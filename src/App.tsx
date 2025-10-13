@@ -5,29 +5,31 @@ import { generateClient } from "aws-amplify/data";
 const client = generateClient<Schema>();
 
 function App() {
-  const [todos, setTodos] = useState<Array<Schema["Todo"]["type"]>>([]);
+  const [partnerOfferings, setPartnerOfferings] = useState<Array<Schema["PartnerOffering"]["type"]>>([]);
 
   useEffect(() => {
-    client.models.Todo.observeQuery().subscribe({
-      next: (data) => setTodos([...data.items]),
+    client.models.PartnerOffering.observeQuery().subscribe({
+      next: (data) => setPartnerOfferings([...data.items]),
     });
   }, []);
 
-  function createTodo() {
-    client.models.Todo.create({ content: window.prompt("Todo content") });
+  function createPartnerOffering() {
+    client.models.PartnerOffering.create({ 
+      offeringName: window.prompt("Offering content")
+    });
   }
 
   return (
     <main>
-      <h1>My todos</h1>
-      <button onClick={createTodo}>+ new</button>
+      <h1>My partnerOfferings</h1>
+      <button onClick={createPartnerOffering}>+ new</button>
       <ul>
-        {todos.map((todo) => (
-          <li key={todo.id}>{todo.content}</li>
+        {partnerOfferings.map((partnerOffering) => (
+          <li key={partnerOffering.id}>{partnerOffering.offeringName}</li>
         ))}
       </ul>
       <div>
-        🥳 App successfully hosted. Try creating a new todo.
+        🥳 App successfully hosted. Try creating a new partnerOffering.
         <br />
         <a href="https://docs.amplify.aws/react/start/quickstart/#make-frontend-updates">
           Review next step of this tutorial.
