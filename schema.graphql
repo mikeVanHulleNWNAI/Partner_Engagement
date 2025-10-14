@@ -1,0 +1,74 @@
+# This is a schema that came from David Tilman.
+
+# This "input" configures a global authorization rule to enable public access to
+# all models in this schema. Learn more about authorization rules here: https://docs.amplify.aws/cli/graphql/authorization-rules
+input AMPLIFY { globalAuthRule: AuthRule = { allow: public } } # FOR TESTING ONLY!
+
+type Manager @model {
+  id: ID!
+  name: String!
+  nwnOffering: [NwnOffering] @hasMany
+}
+
+type NwnOffering @model {
+  id: ID!
+  name: String!
+  manager: Manager
+  partnerOffering: [PartnerOffering] @hasMany
+  manager: Manager @belongsTo
+}
+
+type PartnerOffering @model {
+  id: ID!
+  offeringName: String!
+  contactInfo: String!
+  dashboard: String!
+  Notes: String!
+  status: ConnectionStatus
+  nwnOffering: NwnOffering @belongsTo
+  company: Company
+  priority: Priority
+  apis: [Api]
+}
+
+type ConnectionStatus @model {
+  id: ID!
+  name: String!
+  partnerOfferings: [PartnerOffering] @hasMany
+}
+
+type Company @model {
+  id: ID!
+  name: String!
+  partnerOfferings: [PartnerOffering] @hasMany
+}
+
+type Priority @model {
+  id: ID!
+  name: String!
+  partnerOfferings: [PartnerOffering] @hasMany
+}
+
+type Api @model {
+  id: ID!
+  docLink: string!
+  trainingLink: string!
+  sandboxEnvironment: String!
+  endpoint: String!
+  partnerOffering: PartnerOffering @belongsTo
+  apiType: ApiType
+  authenticationType: AuthenticationType!
+  authenticationInfo: String!
+}
+
+type ApiType @model {
+  id: ID!
+  name: String!
+  apis: [Api] @hasMany
+}
+
+type AuthenticationType @model {
+  id: ID!
+  name: string!
+  apis: [API] @hasMany
+}

@@ -7,94 +7,88 @@ specifies that any user authenticated via an API key can "create", "read",
 "update", and "delete" any "PartnerOffering" records.
 =========================================================================*/
 const schema = a.schema({
-  PartnerOffering: a
-    .model({
-      statusTypeId: a.id(),
-      nwnOfferingId: a.id(),
-      companyId: a.id(),
-      priorityTypeId: a.id(),
-      offeringName: a.string(),
-      contactInfo: a.string(),
-      dashboard: a.string(),
-      notes: a.string(),
-      
-      // Relationships
-      statusType: a.belongsTo('ConnectionStatusType', 'statusTypeId'),
-      nwnOffering: a.belongsTo('NwnOffering', 'nwnOfferingId'),
-      company: a.belongsTo('Company', 'companyId'),
-      priorityType: a.belongsTo('PriorityType', 'priorityTypeId'),
-      apis: a.hasMany('Api', 'partnerOfferingId'),
-    })
-    .authorization((allow) => [allow.publicApiKey()]),
-
   Manager: a
     .model({
-      name: a.string(),
-      
-      // Relationships
+      name: a.string().required(),
       nwnOfferings: a.hasMany('NwnOffering', 'managerId'),
     })
     .authorization((allow) => [allow.publicApiKey()]),
 
   NwnOffering: a
     .model({
-      name: a.string(),
+      name: a.string().required(),
       managerId: a.id(),
-      
-      // Relationships
       manager: a.belongsTo('Manager', 'managerId'),
       partnerOfferings: a.hasMany('PartnerOffering', 'nwnOfferingId'),
     })
     .authorization((allow) => [allow.publicApiKey()]),
 
-  ConnectionStatusType: a
+  PartnerOffering: a
     .model({
-      name: a.string(),
-      
-      // Relationships
-      partnerOfferings: a.hasMany('PartnerOffering', 'statusTypeId'),
+      offeringName: a.string().required(),
+      contactInfo: a.string().required(),
+      dashboard: a.string().required(),
+      notes: a.string().required(),
+      statusId: a.id(),
+      status: a.belongsTo('ConnectionStatus', 'statusId'),
+      nwnOfferingId: a.id(),
+      nwnOffering: a.belongsTo('NwnOffering', 'nwnOfferingId'),
+      companyId: a.id(),
+      company: a.belongsTo('Company', 'companyId'),
+      priorityId: a.id(),
+      priority: a.belongsTo('Priority', 'priorityId'),
+      apis: a.hasMany('Api', 'partnerOfferingId'),
+    })
+    .authorization((allow) => [allow.publicApiKey()]),
+
+  ConnectionStatus: a
+    .model({
+      name: a.string().required(),
+      partnerOfferings: a.hasMany('PartnerOffering', 'statusId'),
     })
     .authorization((allow) => [allow.publicApiKey()]),
 
   Company: a
     .model({
-      name: a.string(),
-      
-      // Relationships
+      name: a.string().required(),
       partnerOfferings: a.hasMany('PartnerOffering', 'companyId'),
+    })
+    .authorization((allow) => [allow.publicApiKey()]),
+
+  Priority: a
+    .model({
+      name: a.string().required(),
+      partnerOfferings: a.hasMany('PartnerOffering', 'priorityId'),
     })
     .authorization((allow) => [allow.publicApiKey()]),
 
   Api: a
     .model({
+      docLink: a.string().required(),
+      trainingLink: a.string().required(),
+      sandboxEnvironment: a.string().required(),
+      endpoint: a.string().required(),
       partnerOfferingId: a.id(),
-      apiTypeId: a.id(),
-      docLink: a.string(),
-      trainingLink: a.string(),
-      sandboxEnvironment: a.string(),
-      mcpEnabled: a.string(),
-      
-      // Relationships
       partnerOffering: a.belongsTo('PartnerOffering', 'partnerOfferingId'),
+      apiTypeId: a.id(),
       apiType: a.belongsTo('ApiType', 'apiTypeId'),
+      authenticationTypeId: a.id().required(),
+      authenticationType: a.belongsTo('AuthenticationType', 'authenticationTypeId'),
+      authenticationInfo: a.string().required(),
     })
     .authorization((allow) => [allow.publicApiKey()]),
 
   ApiType: a
     .model({
-      name: a.string(),
-      
-      // Relationships
+      name: a.string().required(),
       apis: a.hasMany('Api', 'apiTypeId'),
     })
     .authorization((allow) => [allow.publicApiKey()]),
 
-  PriorityType: a
+  AuthenticationType: a
     .model({
-      name: a.string(),
-      
-      // Relationships
-      partnerOfferings: a.hasMany('PartnerOffering', 'priorityTypeId'),
+      name: a.string().required(),
+      apis: a.hasMany('Api', 'authenticationTypeId'),
     })
     .authorization((allow) => [allow.publicApiKey()]),
 });
@@ -104,14 +98,12 @@ export type Schema = ClientSchema<typeof schema>;
 export const data = defineData({
   schema,
   authorizationModes: {
-    defaultAuthorizationMode: "apiKey",
-    // API Key is used for a.allow.public() rules
+    defaultAuthorizationMode: 'apiKey',
     apiKeyAuthorizationMode: {
       expiresInDays: 30,
     },
   },
 });
-
 /*== STEP 2 ===============================================================
 Go to your frontend source code. From your client-side code, generate a
 Data client to make CRUDL requests to your table. (THIS SNIPPET WILL ONLY
