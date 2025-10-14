@@ -1,11 +1,18 @@
 import type { Schema } from "../amplify/data/resource";
-import ApiList from "./APIList";
+import ApiList from "./ApiList";
 
-function PartnerOfferingItem({ partnerOffering }: { partnerOffering: Schema["PartnerOffering"]["type"] }) {
+function PartnerOfferingItem({ partnerOffering, apiTypes }: 
+  { 
+    partnerOffering: Schema["PartnerOffering"]["type"] 
+    apiTypes: Array<Schema["ApiType"]["type"]>
+  }) {
   return (
     <li>
       {partnerOffering.offeringName}
-      <ApiList partnerOffering={partnerOffering} />
+      <ApiList 
+        partnerOffering={partnerOffering} 
+        apiTypes={apiTypes}
+      />
      </li>
   );
 }

@@ -7,32 +7,65 @@ function sleep(ms: number) {
 }
 
 // Component to load and display APIs
-function ApiList({ partnerOffering }: { partnerOffering: Schema["PartnerOffering"]["type"] }) {
+function ApiList(
+  { partnerOffering, apiTypes }:
+    {
+      partnerOffering: Schema["PartnerOffering"]["type"]
+      apiTypes: Array<Schema["ApiType"]["type"]>
+    }
+  ) {
   const [apis, setApis] = useState<Array<Schema["Api"]["type"]>>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadApis() {
       setLoading(true);
-      // TODO: remove this sleep
-      await sleep(2000);
-      const { data } = await partnerOffering.apis();
-      if (data) setApis(data);
-      setLoading(false);
+      setError(null);
+      try {
+        // TODO: remove this sleep
+        await sleep(Math.random() * 2000);
+        const { data, errors } = await partnerOffering.apis();
+        
+        if (errors) {
+          setError("Failed to load APIs");
+          console.error(errors);
+        } else if (data) {
+          setApis(data);
+        }
+      } catch (err) {
+        setError("An unexpected error occurred");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
     }
-    
+
     loadApis();
-  }, [partnerOffering.id]);
+  }, [partnerOffering]);
 
   if (loading) {
-    return <span> Loading APIs...</span>;
+    return <span>Loading APIs...</span>;
+  }
+
+  if (error) {
+    return <span style={{ color: 'red' }}>{error}</span>;
+  }
+
+  if (apis.length === 0) {
+    return <span>No APIs found.</span>;
   }
 
   return (
     <ul>
-      {apis.map(api => (
-        <li key={api.id}>{api.docLink}</li>
-      ))}
+      {apis.map(api => {
+        const apiType = apiTypes.find(type => type.id === api.apiTypeId);
+        return (
+          <li key={api.id}>
+            {api.docLink} - {apiType?.name ?? 'Unknown Type'}
+          </li>
+        );
+      })}
     </ul>
   );
 }
