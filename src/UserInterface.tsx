@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Schema } from "../amplify/data/resource";
 import { generateClient } from "aws-amplify/data";
+import PartnerOfferingItem from "./PartnerOfferingItem";
 
 const client = generateClient<Schema>();
 
@@ -13,9 +14,18 @@ function UserInterface() {
     });
   }, []);
 
-  function createPartnerOffering() {
-    client.models.PartnerOffering.create({
+  async function createPartnerOffering() {
+    const test = await client.models.PartnerOffering.create({
       offeringName: window.prompt("Offering content")
+    });
+    const id = test.data?.id;
+    await client.models.Api.create({
+      partnerOfferingId: id,
+      docLink: "abcd1"
+    });
+    await client.models.Api.create({
+      partnerOfferingId: id,
+      docLink: "abcd2"
     });
   }
 
@@ -25,7 +35,7 @@ function UserInterface() {
       <button onClick={createPartnerOffering}>+ new</button>
       <ul>
         {partnerOfferings.map((partnerOffering) => (
-          <li key={partnerOffering.id}>{partnerOffering.offeringName}</li>
+          <PartnerOfferingItem key={partnerOffering.id} partnerOffering={partnerOffering}/>
         ))}
       </ul>
       <div>
