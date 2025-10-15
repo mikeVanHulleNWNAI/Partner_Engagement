@@ -7,8 +7,8 @@ interface ItemGridProps {
 const ItemGrid: React.FC<ItemGridProps> = ({ children }) => {
   return (
     <div className="bg-gray-50 p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-10 gap-6">
+      <div className="mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-5 md:grid-cols-8 lg:grid-cols-12 xl:grid-cols-15 2xl:grid-cols-18 gap-6">
           {children}
         </div>
       </div>

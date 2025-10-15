@@ -6,10 +6,6 @@ function App() {
   return (
     <div className="App">
       <NavBar />
-      {/*
-      <ConnectionForm />
-      <IntegrationTableExample/>
-      */}
       <UserInterface />
     </div>
   );
