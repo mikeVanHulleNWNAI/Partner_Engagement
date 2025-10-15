@@ -1,5 +1,21 @@
 import { CLIENT } from "./Constants";
 
+const apiTypeNames = [
+    "REST",
+    "REST (OKTA)",
+    "MCP",
+    "GRAPHQL",
+    "SDK",
+    "REST & SOAP",
+    "REST & GRAPH"
+];
+
+const priorities = [
+    "LOW",
+    "MEDIUM",
+    "HIGH"
+];
+
 // add a ProductOffering
 export async function createPartnerOffering() {
     await createInitialDataSettings();
@@ -10,11 +26,15 @@ export async function createPartnerOffering() {
         // in on the client side.  This way everything for PartnerOffering is updated once.
         const partnerOfferingId = crypto.randomUUID();
 
+        // pick a random priority
+        const randomPriority = priorities[Math.floor(Math.random() * priorities.length)];
+        const priorityResult = await CLIENT.models.Priority.list({ filter: { name: { eq: randomPriority} } })
+        const priorityId = priorityResult.data[0].id;
+
         const [apiTypeRESTResult, apiTypeGRAPHQLResult] = await Promise.all([
             CLIENT.models.ApiType.list({ filter: { name: { eq: "REST" } } }),
             CLIENT.models.ApiType.list({ filter: { name: { eq: "GRAPHQL" } } })
         ])
-
         const apiTypeRESTId = apiTypeRESTResult.data?.[0]?.id;
         const apiTypeGRAPHQLId = apiTypeGRAPHQLResult.data?.[0]?.id;
 
@@ -55,23 +75,14 @@ export async function createPartnerOffering() {
             offeringName: prompt,
             contactInfo: "Mr. Jones",
             dashboard: "www.google.com",
-            notes: "This is a test"
+            notes: "This is a test",
+            priorityId: priorityId
         });
     }
 }
 
 // populate the database with initial values
 async function createInitialDataSettings() {
-    const apiTypeNames = [
-        "REST",
-        "REST (OKTA)",
-        "MCP",
-        "GRAPHQL",
-        "SDK",
-        "REST & SOAP",
-        "REST & GRAPH"
-    ];
-
     for (const name of apiTypeNames) {
         const { data: existing } = await CLIENT.models.ApiType.list({
             filter: { name: { eq: name } }
@@ -79,6 +90,16 @@ async function createInitialDataSettings() {
 
         if (!existing || existing.length === 0) {
             await CLIENT.models.ApiType.create({ name });
+        }
+    }
+
+    for (const name of priorities) {
+        const { data: existing } = await CLIENT.models.Priority.list({
+            filter: { name: { eq: name } }
+        });
+
+        if (!existing || existing.length === 0) {
+            await CLIENT.models.Priority.create({ name });
         }
     }
 }

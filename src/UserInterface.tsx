@@ -1,12 +1,18 @@
 import { useEffect, useState } from "react";
 import type { Schema } from "../amplify/data/resource";
-import PartnerOfferingItem from "./PartnerOfferingItem";
 import { createPartnerOffering, deleteAll } from "./Utils/CreateData"
 import { CLIENT } from "./Utils/Constants";
+import ItemGrid from "./ItemGrid";
+import PartnerOfferingTile from "./PartnerOfferingTile";
+import Sidebar from "./SideBar";
+import ApiList from "./ApiList";
 
 function UserInterface() {
   const [partnerOfferings, setPartnerOfferings] = useState<Array<Schema["PartnerOffering"]["type"]>>([]);
   const [apiTypes, setApiTypes] = useState<Array<Schema["ApiType"]["type"]>>([]);
+
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [activePartnerOffering, setActivePartnerOffering] = useState<Schema["PartnerOffering"]["type"]>();
 
   useEffect(() => {
     CLIENT.models.PartnerOffering.observeQuery().subscribe({
@@ -18,27 +24,40 @@ function UserInterface() {
     })
   }, []);
 
+  const activateSidebar = (productOffering: Schema["PartnerOffering"]["type"]) => {
+    setActivePartnerOffering(productOffering);
+    setIsOpen(true);
+  }
+
   return (
     <main>
       <h1>My partnerOfferings</h1>
       <button onClick={createPartnerOffering}>+ new</button>
       <button onClick={deleteAll}>Delete all</button>
-      <ul>
+      <Sidebar isOpen={isOpen} onClose={() => setIsOpen(false)}>
+        <div className="p-6 mt-14">
+          {activePartnerOffering ? (
+            <div>
+              {activePartnerOffering.offeringName}
+              <ApiList
+                partnerOffering={activePartnerOffering}
+                apiTypes={apiTypes}
+              />
+            </div>
+          ) : (
+            "Loading..."
+          )}
+        </div>
+      </Sidebar>
+      <ItemGrid>
         {partnerOfferings.map((partnerOffering) => (
-          <PartnerOfferingItem
+          <PartnerOfferingTile
             key={partnerOffering.id}
             partnerOffering={partnerOffering}
-            apiTypes={apiTypes}
+            onClick={() => activateSidebar(partnerOffering)}
           />
         ))}
-      </ul>
-      <div>
-        🥳 App successfully hosted. Try creating a new partnerOffering.
-        <br />
-        <a href="https://docs.amplify.aws/react/start/quickstart/#make-frontend-updates">
-          Review next step of this tutorial.
-        </a>
-      </div>
+      </ItemGrid>
     </main>
   );
 }

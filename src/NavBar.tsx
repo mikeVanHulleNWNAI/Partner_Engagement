@@ -12,7 +12,7 @@ export default function NavBar() {
                     <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
                         <Box>
                             <Typography sx={{ position: 'relative' }} variant="h6" fontWeight='bold'>
-                                API Connections Manager
+                                Partner Offerings
                             </Typography>
                         </Box>
                     </Toolbar>
