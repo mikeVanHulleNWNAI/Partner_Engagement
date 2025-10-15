@@ -1,11 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Schema } from "../amplify/data/resource";
 
-// Helper function to simulate delay
-function sleep(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 // Component to load and display APIs
 function ApiList(
   { partnerOffering, apiTypes }:
@@ -23,8 +18,6 @@ function ApiList(
       setLoading(true);
       setError(null);
       try {
-        // TODO: remove this sleep
-        await sleep(Math.random() * 2000);
         const { data, errors } = await partnerOffering.apis();
         
         if (errors) {
