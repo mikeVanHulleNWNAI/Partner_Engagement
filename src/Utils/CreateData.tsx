@@ -1,3 +1,4 @@
+import { Schema } from "../../amplify/data/resource";
 import { CLIENT } from "./Constants";
 
 const apiTypeNames = [
@@ -16,10 +17,65 @@ const priorities = [
     "HIGH"
 ];
 
-// add a ProductOffering
-export async function createPartnerOffering() {
-    await createInitialDataSettings();
+const companies = [
+    "Genysis",
+    "Five9's",
+    "Verkada",
+    "ApexaiQ",
+    "Amazon",
+    "Microsoft",
+    "Nectar",
+    "Juniper",
+    "CISCO",
+    "HPE",
+    "ServiceNow",
+    "NextThink API",
+    "Big fix",
+    "Webex",
+    "Contrivian",
+    "Mettel.net",
+    "Google",
+    "Deepseas",
+    "Proficio",
+    "Splunk",
+    "Continel",
+    "XSIAM",
+    "Clowd Strike",
+    "Quium (LeverageIS = NWN Acq)",
+    "Kurmi (www.kurmi-software.com",
+    "Asana",
+    "Salesforce",
+    "Gong",
+    "GovIQ",
+    "Calendar APIs",
+    "Aiva",
+    "EMP",
+    "Demandbase",
+    "6sense",
+    "ZoomInfo",
+    "EMP",
+    "Webex Control Hub",
+    "ServiceNow (ITSM)",
+    "Zoom Admin / QoS Dashboard",
+    "Avaya Cloud Office",
+    "Cisco Catalyst Center (DNA Center)",
+    "Cisco Meraki Dashboard",
+    "Cisco ThousandEyes",
+    "CISCO DEVELOPMENT RESOURCES",
+    "Juniper Mist Cloud",
+    "Juniper Session Smart WAN (Mist)",
+    "HPE Aruba EdgeConnect",
+    "HPE Aruba Central",
+    "Contrivian (Internet & Satellite)",
+    "CMDB (ServiceNow CMDB)",
+    "OpsRamp",
+    "Zenoss Cloud"
+];
 
+// add a ProductOffering
+export async function createPartnerOffering(
+    company: Schema["Company"]["type"]
+) {
     const prompt = window.prompt("Offering content");
     if (prompt !== null) {
         // Create a uuid for the PartnerOffering because we are going to include
@@ -76,13 +132,14 @@ export async function createPartnerOffering() {
             contactInfo: "Mr. Jones",
             dashboard: "www.google.com",
             notes: "This is a test",
-            priorityId: priorityId
+            priorityId: priorityId,
+            companyId: company.id
         });
     }
 }
 
 // populate the database with initial values
-async function createInitialDataSettings() {
+export async function createInitialDataSettings() {
     for (const name of apiTypeNames) {
         const { data: existing } = await CLIENT.models.ApiType.list({
             filter: { name: { eq: name } }
@@ -100,6 +157,16 @@ async function createInitialDataSettings() {
 
         if (!existing || existing.length === 0) {
             await CLIENT.models.Priority.create({ name });
+        }
+    }
+
+    for (const name of companies) {
+        const { data: existing } = await CLIENT.models.Company.list({
+            filter: { name: { eq: name } }
+        });
+
+        if (!existing || existing.length === 0) {
+            await CLIENT.models.Company.create({ name });
         }
     }
 }
