@@ -1,20 +1,21 @@
-import { Schema } from "../../amplify/data/resource";
 import { CLIENT } from "./Constants";
 
-const apiTypeNames = [
-    "REST",
-    "REST (OKTA)",
-    "MCP",
-    "GRAPHQL",
-    "SDK",
-    "REST & SOAP",
-    "REST & GRAPH"
+const managers = [
+    "Kevin Basden",
+    "Brian Fichter",
+    "Austin Rose",
+    "Mike Patton",
+    "Alvaro Rivera",
+    "Chris Poe",
+    "Mike Patton",
+    "Alec Saffrin"
 ];
 
-const priorities = [
-    "LOW",
-    "MEDIUM",
-    "HIGH"
+const connectionStatus = [
+    "Connected",
+    "In Process",
+    "Meeting Scheduled",
+    "Upcoming"
 ];
 
 const companies = [
@@ -40,7 +41,7 @@ const companies = [
     "Splunk",
     "Continel",
     "XSIAM",
-    "Clowd Strike",
+    "Crowd Strike",
     "Quium (LeverageIS = NWN Acq)",
     "Kurmi (www.kurmi-software.com",
     "Asana",
@@ -72,9 +73,24 @@ const companies = [
     "Zenoss Cloud"
 ];
 
+const priorities = [
+    "LOW",
+    "MEDIUM",
+    "HIGH"
+];
+
+const apiTypes = [
+    "REST",
+    "REST (OKTA)",
+    "MCP",
+    "GRAPHQL",
+    "SDK",
+    "REST & SOAP",
+    "REST & GRAPH"
+];
+
 // add a ProductOffering
 export async function createPartnerOffering(
-    company: Schema["Company"]["type"]
 ) {
     const prompt = window.prompt("Offering content");
     if (prompt !== null) {
@@ -84,7 +100,7 @@ export async function createPartnerOffering(
 
         // pick a random priority
         const randomPriority = priorities[Math.floor(Math.random() * priorities.length)];
-        const priorityResult = await CLIENT.models.Priority.list({ filter: { name: { eq: randomPriority} } })
+        const priorityResult = await CLIENT.models.Priority.list({ filter: { name: { eq: randomPriority } } })
         const priorityId = priorityResult.data[0].id;
 
         const [apiTypeRESTResult, apiTypeGRAPHQLResult] = await Promise.all([
@@ -133,55 +149,107 @@ export async function createPartnerOffering(
             dashboard: "www.google.com",
             notes: "This is a test",
             priorityId: priorityId,
-            companyId: company.id
         });
     }
 }
 
 // populate the database with initial values
 export async function createInitialDataSettings() {
-    for (const name of apiTypeNames) {
-        const { data: existing } = await CLIENT.models.ApiType.list({
+    // Manager
+    for (const name of managers) {
+        const { data: existing } = await CLIENT.models.Manager.list({
             filter: { name: { eq: name } }
         });
 
         if (!existing || existing.length === 0) {
-            await CLIENT.models.ApiType.create({ name });
+            await CLIENT.models.Manager.create({ name });
         }
     }
 
-    for (const name of priorities) {
-        const { data: existing } = await CLIENT.models.Priority.list({
-            filter: { name: { eq: name } }
-        });
+    // NwnOffering
+    await CLIENT.models.NwnOffering.create({
+        name: "Customer Experience",
+        managerId: (await CLIENT.models.Manager.list({
+            filter: { name: { eq: "Kevin Basden" } } })).data[0].id
+    })
+    await CLIENT.models.NwnOffering.create({
+        name: "Visual Collaboration",
+        managerId: (await CLIENT.models.Manager.list({
+            filter: { name: { eq: "Brian Fichter" } } })).data[0].id
+    })
+    await CLIENT.models.NwnOffering.create({
+        name: "Intelligent Cloud",
+        managerId: (await CLIENT.models.Manager.list({
+            filter: { name: { eq: "Austin Rose" } } })).data[0].id
+    })
+    await CLIENT.models.NwnOffering.create({
+        name: "Managed Devices",
+        managerId: (await CLIENT.models.Manager.list({
+            filter: { name: { eq: "Mike Patton" } } })).data[0].id
+    })
+    await CLIENT.models.NwnOffering.create({
+        name: "Intelligent Workspace (edge)",
+        managerId: (await CLIENT.models.Manager.list({
+            filter: { name: { eq: "Alvaro Rivera" } } })).data[0].id
+    })
+    await CLIENT.models.NwnOffering.create({
+        name: "Intelligent Connectivity",
+        managerId: (await CLIENT.models.Manager.list({
+            filter: { name: { eq: "Chris Poe" } } })).data[0].id
+    })
+    await CLIENT.models.NwnOffering.create({
+        name: "Cyber Security",
+        managerId: (await CLIENT.models.Manager.list({
+            filter: { name: { eq: "Alec Saffrin" } } })).data[0].id
+    })
 
-        if (!existing || existing.length === 0) {
-            await CLIENT.models.Priority.create({ name });
-        }
-    }
+    // ConnectionStatus
+    for (const name of connectionStatus)
+        await CLIENT.models.ConnectionStatus.create({ name });
 
-    for (const name of companies) {
-        const { data: existing } = await CLIENT.models.Company.list({
-            filter: { name: { eq: name } }
-        });
+    // Company
+    for (const name of companies)
+        await CLIENT.models.Company.create({ name });
 
-        if (!existing || existing.length === 0) {
-            await CLIENT.models.Company.create({ name });
-        }
-    }
+    // Priority
+    for (const name of priorities)
+        await CLIENT.models.Priority.create({ name });
+
+    // ApiType
+    for (const name of apiTypes)
+       await CLIENT.models.ApiType.create({ name });
 }
 
 export async function deleteAll() {
+    // Manager
+    const allManagers = await CLIENT.models.Manager.list();
+    await Promise.all(allManagers.data.map((d) => CLIENT.models.Manager.delete(d)));
+
+    // NwnOffering
+    const allNwnOffering = await CLIENT.models.NwnOffering.list();
+    await Promise.all(allNwnOffering.data.map((d) => CLIENT.models.NwnOffering.delete(d)));
+
+    // ConnectionStatus
+    const allConnectionStatus = await CLIENT.models.ConnectionStatus.list();
+    await Promise.all(allConnectionStatus.data.map((d) => CLIENT.models.ConnectionStatus.delete(d)));
+
+    // Company
+    const allCompanies = await CLIENT.models.Company.list();
+    await Promise.all(allCompanies.data.map((d) => CLIENT.models.Company.delete(d)))
+
+    // Priority
+    const allPriroities = await CLIENT.models.Company.list();
+    await Promise.all(allPriroities.data.map((d) => CLIENT.models.Company.delete(d)));
+
+    // Api
     const allApis = await CLIENT.models.Api.list();
     await Promise.all(allApis.data.map((d) => CLIENT.models.Api.delete(d)));
 
+    // ApiType
     const allApiTypes = await CLIENT.models.ApiType.list();
     await Promise.all(allApiTypes.data.map((d) => CLIENT.models.ApiType.delete(d)));
 
     const allPartnerOfferings = await CLIENT.models.PartnerOffering.list();
     await Promise.all(allPartnerOfferings.data.map((d) => CLIENT.models.PartnerOffering.delete(d)));
-
-    const allCompanies = await CLIENT.models.Company.list();
-    await Promise.all(allCompanies.data.map((d) => CLIENT.models.Company.delete(d)))
 }
 

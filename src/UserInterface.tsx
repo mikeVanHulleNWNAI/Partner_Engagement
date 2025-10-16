@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Schema } from "../amplify/data/resource";
-import { createPartnerOffering, createInitialDataSettings, deleteAll } from "./Utils/CreateData"
+import { createInitialDataSettings, deleteAll } from "./Utils/CreateData"
 import { CLIENT } from "./Utils/Constants";
 import ItemGrid from "./ItemGrid";
 //import PartnerOfferingTile from "./PartnerOfferingTile";
@@ -8,16 +8,17 @@ import Sidebar from "./SideBar";
 //import ApiList from "./ApiList";
 import CompanyTile from "./CompanyTile";
 import ApiList from "./ApiList";
+import EditPartnerOfferingForm from "./EditPartnerOfferingForm";
 
 function UserInterface() {
   //  const [partnerOfferings, setPartnerOfferings] = useState<Array<Schema["PartnerOffering"]["type"]>>([]);
   const [companies, setCompanies] = useState<Array<Schema["Company"]["type"]>>([]);
   const [apiTypes, setApiTypes] = useState<Array<Schema["ApiType"]["type"]>>([]);
-
   const [isOpen, setIsOpen] = useState<boolean>(false);
   //  const [activePartnerOffering, setActivePartnerOffering] = useState<Schema["PartnerOffering"]["type"]>();
   const [activeCompany, setActiveCompany] = useState<Schema["Company"]["type"]>();
   const [activePartnerOfferings, setActivePartnerOfferings] = useState<Array<Schema["PartnerOffering"]["type"]>>([]);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
 
   useEffect(() => {
     //    CLIENT.models.PartnerOffering.observeQuery().subscribe({
@@ -59,6 +60,19 @@ function UserInterface() {
     setIsOpen(true);
   }
 
+  const handleOpenPopup = () => {
+    setIsPopupOpen(true);
+  };
+
+  const handleClosePopup = () => {
+    setIsPopupOpen(false);
+  };
+
+  const handleSubmitForm = (data: { name: string; email: string }) => {
+    console.log('Form submitted with data:', data);
+    // Perform actions with the submitted data, e.g., send to an API
+  };
+
   return (
     <main>
       <h1>My partnerOfferings</h1>
@@ -83,10 +97,13 @@ function UserInterface() {
           */}
           {activeCompany ? (
             <div>
-              <button className="select-none" onClick={async () => {
-                await createPartnerOffering(activeCompany);
-                await loadActivePartnerOfferings();
-              }}>New Partner Offering</button>
+              <button className="select-none" onClick={handleOpenPopup}>
+                Test form</button>
+              <EditPartnerOfferingForm
+                open={isPopupOpen}
+                onClose={handleClosePopup}
+                onSubmit={handleSubmitForm}
+              />
               <div className="text-3xl font-bold">Company: {activeCompany.name}</div>
               <ul>
                 {
@@ -122,7 +139,7 @@ function UserInterface() {
           />
         ))}
         */}
-        {companies.map((company) => 
+        {companies.map((company) =>
         (
           <CompanyTile
             key={company.id}
