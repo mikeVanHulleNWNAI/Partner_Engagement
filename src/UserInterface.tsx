@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { Schema } from "../amplify/data/resource";
 import { createPartnerOffering, createInitialDataSettings, deleteAll } from "./Utils/CreateData"
 import { CLIENT } from "./Utils/Constants";
@@ -23,24 +23,32 @@ function UserInterface() {
     //    CLIENT.models.PartnerOffering.observeQuery().subscribe({
     //      next: (data) => setPartnerOfferings([...data.items]),
     //    });
-    CLIENT.models.Company.observeQuery().subscribe({
+    const companiesSubscription = CLIENT.models.Company.observeQuery().subscribe({
       next: (data) => setCompanies([...data.items]),
     })
     // the apiType table will not change often
-    CLIENT.models.ApiType.observeQuery().subscribe({
+    const apiTypesSubscription = CLIENT.models.ApiType.observeQuery().subscribe({
       next: (data) => setApiTypes([...data.items]),
     })
-    loadActivePartnerOfferings();
-  }, [activeCompany]);
 
-  async function loadActivePartnerOfferings() {
+    return () => {
+      companiesSubscription.unsubscribe();
+      apiTypesSubscription.unsubscribe();
+    }
+  }, []);
+
+  const loadActivePartnerOfferings = useCallback(async () => {
     if (activeCompany) {
       const { data } = await activeCompany.partnerOfferings();
       if (data) {
         setActivePartnerOfferings(data);
       }
     }
-  }
+  }, [activeCompany]);
+
+  useEffect(() => {
+    loadActivePartnerOfferings();
+  }, [loadActivePartnerOfferings]);
 
   const activateSidebar = (
     //    productOffering: Schema["PartnerOffering"]["type"],
@@ -54,7 +62,7 @@ function UserInterface() {
   return (
     <main>
       <h1>My partnerOfferings</h1>
-      <button onClick={async () => {
+      <button className="select-none" onClick={async () => {
         await deleteAll();
         await createInitialDataSettings();
       }}>Delete and Restore</button>
@@ -75,7 +83,7 @@ function UserInterface() {
           */}
           {activeCompany ? (
             <div>
-              <button onClick={async () => {
+              <button className="select-none" onClick={async () => {
                 await createPartnerOffering(activeCompany);
                 await loadActivePartnerOfferings();
               }}>New Partner Offering</button>
@@ -114,7 +122,8 @@ function UserInterface() {
           />
         ))}
         */}
-        {companies.map((company) => (
+        {companies.map((company) => 
+        (
           <CompanyTile
             key={company.id}
             company={company}

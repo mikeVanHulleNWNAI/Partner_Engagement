@@ -57,10 +57,10 @@ function PartnerOfferingTile({ partnerOffering, onClick }:
 
     return (
         <div
-            className={`${tileColor} rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden ${onClick ? 'cursor-pointer' : ''}`}
+            className={`${tileColor} rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden select-none ${onClick ? 'cursor-pointer' : ''}`}
             onClick={onClick}
         >
-            <div className="m-2 select-none">
+            <div className="m-2">
                 {partnerOffering.offeringName}
             </div>
         </div>

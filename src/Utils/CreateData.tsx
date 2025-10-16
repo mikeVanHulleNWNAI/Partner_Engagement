@@ -180,5 +180,8 @@ export async function deleteAll() {
 
     const allPartnerOfferings = await CLIENT.models.PartnerOffering.list();
     await Promise.all(allPartnerOfferings.data.map((d) => CLIENT.models.PartnerOffering.delete(d)));
+
+    const allCompanies = await CLIENT.models.Company.list();
+    await Promise.all(allCompanies.data.map((d) => CLIENT.models.Company.delete(d)))
 }
 

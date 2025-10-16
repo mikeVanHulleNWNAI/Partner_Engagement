@@ -19,7 +19,7 @@ function Sidebar({ isOpen, onClose, children }: SidebarProps) {
 
       {/* Sidebar */}
       <div
-        className={`fixed top-0 right-0 h-full sm:w-40 md:w-60 lg:w-100 bg-white shadow-xl z-40 transform transition-transform duration-300 ease-in-out ${
+        className={`overflow-y-auto fixed top-0 right-0 h-full sm:w-40 md:w-60 lg:w-100 bg-white shadow-xl z-40 transform transition-transform duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
