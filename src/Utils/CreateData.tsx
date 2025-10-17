@@ -89,68 +89,72 @@ const apiTypes = [
     "REST & GRAPH"
 ];
 
+const authenticationType = [
+    "Test authentication"
+];
+
 // add a ProductOffering
 export async function createPartnerOffering(
+    offeringName: string,
+    contactInfo: string,
+    dashboard: string,
+    notes: string,
+    status: string,
+    nwnOffering: string,
+    company: string,
+    priority: string,
+    apiList: string[],
+    docLinkList: string[],
+    trainingLinkList: string[],
+    sandboxEnvList: string[],
+    authenticationTypeList: string[],
+    authenticationTypeInfoList: string[]
 ) {
-    const prompt = window.prompt("Offering content");
-    if (prompt !== null) {
-        // Create a uuid for the PartnerOffering because we are going to include
-        // in on the client side.  This way everything for PartnerOffering is updated once.
-        const partnerOfferingId = crypto.randomUUID();
 
-        // pick a random priority
-        const randomPriority = priorities[Math.floor(Math.random() * priorities.length)];
-        const priorityResult = await CLIENT.models.Priority.list({ filter: { name: { eq: randomPriority } } })
-        const priorityId = priorityResult.data[0].id;
+    // Create a uuid for the PartnerOffering because we are going to include
+    // in on the client side.  This way everything for PartnerOffering is updated once.
+    const partnerOfferingId = crypto.randomUUID();
 
-        const [apiTypeRESTResult, apiTypeGRAPHQLResult] = await Promise.all([
-            CLIENT.models.ApiType.list({ filter: { name: { eq: "REST" } } }),
-            CLIENT.models.ApiType.list({ filter: { name: { eq: "GRAPHQL" } } })
-        ])
-        const apiTypeRESTId = apiTypeRESTResult.data?.[0]?.id;
-        const apiTypeGRAPHQLId = apiTypeGRAPHQLResult.data?.[0]?.id;
+    const statusResult = await CLIENT.models.ConnectionStatus.list({ filter: { name: { eq: status } } })
+    const statusId = statusResult.data[0].id;
 
-        const name = "Test authentication";
-        let { data: existing } = await CLIENT.models.AuthenticationType.list({
-            filter: { name: { eq: name } }
-        });
-        if (!existing || existing.length === 0) {
-            const { data: created } = await CLIENT.models.AuthenticationType.create({ name });
-            existing = created ? [created] : [];
-        }
-        const authenticationTypeId = existing[0].id;
+    const nwnOfferingResult = await CLIENT.models.NwnOffering.list({ filter: { name: { eq: nwnOffering } } })
+    const nwnOfferingId = nwnOfferingResult.data[0].id;
 
+    const companyResult = await CLIENT.models.Company.list({ filter: { name: { eq: company } } })
+    const companyId = companyResult.data[0].id;
+
+    const priorityResult = await CLIENT.models.Priority.list({ filter: { name: { eq: priority } } })
+    const priorityId = priorityResult.data[0].id;
+
+    for (let i = 0; i < apiList.length; i++) {
+        const apiTypeResult = await CLIENT.models.ApiType.list({ filter: { name: { eq: apiList[i] } } })
+        const apiTypeId = apiTypeResult.data[0].id;
+        const authenticationTypeResult = await CLIENT.models.ApiType.list({ filter: { name: { eq: authenticationTypeList[i] } } })
+        const authenticationTypeId = authenticationTypeResult.data[0].id;
         await CLIENT.models.Api.create({
-            partnerOfferingId: partnerOfferingId,
-            docLink: "abcd1",
-            apiTypeId: apiTypeRESTId,
-            trainingLink: "",
-            sandboxEnvironment: "",
+            docLink: docLinkList[i],
+            trainingLink: trainingLinkList[i],
+            sandboxEnvironment: sandboxEnvList[i],
             endpoint: "",
-            authenticationTypeId: authenticationTypeId ?? "",
-            authenticationInfo: ""
-        })
-
-        await CLIENT.models.Api.create({
             partnerOfferingId: partnerOfferingId,
-            docLink: "abcd2",
-            apiTypeId: apiTypeGRAPHQLId,
-            trainingLink: "",
-            sandboxEnvironment: "",
-            endpoint: "",
-            authenticationTypeId: authenticationTypeId ?? "",
-            authenticationInfo: ""
+            apiTypeId: apiTypeId,
+            authenticationTypeId: authenticationTypeId,
+            authenticationInfo: authenticationTypeInfoList[i]
         })
-
-        await CLIENT.models.PartnerOffering.create({
-            id: partnerOfferingId,
-            offeringName: prompt,
-            contactInfo: "Mr. Jones",
-            dashboard: "www.google.com",
-            notes: "This is a test",
-            priorityId: priorityId,
-        });
     }
+
+    await CLIENT.models.PartnerOffering.create({
+        id: partnerOfferingId,
+        offeringName: offeringName,
+        contactInfo: contactInfo,
+        dashboard: dashboard,
+        notes: notes,
+        statusId: statusId,
+        nwnOfferingId: nwnOfferingId,
+        companyId: companyId,
+        priorityId: priorityId,
+    });
 }
 
 // populate the database with initial values
@@ -170,37 +174,44 @@ export async function createInitialDataSettings() {
     await CLIENT.models.NwnOffering.create({
         name: "Customer Experience",
         managerId: (await CLIENT.models.Manager.list({
-            filter: { name: { eq: "Kevin Basden" } } })).data[0].id
+            filter: { name: { eq: "Kevin Basden" } }
+        })).data[0].id
     })
     await CLIENT.models.NwnOffering.create({
         name: "Visual Collaboration",
         managerId: (await CLIENT.models.Manager.list({
-            filter: { name: { eq: "Brian Fichter" } } })).data[0].id
+            filter: { name: { eq: "Brian Fichter" } }
+        })).data[0].id
     })
     await CLIENT.models.NwnOffering.create({
         name: "Intelligent Cloud",
         managerId: (await CLIENT.models.Manager.list({
-            filter: { name: { eq: "Austin Rose" } } })).data[0].id
+            filter: { name: { eq: "Austin Rose" } }
+        })).data[0].id
     })
     await CLIENT.models.NwnOffering.create({
         name: "Managed Devices",
         managerId: (await CLIENT.models.Manager.list({
-            filter: { name: { eq: "Mike Patton" } } })).data[0].id
+            filter: { name: { eq: "Mike Patton" } }
+        })).data[0].id
     })
     await CLIENT.models.NwnOffering.create({
         name: "Intelligent Workspace (edge)",
         managerId: (await CLIENT.models.Manager.list({
-            filter: { name: { eq: "Alvaro Rivera" } } })).data[0].id
+            filter: { name: { eq: "Alvaro Rivera" } }
+        })).data[0].id
     })
     await CLIENT.models.NwnOffering.create({
         name: "Intelligent Connectivity",
         managerId: (await CLIENT.models.Manager.list({
-            filter: { name: { eq: "Chris Poe" } } })).data[0].id
+            filter: { name: { eq: "Chris Poe" } }
+        })).data[0].id
     })
     await CLIENT.models.NwnOffering.create({
         name: "Cyber Security",
         managerId: (await CLIENT.models.Manager.list({
-            filter: { name: { eq: "Alec Saffrin" } } })).data[0].id
+            filter: { name: { eq: "Alec Saffrin" } }
+        })).data[0].id
     })
 
     // ConnectionStatus
@@ -217,7 +228,287 @@ export async function createInitialDataSettings() {
 
     // ApiType
     for (const name of apiTypes)
-       await CLIENT.models.ApiType.create({ name });
+        await CLIENT.models.ApiType.create({ name });
+
+    // AuthenticationType
+    for (const name of authenticationType)
+        await CLIENT.models.AuthenticationType.create({ name });
+
+    createAllPartnerOfferings();
+}
+
+async function createAllPartnerOfferings()
+{
+    createPartnerOffering(
+        "", 
+        "", 
+        "https://nwn-demo.command.verkada.com", 
+        "To request Access please reach out to Org Admin to send invitation (dsalins@nwn.ai)", 
+        "Connected", 
+        "Customer Experience", 
+        "Genysis", 
+        "LOW", 
+        ["REST"], 
+        ["https://all.docs.genesys.com/Developer/APIbyService"], 
+        ["https://beyond.genesys.com/explore/"], 
+        ['{"Environment":"Sandbox"{'], 
+        [""], 
+        [""]);
+    createPartnerOffering(
+        "", 
+        "Brian Norton <brian.norton@five9.com>", 
+        " https://login.five9.com/and; https://admin.us.five9.net/.", 
+        "", 
+        "In Process", 
+        "Customer Experience", 
+        "Five9's", 
+        "HIGH", 
+        ["REST"], 
+        ["https://documentation.five9.com/category/dev"], 
+        ["https://www.five9.com/contact-center-services/training"], 
+        ['{"Client ID": "122g33Y5tsTYjrGQpHVlCdUMjNxIsWfD",'], 
+        [""], 
+        [""]);
+    createPartnerOffering(
+        "", 
+        "", 
+        "https://nwn.okta.com/app/UserHome", 
+        "OKTA", 
+        "Connected", 
+        "Visual Collaboration", 
+        "Verkada", 
+        "LOW", 
+        ["REST (OKTA)"], 
+        ["https://nwn-demo.command.verkada.com/admin/settings/api-integrations"], 
+        [""], 
+        [""], 
+        [""], 
+        [""]);
+    createPartnerOffering(
+        "", 
+        "Pragti Aggarwal <pragti@apexaiq.com>; Engineering support: lokesh@apexaiq.com", 
+        "https://nwn.okta.com/app/UserHome", 
+        "", 
+        "Connected", 
+        "", 
+        "ApexaiQ", 
+        "LOW", 
+        ["REST"], 
+        ["https://app.apexaiq.com/docs"], 
+        ["https://www.apexaiq.com/resources/"], 
+        [""], 
+        [""], 
+        [""]);
+    createPartnerOffering(
+        "", 
+        "", 
+        "", 
+        "", 
+        "Connected", 
+        "Intelligent Cloud", 
+        "Amazon", 
+        "LOW", 
+        ["REST", "MCP"], 
+        ["https://docs.aws.amazon.com/", "https://github.com/awslabs/mcp"], 
+        ["https://www.aws.training/", "https://github.com/awslabs/mcp"], 
+        ["", "https://github.com/awslabs/mcp"], 
+        ["", ""], 
+        ["", ""]);
+    createPartnerOffering(
+        "", 
+        "", 
+        "", 
+        "", 
+        "Connected", 
+        "Intelligent Cloud", 
+        "Microsoft", 
+        "LOW", 
+        ["MCP", "GRAPHQL", "REST"], 
+        ["https://github.com/Azure/azure-mcp", "", "https://learn.microsoft.com/en-us/rest/api/azure/"], 
+        ["https://github.com/Azure/azure-mcp", "", "https://learn.microsoft.com/en-us/training/azure/"], 
+        ["https://github.com/Azure/azure-mcp", "", ""], 
+        ["", "", ""], 
+        ["", "", ""]);
+    createPartnerOffering(
+        "", 
+        "Prakash Birdja <pbirdja@nectarcorp.com>", 
+        "https://us.nectar.services/dapi/doc", 
+        "via OKTA card.", 
+        "In Process", 
+        "Visual Collaboration", 
+        "Nectar", 
+        "HIGH", 
+        ["REST (OKTA)"], 
+        ["https://portal.nectar.software/docs"], 
+        ["https://support.nectarcorp.com/docs/training"], 
+        [""], 
+        [""], 
+        [""]);
+    createPartnerOffering(
+        "", 
+        "Vu Le <vumle@amazon.com>", 
+        "https://console.aws.amazon.com/", 
+        "", 
+        "In Process", 
+        "Customer Experience", 
+        "Amazon", 
+        "HIGH", 
+        ["SDK"], 
+        ["https://docs.aws.amazon.com/connect/latest/APIReference/connect-service-api.html"], 
+        ["https://aws.amazon.com/blogs/training-and-certification/category/contact-center/amazon-connect/"], 
+        [""], 
+        [""], 
+        [""]);
+    createPartnerOffering(
+        "", 
+        "", 
+        "", 
+        "", 
+        "In Process", 
+        "Managed Devices", 
+        "Microsoft", 
+        "HIGH", 
+        ["MCP"], 
+        ["https://learn.microsoft.com/en-us/purview/developer/"], 
+        ["https://learn.microsoft.com/en-us/training/purview/"], 
+        [""], 
+        [""], 
+        [""]);
+    createPartnerOffering(
+        "", 
+        "", 
+        "", 
+        "", 
+        "In Process", 
+        "Intelligent Workspace", 
+        "Microsoft", 
+        "HIGH", 
+        ["MCP"], 
+        ["https://learn.microsoft.com/en-us/graph/api/resources/teams-api-overview?view=graph-rest-1.0"], 
+        ["https://learn.microsoft.com/en-us/training/modules/microsoft-intune/"], 
+        [""], 
+        [""], 
+        [""]);
+    createPartnerOffering(
+        "", 
+        "", 
+        "", 
+        "", 
+        "In Process", 
+        "Intelligent Connectivity", 
+        "Juniper", 
+        "HIGH", 
+        ["REST"], 
+        ["https://www.juniper.net/documentation/us/en/software/mist/automation-integration/topics/concept/restful-api-overview.html"], 
+        ["https://learningportal.juniper.net/juniper/user_activity_info.aspx?id=11584"], 
+        [""], 
+        [""], 
+        [""]);
+    createPartnerOffering(
+        "", 
+        "", 
+        "", 
+        "", 
+        "In Process", 
+        "Intelligent Connectivity", 
+        "CISCO", 
+        "HIGH", 
+        ["REST"], 
+        ["https://developer.cisco.com/docs/dna-center/overview/"], 
+        ["https://learningnetwork.cisco.com/s/cisco-dna-center-training-videos"], 
+        [""], 
+        [""], 
+        [""]);
+    createPartnerOffering(
+        "", 
+        "", 
+        "", 
+        "", 
+        "In Process", 
+        "Intelligent Connectivity", 
+        "CISCO", 
+        "HIGH", 
+        ["REST"], 
+        [""], 
+        [""], 
+        [""], 
+        [""], 
+        [""]);
+    createPartnerOffering(
+        "", 
+        "", 
+        "", 
+        "", 
+        "In Process", 
+        "Intelligent Connectivity", 
+        "CISCO", 
+        "HIGH", 
+        ["REST"], 
+        [""], 
+        [""], 
+        [""], 
+        [""], 
+        [""]);
+    createPartnerOffering(
+        "", 
+        "", 
+        "", 
+        "", 
+        "In Process", 
+        "Intelligent Connectivity", 
+        "CISCO", 
+        "HIGH", 
+        ["REST"], 
+        [""], 
+        [""], 
+        [""], 
+        [""], 
+        [""]);
+    createPartnerOffering(
+        "", 
+        "", 
+        "", 
+        "", 
+        "In Process", 
+        "Intelligent Connectivity", 
+        "CISCO", 
+        "HIGH", 
+        [], 
+        [], 
+        [], 
+        [], 
+        [], 
+        []);
+    createPartnerOffering(
+        "", 
+        "", 
+        "", 
+        "", 
+        "Meeting Scheduled", 
+        "Intelligent Connectivity", 
+        "HPE", 
+        "MEDIUM", 
+        ["REST"], 
+        ["https://developer.arubanetworks.com/central/docs/api-gateway, https://developer.greenlake.hpe.com/docs/greenlake/services"], 
+        ["https://sthpe-education.insite-la.com/us/en/training/portfolio/aruba.html; https://education.hpe.com/ww/en/training/portfolio/greenlake.html"], 
+        [""], 
+        [""], 
+        [""]);
+    createPartnerOffering(
+        "", 
+        "", 
+        "", 
+        "", 
+        "Meeting Scheduled", 
+        "Managed Devices", 
+        "HPE", 
+        "MEDIUM", 
+        ["REST"], 
+        ["https://developers.hp.com/hp-proactive-insights/api/hp-workforce-solutions-analytics-api"], 
+        ["https://education.hpe.com/ww/en/training/index.html"], 
+        [""], 
+        [""], 
+        [""]);
 }
 
 export async function deleteAll() {
@@ -249,6 +540,11 @@ export async function deleteAll() {
     const allApiTypes = await CLIENT.models.ApiType.list();
     await Promise.all(allApiTypes.data.map((d) => CLIENT.models.ApiType.delete(d)));
 
+    // AuthenticationType
+    const allAuthenticationTypes = await CLIENT.models.AuthenticationType.list();
+    await Promise.all(allAuthenticationTypes.data.map((d) => CLIENT.models.AuthenticationType.delete(d)));
+
+    // PartnerOfferings
     const allPartnerOfferings = await CLIENT.models.PartnerOffering.list();
     await Promise.all(allPartnerOfferings.data.map((d) => CLIENT.models.PartnerOffering.delete(d)));
 }
