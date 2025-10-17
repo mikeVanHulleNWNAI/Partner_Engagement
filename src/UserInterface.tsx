@@ -7,6 +7,7 @@ import ApiList from "./ApiList";
 import EditPartnerOfferingForm from "./EditPartnerOfferingForm";
 import PartnerOfferingTile from "./PartnerOfferingTile";
 import { partnerOfferingType } from "./Types";
+import { PartnerOfferingSelectionSet } from "./Utils/PartnerOfferingSelectionSet";
 
 const ProductOfferingItem = memo<{ partnerOffering: partnerOfferingType; onClick: () => void }>(
   ({ partnerOffering, onClick }) => (
@@ -25,32 +26,34 @@ function UserInterface() {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
   useEffect(() => {
-    const partnerOfferingSubscription = CLIENT.models.PartnerOffering.observeQuery({
-      selectionSet: [
-        'id',
-        'offeringName',
-        'contactInfo',
-        'dashboard',
-        'notes',
-        'status.name',
-        'nwnOffering.name',
-        'nwnOffering.manager.name',
-        'company.name',
-        'priority.name',
-        'apis.id',
-        'apis.docLink',
-        'apis.trainingLink',
-        'apis.sandboxEnvironment',
-        'apis.endpoint',
-        'apis.apiType.name',
-        'apis.authenticationType.name',
-        'apis.authenticationInfo',
-      ]
-    }).subscribe({
-      next: (data) => {
-        const partnerOfferingMap = data.items.map(partnerOffering => ({
-          ...partnerOffering,
-        }))
+    const partnerOfferingSubscription = CLIENT.models.PartnerOffering.observeQuery(
+      { selectionSet: PartnerOfferingSelectionSet }
+    ).subscribe({
+      next: async (data) => {
+        // Check if any items have null status
+        const hasNullStatus = data.items.some(item => item.status === null);
+
+        if (hasNullStatus) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+
+        // This code fixes https://github.com/aws-amplify/amplify-js/issues/13267 .
+        // Which is considered a bug.  When a new record is inserted into GraphQL,
+        // the item returned to the observable does not have any of its nested items
+        // populated.  This code finds items that have item.status as null.  It
+        // looks in the GraphQL database and replaces those items with good ones.
+        const partnerOfferingMap = (await Promise.all(
+          data.items.map(async (item) => {
+            if (item.status === null) {
+              const refetchedItem = await CLIENT.models.PartnerOffering.get(
+                { id: item.id },
+                { selectionSet: PartnerOfferingSelectionSet }
+              );
+              return refetchedItem.data;
+            }
+            return item;
+          })
+        )).filter((item): item is partnerOfferingType => item !== null && item !== undefined);
 
         setPartnerOfferings(partnerOfferingMap);
       }
@@ -92,7 +95,7 @@ function UserInterface() {
         <div className="p-6 mt-14">
           {activePartnerOffering ? (
             <div>
-              <button hidden onClick={async () => {
+              <button onClick={async () => {
                 await createPartnerOffering(
                   "Test 1234",
                   "Pragti Aggarwal <pragti@apexaiq.com>; Engineering support: lokesh@apexaiq.com",
@@ -131,9 +134,6 @@ function UserInterface() {
                     <div><strong>NWN Offering: </strong>{activePartnerOffering.nwnOffering.name}</div>
                     <div><strong>Company: </strong>{activePartnerOffering.company.name}</div>
                     <div><strong>Priority: </strong>{activePartnerOffering.priority.name}</div>
-
-
-
                     <ApiList
                       partnerOffering={activePartnerOffering}
                     />
