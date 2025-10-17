@@ -311,7 +311,7 @@ async function createAllPartnerOfferings() {
         [""],
         [""]);
     createPartnerOffering(
-        "",
+        "AWS",
         "",
         "",
         "",
@@ -326,7 +326,7 @@ async function createAllPartnerOfferings() {
         ["", ""],
         ["", ""]);
     createPartnerOffering(
-        "",
+        "Azure",
         "",
         "",
         "",
@@ -356,7 +356,7 @@ async function createAllPartnerOfferings() {
         [""],
         [""]);
     createPartnerOffering(
-        "",
+        "Connect",
         "Vu Le <vumle@amazon.com>",
         "https://console.aws.amazon.com/",
         "",
@@ -371,7 +371,7 @@ async function createAllPartnerOfferings() {
         [""],
         [""]);
     createPartnerOffering(
-        "",
+        "Intune",
         "",
         "",
         "",
@@ -386,7 +386,7 @@ async function createAllPartnerOfferings() {
         [""],
         [""]);
     createPartnerOffering(
-        "",
+        "Teams",
         "",
         "",
         "",
@@ -401,7 +401,7 @@ async function createAllPartnerOfferings() {
         [""],
         [""]);
     createPartnerOffering(
-        "",
+        "MIST",
         "",
         "",
         "",
@@ -416,7 +416,7 @@ async function createAllPartnerOfferings() {
         [""],
         [""]);
     createPartnerOffering(
-        "",
+        "DNA Center",
         "",
         "",
         "",
@@ -431,22 +431,7 @@ async function createAllPartnerOfferings() {
         [""],
         [""]);
     createPartnerOffering(
-        "",
-        "",
-        "",
-        "",
-        "In Process",
-        "Intelligent Connectivity",
-        "CISCO",
-        "HIGH",
-        ["REST"],
-        [""],
-        [""],
-        [""],
-        [""],
-        [""]);
-    createPartnerOffering(
-        "",
+        "1000 eyes",
         "",
         "",
         "",
@@ -461,7 +446,7 @@ async function createAllPartnerOfferings() {
         [""],
         [""]);
     createPartnerOffering(
-        "",
+        "Cat Center",
         "",
         "",
         "",
@@ -476,7 +461,22 @@ async function createAllPartnerOfferings() {
         [""],
         [""]);
     createPartnerOffering(
+        "Meraki",
         "",
+        "",
+        "",
+        "In Process",
+        "Intelligent Connectivity",
+        "CISCO",
+        "HIGH",
+        ["REST"],
+        [""],
+        [""],
+        [""],
+        [""],
+        [""]);
+    createPartnerOffering(
+        "AIOps",
         "",
         "",
         "",
@@ -491,7 +491,7 @@ async function createAllPartnerOfferings() {
         [],
         []);
     createPartnerOffering(
-        "",
+        "Aruba Central",
         "",
         "",
         "",
@@ -506,7 +506,7 @@ async function createAllPartnerOfferings() {
         [""],
         [""]);
     createPartnerOffering(
-        "",
+        "Workspace Analytics",
         "",
         "",
         "",

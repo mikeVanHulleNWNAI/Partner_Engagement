@@ -1,62 +1,52 @@
-import { useCallback, useEffect, useState } from "react";
-import type { Schema } from "../amplify/data/resource";
+import { useEffect, useState } from "react";
 import { createInitialDataSettings, deleteAll } from "./Utils/CreateData"
 import { CLIENT } from "./Utils/Constants";
 import ItemGrid from "./ItemGrid";
-//import PartnerOfferingTile from "./PartnerOfferingTile";
 import Sidebar from "./Sidebar";
-//import ApiList from "./ApiList";
-import CompanyTile from "./CompanyTile";
 import ApiList from "./ApiList";
 import EditPartnerOfferingForm from "./EditPartnerOfferingForm";
+import PartnerOfferingTile from "./PartnerOfferingTile";
+import { partnerOfferingType } from "./Types";
 
 function UserInterface() {
-  //  const [partnerOfferings, setPartnerOfferings] = useState<Array<Schema["PartnerOffering"]["type"]>>([]);
-  const [companies, setCompanies] = useState<Array<Schema["Company"]["type"]>>([]);
-  const [apiTypes, setApiTypes] = useState<Array<Schema["ApiType"]["type"]>>([]);
+  const [partnerOfferings, setPartnerOfferings] = useState<partnerOfferingType[]>([]);
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  //  const [activePartnerOffering, setActivePartnerOffering] = useState<Schema["PartnerOffering"]["type"]>();
-  const [activeCompany, setActiveCompany] = useState<Schema["Company"]["type"]>();
-  const [activePartnerOfferings, setActivePartnerOfferings] = useState<Array<Schema["PartnerOffering"]["type"]>>([]);
+  const [activePartnerOffering, setActivePartnerOffering] = useState<partnerOfferingType>();
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
   useEffect(() => {
-    //    CLIENT.models.PartnerOffering.observeQuery().subscribe({
-    //      next: (data) => setPartnerOfferings([...data.items]),
-    //    });
-    const companiesSubscription = CLIENT.models.Company.observeQuery().subscribe({
-      next: (data) => setCompanies([...data.items]),
-    })
-    // the apiType table will not change often
-    const apiTypesSubscription = CLIENT.models.ApiType.observeQuery().subscribe({
-      next: (data) => setApiTypes([...data.items]),
+    const partnerOfferingSubscription = CLIENT.models.PartnerOffering.observeQuery({
+      selectionSet: [
+        'id',
+        'offeringName',
+        'nwnOffering.name',
+        'company.name',
+        'priority.name',
+        'apis.id',
+        'apis.endpoint',
+        'apis.docLink',
+        'apis.apiType.name'
+      ]
+    }).subscribe({
+      next: (data) => {
+        const partnerOfferingMap = data.items.map(partnerOffering => ({
+          ...partnerOffering,
+          apisMap: new Map(partnerOffering.apis.map(api => [api.id, api])),
+        }))
+
+        setPartnerOfferings(partnerOfferingMap);
+      }
     })
 
     return () => {
-      companiesSubscription.unsubscribe();
-      apiTypesSubscription.unsubscribe();
+      partnerOfferingSubscription.unsubscribe();
     }
   }, []);
 
-  const loadActivePartnerOfferings = useCallback(async () => {
-    if (activeCompany) {
-      const { data } = await activeCompany.partnerOfferings();
-      if (data) {
-        setActivePartnerOfferings(data);
-      }
-    }
-  }, [activeCompany]);
-
-  useEffect(() => {
-    loadActivePartnerOfferings();
-  }, [loadActivePartnerOfferings]);
-
   const activateSidebar = (
-    //    productOffering: Schema["PartnerOffering"]["type"],
-    company: Schema["Company"]["type"],
+    productOffering: partnerOfferingType,
   ) => {
-    //    setActivePartnerOffering(productOffering);
-    setActiveCompany(company);
+    setActivePartnerOffering(productOffering);
     setIsOpen(true);
   }
 
@@ -76,75 +66,45 @@ function UserInterface() {
   return (
     <main>
       <h1>My partnerOfferings</h1>
-      <button disabled className="select-none" onClick={async () => {
+      <button hidden className="select-none" onClick={async () => {
         await deleteAll();
         await createInitialDataSettings();
       }}>Delete and Restore</button>
       <Sidebar isOpen={isOpen} onClose={() => setIsOpen(false)}>
         <div className="p-6 mt-14">
-          {/*
           {activePartnerOffering ? (
             <div>
-              {activePartnerOffering.offeringName}
-              <ApiList
-                partnerOffering={activePartnerOffering}
-                apiTypes={apiTypes}
-              />
-            </div>
-          ) : (
-            "Loading..."
-          )}
-          */}
-          {activeCompany ? (
-            <div>
-              <button className="select-none" onClick={handleOpenPopup}>
-                Test form</button>
+              <button hidden className="select-none" onClick={handleOpenPopup}>
+                Test Form
+              </button>
               <EditPartnerOfferingForm
                 open={isPopupOpen}
                 onClose={handleClosePopup}
                 onSubmit={handleSubmitForm}
               />
-              <div className="text-3xl font-bold">Company: {activeCompany.name}</div>
-              <ul>
-                {
-                  activePartnerOfferings?.map((activePartnerOffering) => (
-                    <li>
-                      <div>
-                        <div className="text-2xl font-bold">
-                          {activePartnerOffering.offeringName}
-                        </div>
-                        <ApiList
-                          partnerOffering={activePartnerOffering}
-                          apiTypes={apiTypes}
-                        />
-                      </div>
-                    </li>
-                  ))
-                }
-              </ul>
+              <div>
+                <ul>
+                  <li>
+                    <div className="text-2xl font-bold">
+                      {activePartnerOffering.offeringName}
+                    </div>
+                    <ApiList
+                      partnerOffering={activePartnerOffering}
+                    />
+                  </li>
+                </ul>              </div>
             </div>
           ) : (
             "Loading..."
           )}
-
         </div>
       </Sidebar>
       <ItemGrid>
-        {/*
         {partnerOfferings.map((partnerOffering) => (
           <PartnerOfferingTile
             key={partnerOffering.id}
             partnerOffering={partnerOffering}
             onClick={() => activateSidebar(partnerOffering)}
-          />
-        ))}
-        */}
-        {companies.map((company) =>
-        (
-          <CompanyTile
-            key={company.id}
-            company={company}
-            onClick={() => activateSidebar(company)}
           />
         ))}
       </ItemGrid>

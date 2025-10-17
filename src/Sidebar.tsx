@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from 'react';
 
 // Sidebar Component
 interface SidebarProps {
@@ -7,6 +8,48 @@ interface SidebarProps {
 }
 
 function Sidebar({ isOpen, onClose, children }: SidebarProps) {
+  const [width, setWidth] = useState(384); // Default width (w-96 = 384px)
+  const [isResizing, setIsResizing] = useState(false);
+  const sidebarRef = useRef<HTMLDivElement>(null);
+
+  const minWidth = 200;
+  const maxWidth = 800;
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing) return;
+
+      const windowWidth = window.innerWidth;
+      const newWidth = windowWidth - e.clientX;
+      
+      if (newWidth >= minWidth && newWidth <= maxWidth) {
+        setWidth(newWidth);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'ew-resize';
+      document.body.style.userSelect = 'none';
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isResizing]);
+
+  const handleMouseDown = () => {
+    setIsResizing(true);
+  };
+
   return (
     <>
       {/* Overlay */}
@@ -19,10 +62,23 @@ function Sidebar({ isOpen, onClose, children }: SidebarProps) {
 
       {/* Sidebar */}
       <div
-        className={`overflow-y-auto fixed top-0 right-0 h-full sm:w-40 md:w-60 lg:w-100 bg-white shadow-xl z-40 transform transition-transform duration-300 ease-in-out ${
+        ref={sidebarRef}
+        style={{ width: `${width}px` }}
+        className={`overflow-y-auto fixed top-0 right-0 h-full bg-white shadow-xl z-40 transform transition-transform duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
+        {/* Resize Handle */}
+        <div
+          onMouseDown={handleMouseDown}
+          className="absolute left-0 top-0 h-full w-1 cursor-ew-resize bg-gray-300 hover:bg-blue-500 active:bg-blue-600 transition-colors"
+          style={{
+            background: isResizing ? '#3b82f6' : undefined,
+          }}
+        >
+          <div className="absolute left-0 top-0 h-full w-2 -translate-x-1/2" />
+        </div>
+
         {children}
       </div>
     </>

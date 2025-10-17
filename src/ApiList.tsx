@@ -1,61 +1,19 @@
-import { useEffect, useState } from "react";
-import type { Schema } from "../amplify/data/resource";
+import { partnerOfferingType } from "./Types";
 
 // Component to load and display APIs
 function ApiList(
-  { partnerOffering, apiTypes }:
+  { partnerOffering }:
     {
-      partnerOffering: Schema["PartnerOffering"]["type"]
-      apiTypes: Array<Schema["ApiType"]["type"]>
+      partnerOffering: partnerOfferingType
     }
   ) {
-  const [apis, setApis] = useState<Array<Schema["Api"]["type"]>>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function loadApis() {
-      setLoading(true);
-      setError(null);
-      try {
-        const { data, errors } = await partnerOffering.apis();
-        
-        if (errors) {
-          setError("Failed to load APIs");
-          console.error(errors);
-        } else if (data) {
-          setApis(data);
-        }
-      } catch (err) {
-        setError("An unexpected error occurred");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadApis();
-  }, [partnerOffering]);
-
-  if (loading) {
-    return <span>Loading APIs...</span>;
-  }
-
-  if (error) {
-    return <span style={{ color: 'red' }}>{error}</span>;
-  }
-
-  if (apis.length === 0) {
-    return <span>No APIs found.</span>;
-  }
 
   return (
     <ul>
-      {apis.map(api => {
-        const apiType = apiTypes.find(type => type.id === api.apiTypeId);
+      {partnerOffering.apis.map((api) => {
         return (
           <li key={api.id}>
-            {api.docLink} - {apiType?.name ?? 'Unknown Type'}
+            {api.docLink} - {api.apiType.name}
           </li>
         );
       })}
