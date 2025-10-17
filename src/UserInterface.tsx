@@ -4,7 +4,7 @@ import { createInitialDataSettings, deleteAll } from "./Utils/CreateData"
 import { CLIENT } from "./Utils/Constants";
 import ItemGrid from "./ItemGrid";
 //import PartnerOfferingTile from "./PartnerOfferingTile";
-import Sidebar from "./SideBar";
+import Sidebar from "./Sidebar";
 //import ApiList from "./ApiList";
 import CompanyTile from "./CompanyTile";
 import ApiList from "./ApiList";
@@ -76,7 +76,7 @@ function UserInterface() {
   return (
     <main>
       <h1>My partnerOfferings</h1>
-      <button className="select-none" onClick={async () => {
+      <button disabled className="select-none" onClick={async () => {
         await deleteAll();
         await createInitialDataSettings();
       }}>Delete and Restore</button>
