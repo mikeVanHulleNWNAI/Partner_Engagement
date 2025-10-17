@@ -10,10 +10,16 @@ function ApiList(
 
   return (
     <ul>
-      {partnerOffering.apis.map((api) => {
+      {partnerOffering.apis?.map((api) => {
         return (
           <li key={api.id}>
-            {api.docLink} - {api.apiType.name}
+            <div><strong>Api Type: </strong>{api.apiType.name}</div>
+            <div><strong>Doc link: </strong>{api.docLink}</div>
+            <div><strong>Training link: </strong>{api.trainingLink}</div>
+            <div><strong>Sandbox Environment: </strong>{api.sandboxEnvironment}</div>
+            <div><strong>Endpoint: </strong>{api.endpoint}</div>
+            <div><strong>Authentication info: </strong>{api.authenticationInfo}</div>
+            <div><strong>Authentication type: </strong>{api.authenticationType?.name}</div>
           </li>
         );
       })}

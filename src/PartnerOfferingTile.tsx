@@ -24,12 +24,12 @@ function PartnerOfferingTile({ partnerOffering, onClick }:
             onClick={onClick}
         >
             <div className="m-2">
-                {partnerOffering.nwnOffering.name}
-                <br/>
-                {partnerOffering.company.name}
-                <br/>
+                {partnerOffering.nwnOffering?.name}
+                <br />
+                {partnerOffering.company?.name}
+                <br />
                 {partnerOffering.offeringName}
-                <br/>
+                <br />
             </div>
         </div>
     );

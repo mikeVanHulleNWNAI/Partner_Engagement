@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { createInitialDataSettings, deleteAll } from "./Utils/CreateData"
+import { memo, useEffect, useState } from "react";
+import { createInitialDataSettings, createPartnerOffering, deleteAll } from "./Utils/CreateData"
 import { CLIENT } from "./Utils/Constants";
 import ItemGrid from "./ItemGrid";
 import Sidebar from "./Sidebar";
@@ -7,6 +7,16 @@ import ApiList from "./ApiList";
 import EditPartnerOfferingForm from "./EditPartnerOfferingForm";
 import PartnerOfferingTile from "./PartnerOfferingTile";
 import { partnerOfferingType } from "./Types";
+
+const ProductOfferingItem = memo<{ partnerOffering: partnerOfferingType; onClick: () => void }>(
+  ({ partnerOffering, onClick }) => (
+    <PartnerOfferingTile
+      key={partnerOffering.id}
+      partnerOffering={partnerOffering}
+      onClick={onClick}
+    />
+  )
+);
 
 function UserInterface() {
   const [partnerOfferings, setPartnerOfferings] = useState<partnerOfferingType[]>([]);
@@ -19,19 +29,27 @@ function UserInterface() {
       selectionSet: [
         'id',
         'offeringName',
+        'contactInfo',
+        'dashboard',
+        'notes',
+        'status.name',
         'nwnOffering.name',
+        'nwnOffering.manager.name',
         'company.name',
         'priority.name',
         'apis.id',
-        'apis.endpoint',
         'apis.docLink',
-        'apis.apiType.name'
+        'apis.trainingLink',
+        'apis.sandboxEnvironment',
+        'apis.endpoint',
+        'apis.apiType.name',
+        'apis.authenticationType.name',
+        'apis.authenticationInfo',
       ]
     }).subscribe({
       next: (data) => {
         const partnerOfferingMap = data.items.map(partnerOffering => ({
           ...partnerOffering,
-          apisMap: new Map(partnerOffering.apis.map(api => [api.id, api])),
         }))
 
         setPartnerOfferings(partnerOfferingMap);
@@ -74,6 +92,24 @@ function UserInterface() {
         <div className="p-6 mt-14">
           {activePartnerOffering ? (
             <div>
+              <button hidden onClick={async () => {
+                await createPartnerOffering(
+                  "Test 1234",
+                  "Pragti Aggarwal <pragti@apexaiq.com>; Engineering support: lokesh@apexaiq.com",
+                  "https://nwn.okta.com/app/UserHome",
+                  "",
+                  "Connected",
+                  "",
+                  "ApexaiQ",
+                  "LOW",
+                  ["REST"],
+                  [""],
+                  [""],
+                  [""],
+                  [""],
+                  [""]
+                );
+              }}>New Partner Offering</button>
               <button hidden className="select-none" onClick={handleOpenPopup}>
                 Test Form
               </button>
@@ -88,11 +124,22 @@ function UserInterface() {
                     <div className="text-2xl font-bold">
                       {activePartnerOffering.offeringName}
                     </div>
+                    <div><strong>ContactInfo: </strong>{activePartnerOffering.contactInfo}</div>
+                    <div><strong>Dashboard: </strong>{activePartnerOffering.dashboard}</div>
+                    <div><strong>Notes: </strong>{activePartnerOffering.notes}</div>
+                    <div><strong>Status: </strong>{activePartnerOffering.status.name}</div>
+                    <div><strong>NWN Offering: </strong>{activePartnerOffering.nwnOffering.name}</div>
+                    <div><strong>Company: </strong>{activePartnerOffering.company.name}</div>
+                    <div><strong>Priority: </strong>{activePartnerOffering.priority.name}</div>
+
+
+
                     <ApiList
                       partnerOffering={activePartnerOffering}
                     />
                   </li>
-                </ul>              </div>
+                </ul>
+              </div>
             </div>
           ) : (
             "Loading..."
@@ -101,7 +148,7 @@ function UserInterface() {
       </Sidebar>
       <ItemGrid>
         {partnerOfferings.map((partnerOffering) => (
-          <PartnerOfferingTile
+          <ProductOfferingItem
             key={partnerOffering.id}
             partnerOffering={partnerOffering}
             onClick={() => activateSidebar(partnerOffering)}
