@@ -23,8 +23,10 @@ function UserInterface() {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [activePartnerOffering, setActivePartnerOffering] = useState<partnerOfferingType>();
   const [isPopupOpen, setIsPopupOpen] = useState(false);
-  const [selectedNwnOffering, setSelectedNwnOffering] = useState<string | null>(null);
-  const [selectedApiType, setSelectedApiType] = useState<string | null>('MCP');
+  const [selectedManager, setSelectedManager] = useState<string | null>("");
+  const [selectedNwnOffering, setSelectedNwnOffering] = useState<string | null>("");
+  const [selectedApiType, setSelectedApiType] = useState<string | null>("");
+  const [managers, setManagers] = useState<Array<{ id: string; name: string }>>([]);
   const [nwnOfferings, setNwnOfferings] = useState<Array<{ id: string; name: string }>>([]);
   const [apiTypes, setApiTypes] = useState<Array<{ id: string; name: string }>>([]);
 
@@ -101,9 +103,10 @@ function UserInterface() {
         ))
           .filter((item): item is partnerOfferingType => item !== null && item !== undefined)
           .filter((item) => {
+            const matchesManager = !selectedManager || item.nwnOffering.manager?.name === selectedManager;
             const matchesNwnOffering = !selectedNwnOffering || item.nwnOffering?.name === selectedNwnOffering;
             const matchesApiType = !selectedApiType || item.apis?.some(api => api.apiType?.name === selectedApiType);
-            return matchesNwnOffering && matchesApiType;
+            return matchesManager && matchesNwnOffering && matchesApiType;
           })
           .sort((a, b) => {
             // Sort by nwnOffering.name first
@@ -133,7 +136,24 @@ function UserInterface() {
     return () => {
       partnerOfferingSubscription.unsubscribe();
     }
-  }, [selectedNwnOffering, selectedApiType]);
+  }, [selectedManager, selectedNwnOffering, selectedApiType]);
+
+  useEffect(() => {
+    const managerSubscription = CLIENT.models.Manager.observeQuery({
+      selectionSet: ['id', 'name']
+    }).subscribe({
+      next: (data) => {
+        const managers = data.items
+          .filter((item): item is { id: string; name: string } => item !== null && item !== undefined && item.name !== "")
+          .sort((a, b) => a.name.localeCompare(b.name));
+        setManagers(managers);
+      }
+    });
+
+    return () => {
+      managerSubscription.unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     const nwnOfferingSubscription = CLIENT.models.NwnOffering.observeQuery({
@@ -141,7 +161,7 @@ function UserInterface() {
     }).subscribe({
       next: (data) => {
         const offerings = data.items
-          .filter((item): item is { id: string; name: string } => item !== null && item !== undefined)
+          .filter((item): item is { id: string; name: string } => item !== null && item !== undefined && item.name !== "")
           .sort((a, b) => a.name.localeCompare(b.name));
         setNwnOfferings(offerings);
       }
@@ -158,7 +178,7 @@ function UserInterface() {
     }).subscribe({
       next: (data) => {
         const types = data.items
-          .filter((item): item is { id: string; name: string } => item !== null && item !== undefined)
+          .filter((item): item is { id: string; name: string } => item !== null && item !== undefined && item.name !== "")
           .sort((a, b) => a.name.localeCompare(b.name));
         setApiTypes(types);
       }
@@ -191,7 +211,62 @@ function UserInterface() {
 
   return (
     <main>
-      <h1>My partnerOfferings</h1>
+      <div className="mb-4 flex gap-4">
+        <div>
+          <label htmlFor="manager-select" className="mr-2 font-semibold">
+            Manager:
+          </label>
+          <select
+            id="manager-select"
+            value={selectedManager || ''}
+            onChange={(e) => setSelectedManager(e.target.value || null)}
+            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">All Managers</option>
+            {managers.map((manager) => (
+              <option key={manager.id} value={manager.name}>
+                {manager.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label htmlFor="nwnOffering-select" className="mr-2 font-semibold">
+            NWN Offering:
+          </label>
+          <select
+            id="nwnOffering-select"
+            value={selectedNwnOffering || ''}
+            onChange={(e) => setSelectedNwnOffering(e.target.value || null)}
+            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">All Offerings</option>
+            {nwnOfferings.map((offering) => (
+              <option key={offering.id} value={offering.name}>
+                {offering.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label htmlFor="apiType-select" className="mr-2 font-semibold">
+            API Type:
+          </label>
+          <select
+            id="apiType-select"
+            value={selectedApiType || ''}
+            onChange={(e) => setSelectedApiType(e.target.value || null)}
+            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">All Types</option>
+            {apiTypes.map((type) => (
+              <option key={type.id} value={type.name}>
+                {type.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
       <button hidden className="select-none" onClick={async () => {
         await deleteAll();
         await createInitialDataSettings();
