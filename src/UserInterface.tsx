@@ -7,7 +7,6 @@ import ApiList from "./ApiList";
 import EditPartnerOfferingForm from "./EditPartnerOfferingForm";
 import PartnerOfferingTile from "./PartnerOfferingTile";
 import { partnerOfferingType } from "./Types";
-import { PartnerOfferingSelectionSet } from "./Utils/PartnerOfferingSelectionSet";
 
 const ProductOfferingItem = memo<{ partnerOffering: partnerOfferingType; onClick: () => void }>(
   ({ partnerOffering, onClick }) => (
@@ -24,10 +23,35 @@ function UserInterface() {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [activePartnerOffering, setActivePartnerOffering] = useState<partnerOfferingType>();
   const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [selectedNwnOffering, setSelectedNwnOffering] = useState<string | null>(null);
+  const [selectedApiType, setSelectedApiType] = useState<string | null>('MCP');
+  const [nwnOfferings, setNwnOfferings] = useState<Array<{ id: string; name: string }>>([]);
+  const [apiTypes, setApiTypes] = useState<Array<{ id: string; name: string }>>([]);
 
   useEffect(() => {
     const partnerOfferingSubscription = CLIENT.models.PartnerOffering.observeQuery(
-      { selectionSet: PartnerOfferingSelectionSet }
+      {
+        selectionSet: [
+          'id',
+          'offeringName',
+          'contactInfo',
+          'dashboard',
+          'notes',
+          'status.name',
+          'nwnOffering.name',
+          'nwnOffering.manager.name',
+          'company.name',
+          'priority.name',
+          'apis.id',
+          'apis.docLink',
+          'apis.trainingLink',
+          'apis.sandboxEnvironment',
+          'apis.endpoint',
+          'apis.apiType.name',
+          'apis.authenticationType.name',
+          'apis.authenticationInfo',
+        ]
+      }
     ).subscribe({
       next: async (data) => {
         // Check if any items have null status
@@ -47,13 +71,60 @@ function UserInterface() {
             if (item.status === null) {
               const refetchedItem = await CLIENT.models.PartnerOffering.get(
                 { id: item.id },
-                { selectionSet: PartnerOfferingSelectionSet }
+                {
+                  selectionSet: [
+                    'id',
+                    'offeringName',
+                    'contactInfo',
+                    'dashboard',
+                    'notes',
+                    'status.name',
+                    'nwnOffering.name',
+                    'nwnOffering.manager.name',
+                    'company.name',
+                    'priority.name',
+                    'apis.id',
+                    'apis.docLink',
+                    'apis.trainingLink',
+                    'apis.sandboxEnvironment',
+                    'apis.endpoint',
+                    'apis.apiType.name',
+                    'apis.authenticationType.name',
+                    'apis.authenticationInfo',
+                  ]
+                }
               );
               return refetchedItem.data;
             }
             return item;
           })
-        )).filter((item): item is partnerOfferingType => item !== null && item !== undefined);
+        ))
+          .filter((item): item is partnerOfferingType => item !== null && item !== undefined)
+          .filter((item) => {
+            const matchesNwnOffering = !selectedNwnOffering || item.nwnOffering?.name === selectedNwnOffering;
+            const matchesApiType = !selectedApiType || item.apis?.some(api => api.apiType?.name === selectedApiType);
+            return matchesNwnOffering && matchesApiType;
+          })
+          .sort((a, b) => {
+            // Sort by nwnOffering.name first
+            const nwnOfferingA = a.nwnOffering?.name?.toLowerCase() || '';
+            const nwnOfferingB = b.nwnOffering?.name?.toLowerCase() || '';
+            if (nwnOfferingA !== nwnOfferingB) {
+              return nwnOfferingA.localeCompare(nwnOfferingB);
+            }
+
+            // Then by company.name
+            const companyA = a.company?.name?.toLowerCase() || '';
+            const companyB = b.company?.name?.toLowerCase() || '';
+            if (companyA !== companyB) {
+              return companyA.localeCompare(companyB);
+            }
+
+            // Finally by offeringName
+            const offeringA = a.offeringName?.toLowerCase() || '';
+            const offeringB = b.offeringName?.toLowerCase() || '';
+            return offeringA.localeCompare(offeringB);
+          });
 
         setPartnerOfferings(partnerOfferingMap);
       }
@@ -62,6 +133,40 @@ function UserInterface() {
     return () => {
       partnerOfferingSubscription.unsubscribe();
     }
+  }, [selectedNwnOffering, selectedApiType]);
+
+  useEffect(() => {
+    const nwnOfferingSubscription = CLIENT.models.NwnOffering.observeQuery({
+      selectionSet: ['id', 'name']
+    }).subscribe({
+      next: (data) => {
+        const offerings = data.items
+          .filter((item): item is { id: string; name: string } => item !== null && item !== undefined)
+          .sort((a, b) => a.name.localeCompare(b.name));
+        setNwnOfferings(offerings);
+      }
+    });
+
+    return () => {
+      nwnOfferingSubscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    const apiTypeSubscription = CLIENT.models.ApiType.observeQuery({
+      selectionSet: ['id', 'name']
+    }).subscribe({
+      next: (data) => {
+        const types = data.items
+          .filter((item): item is { id: string; name: string } => item !== null && item !== undefined)
+          .sort((a, b) => a.name.localeCompare(b.name));
+        setApiTypes(types);
+      }
+    });
+
+    return () => {
+      apiTypeSubscription.unsubscribe();
+    };
   }, []);
 
   const activateSidebar = (
