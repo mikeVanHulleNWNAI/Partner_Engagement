@@ -18,18 +18,30 @@ function PartnerOfferingTile({ partnerOffering, onClick }:
         }
     }
 
+    // Map Tailwind classes to actual color values
+    const colorMap: { [key: string]: string } = {
+        "bg-gray-200": "#f3f4f6",
+        "bg-yellow-200": "#fef9c3",
+        "bg-red-200": "#fee2e2"
+    };
+
     return (
         <div
             className={`${tileColor} rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden select-none ${onClick ? 'cursor-pointer' : ''}`}
             onClick={onClick}
         >
             <div className="m-2">
-                {partnerOffering.nwnOffering?.name}
-                <br />
-                {partnerOffering.company?.name}
-                <br />
-                {partnerOffering.offeringName}
-                <br />
+                <ul style={{ backgroundColor: 'black' }}>
+                    <li style={{ backgroundColor: colorMap[tileColor] }}>
+                        {partnerOffering.nwnOffering?.name}
+                    </li>
+                    <li style={{ backgroundColor: colorMap[tileColor] }}>
+                        {partnerOffering.company?.name}
+                    </li>
+                    <li style={{ backgroundColor: colorMap[tileColor] }}>
+                        {partnerOffering.offeringName}
+                    </li>
+                </ul>
             </div>
         </div>
     );
