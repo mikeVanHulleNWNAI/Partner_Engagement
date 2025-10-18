@@ -1,5 +1,5 @@
 import { memo, useEffect, useState } from "react";
-import { createInitialDataSettings, createPartnerOffering, deleteAll } from "./Utils/CreateData"
+import { createInitialDataSettings, createPartnerOffering, deleteAll, deletePartnerOffering } from "./Utils/CreateData"
 import { CLIENT } from "./Utils/Constants";
 import ItemGrid from "./ItemGrid";
 import Sidebar from "./Sidebar";
@@ -189,6 +189,26 @@ function UserInterface() {
     };
   }, []);
 
+  const deleteTemps = async() => {
+    const test = partnerOfferings.filter((value) => value.company.name === "ApexaiQ");
+    test.forEach(async(value) => await deletePartnerOffering(value.id));
+    await createPartnerOffering(
+        "",
+        "Pragti Aggarwal <pragti@apexaiq.com>; Engineering support: lokesh@apexaiq.com",
+        "https://nwn.okta.com/app/UserHome",
+        "",
+        "Connected",
+        "",
+        "ApexaiQ",
+        "LOW",
+        ["REST"],
+        ["https://app.apexaiq.com/docs"],
+        ["https://www.apexaiq.com/resources/"],
+        [""],
+        [""],
+        [""]);
+  }
+
   const activateSidebar = (
     productOffering: partnerOfferingType,
   ) => {
@@ -271,11 +291,14 @@ function UserInterface() {
         await deleteAll();
         await createInitialDataSettings();
       }}>Delete and Restore</button>
+      <button hidden className="select-none" onClick={async () => {
+        await deleteTemps();
+      }}>Delete temps</button>
       <Sidebar isOpen={isOpen} onClose={() => setIsOpen(false)}>
         <div className="p-6 mt-14">
           {activePartnerOffering ? (
             <div>
-              <button onClick={async () => {
+              <button hidden onClick={async () => {
                 await createPartnerOffering(
                   "Test 1234",
                   "Pragti Aggarwal <pragti@apexaiq.com>; Engineering support: lokesh@apexaiq.com",

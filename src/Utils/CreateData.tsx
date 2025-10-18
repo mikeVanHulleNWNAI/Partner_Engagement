@@ -163,6 +163,38 @@ export async function createPartnerOffering(
     });
 }
 
+export async function deletePartnerOffering(id: string) {
+    try {
+        // First, get the partner offering with its APIs
+        const partnerOfferingToDelete = await CLIENT.models.PartnerOffering.get(
+            { id: id },
+            {
+                selectionSet: ['id', 'apis.id']
+            }
+        );
+
+        // Delete all associated APIs first
+        if (partnerOfferingToDelete?.data?.apis) {
+            // Call apis as a function to get the actual array
+            const apisResult = partnerOfferingToDelete.data.apis;
+            
+            if (apisResult && apisResult.length > 0) {
+                await Promise.all(
+                    apisResult.map(api =>
+                        CLIENT.models.Api.delete({ id: api.id })
+                    )
+                );
+            }
+        }
+
+        // Then delete the partner offering
+        await CLIENT.models.PartnerOffering.delete({ id });
+
+    } catch (error) {
+        console.error('Error deleting partner offering:', error);
+    }
+}
+
 // populate the database with initial values
 export async function createInitialDataSettings() {
     // Manager
