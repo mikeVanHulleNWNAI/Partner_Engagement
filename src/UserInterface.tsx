@@ -7,6 +7,7 @@ import ApiList from "./ApiList";
 import EditPartnerOfferingForm from "./EditPartnerOfferingForm";
 import PartnerOfferingTile from "./PartnerOfferingTile";
 import { partnerOfferingType } from "./Types";
+import { RenderLinkOrText } from "./RenderLinkOrText";
 
 // the memo may make redrawing more efficent
 const PartnerOfferingTileMemo = memo<{
@@ -348,6 +349,7 @@ function UserInterface() {
                     />
                     <div><strong>Manager: </strong>{activePartnerOffering.nwnOffering?.manager?.name}</div>
                     <div><strong>ContactInfo: </strong>{activePartnerOffering.contactInfo}</div>
+                    <RenderLinkOrText label="Dashboard: " value={activePartnerOffering.dashboard} />
                     <div><strong>Dashboard: </strong>{activePartnerOffering.dashboard}</div>
                     <div><strong>Notes: </strong>{activePartnerOffering.notes}</div>
                     <div><strong>Status: </strong>{activePartnerOffering.status.name}</div>

@@ -19,30 +19,30 @@ function PartnerOfferingTile({ partnerOffering, onClick, isHighlighted = false }
         }
     }
 
-    // Map Tailwind classes to actual color values
-    const colorMap: { [key: string]: string } = {
-        "bg-gray-200": "#f3f4f6",
-        "bg-yellow-200": "#fef9c3",
-        "bg-red-200": "#fee2e2"
-    };
-
     return (
         <div
-            className={`${tileColor} rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden select-none ${onClick ? 'cursor-pointer' : ''} ${isHighlighted ? 'ring-4 ring-blue-500 ring-offset-2' : ''}`}
+            className={`${tileColor} rounded-lg shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden select-none ${onClick ? 'cursor-pointer hover:scale-105' : ''} ${isHighlighted ? 'ring-4 ring-blue-500 ring-offset-2' : ''}`}
             onClick={onClick}
         >
-            <div className="m-2">
-                <ul style={{ backgroundColor: 'black' }}>
-                    <li style={{ backgroundColor: colorMap[tileColor] }}>
+            <div className="p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                    <h3 className="font-semibold text-sm text-gray-700 uppercase tracking-wide">
                         {partnerOffering.nwnOffering?.name}
-                    </li>
-                    <li style={{ backgroundColor: colorMap[tileColor] }}>
+                    </h3>
+                </div>
+                
+                <div className="border-l-4 border-gray-400 pl-3">
+                    <p className="text-lg font-bold text-gray-900">
                         {partnerOffering.company?.name}
-                    </li>
-                    <li style={{ backgroundColor: colorMap[tileColor] }}>
+                    </p>
+                </div>
+                
+                <div className="pt-2 border-t border-gray-300">
+                    <p className="text-sm text-gray-600">
                         {partnerOffering.offeringName}
-                    </li>
-                </ul>
+                    </p>
+                </div>
             </div>
         </div>
     );

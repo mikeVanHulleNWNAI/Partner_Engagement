@@ -1,22 +1,14 @@
-import { AppBar, Box, Container, Toolbar, Typography, } from "@mui/material";
+import { AppBar, Toolbar, Typography, } from "@mui/material";
 
 export default function NavBar() {
 
     return (
-        <Box sx={{ flexGrow: 1 }}>
-            <AppBar position="fixed"
-                sx={{
-                    backgroundImage: 'linear-gradient(135deg, #182a73 0%, #218aae 69%, #20a7ac 89%)',
-                }}>
-                <Container maxWidth='xl'>
-                    <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <Box>
-                            <Typography sx={{ position: 'relative' }} variant="h6" fontWeight='bold'>
-                                Partner Offerings
-                            </Typography>
-                        </Box>
-                    </Toolbar>
-                </Container>
-            </AppBar>
-        </Box>)
+        <AppBar position="fixed" sx={{ backgroundColor: '#b19367ff', boxShadow: 'none' }}>
+            <Toolbar sx={{ display: 'flex', justifyContent: 'flex-start', height: '64px', minHeight: '64px' }}>
+                <Typography sx={{ color: '#000000', position: 'relative', textAlign: 'left' }} variant="h5" fontWeight='bold'>
+                    Partner Offerings
+                </Typography>
+            </Toolbar>
+        </AppBar>
+    )
 }

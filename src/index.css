@@ -2,7 +2,7 @@
 
 body {
   margin: 0;
-  background: linear-gradient(180deg, rgb(117, 81, 194), rgb(255, 255, 255));
+  background: linear-gradient(180deg, #9487c5, #b2afbb);
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   height: 100vh;
   width: 100vw;
@@ -11,7 +11,7 @@ body {
 }
 
 main {
-  padding-top: 10vh;
+  padding-top: 104px;
 }
 
 button {
@@ -54,11 +54,17 @@ li {
   padding: 8px;
 }
 
-li:hover {
-  background: #dadbf9;
-}
-
 a {
   font-weight: 800;
   text-decoration: none;
+}
+
+.link {
+  color: #0000EE;
+  text-decoration: underline;
+  font-weight: normal;
+}
+
+.link:visited {
+  color: #551A8B;
 }
