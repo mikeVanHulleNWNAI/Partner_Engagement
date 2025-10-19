@@ -1,8 +1,7 @@
 
 // renders a link if it is found to be a link or text if it is not a link.
-export const RenderLinkOrText = ({ label, value }: { label: string; value: string | undefined }) => {
-  if (!value) return null;
-  
+export const RenderLinkOrText = ({ label, value }: { label: string; value: string }) => {
+
   const isValidUrl = (text: string) => {
     try {
       new URL(text);
