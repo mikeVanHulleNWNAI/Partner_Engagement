@@ -1,8 +1,12 @@
-import { AppBar, Toolbar, Typography } from "@mui/material";
+import { AppBar, Toolbar, Typography, CircularProgress } from "@mui/material";
 import { NAVBAR_COLOR } from "./Utils/Constants";
 import { adjustColorHSL } from "./Utils/adjustColor";
 
-export default function NavBar() {
+interface NavBarProps {
+    isLoading?: boolean;
+}
+
+export default function NavBar({ isLoading = false }: NavBarProps) {
     return (
         <AppBar 
             position="fixed" 
@@ -16,6 +20,15 @@ export default function NavBar() {
                 <Typography sx={{ color: '#000000', position: 'relative', textAlign: 'left' }} variant="h5" fontWeight='bold'>
                     Partner Offerings
                 </Typography>
+                {isLoading && (
+                    <CircularProgress 
+                        size={24} 
+                        sx={{ 
+                            marginLeft: 2,
+                            color: '#000000'
+                        }} 
+                    />
+                )}
             </Toolbar>
         </AppBar>
     )

@@ -6,6 +6,7 @@ import Sidebar from "./Sidebar";
 import ApiList from "./ApiList";
 import EditPartnerOfferingForm from "./EditPartnerOfferingForm";
 import PartnerOfferingTile from "./PartnerOfferingTile";
+import NavBar from "./NavBar";
 import { partnerOfferingType } from "./Types";
 import { RenderLinkOrText } from "./RenderLinkOrText";
 
@@ -53,6 +54,20 @@ function UserInterface() {
   const [managers, setManagers] = useState<Array<{ id: string; name: string }>>([]);
   const [nwnOfferings, setNwnOfferings] = useState<Array<{ id: string; name: string }>>([]);
   const [apiTypes, setApiTypes] = useState<Array<{ id: string; name: string }>>([]);
+
+  // Loading state
+  const [loadingStates, setLoadingStates] = useState({
+    partnerOfferings: true,
+    managers: true,
+    nwnOfferings: true,
+    apiTypes: true
+  });
+
+  // Compute overall loading state
+  const isLoading = useMemo(() => 
+    Object.values(loadingStates).some(state => state),
+    [loadingStates]
+  );
 
   // UI state
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -113,6 +128,7 @@ function UserInterface() {
           });
 
         setAllPartnerOfferings(partnerOfferingMap);
+        setLoadingStates(prev => ({ ...prev, partnerOfferings: false }));
       }
     });
 
@@ -133,6 +149,7 @@ function UserInterface() {
           )
           .sort((a, b) => a.name.localeCompare(b.name));
         setManagers(managers);
+        setLoadingStates(prev => ({ ...prev, managers: false }));
       }
     });
 
@@ -153,6 +170,7 @@ function UserInterface() {
           )
           .sort((a, b) => a.name.localeCompare(b.name));
         setNwnOfferings(offerings);
+        setLoadingStates(prev => ({ ...prev, nwnOfferings: false }));
       }
     });
 
@@ -173,6 +191,7 @@ function UserInterface() {
           )
           .sort((a, b) => a.name.localeCompare(b.name));
         setApiTypes(types);
+        setLoadingStates(prev => ({ ...prev, apiTypes: false }));
       }
     });
 
@@ -250,187 +269,190 @@ function UserInterface() {
   }, []);
 
   return (
-    <main className="p-4 mt-8">
-      {/* Filter Controls */}
-      <div className="mb-4 flex flex-wrap gap-4">
-        <div className="flex items-center">
-          <label htmlFor="manager-select" className="mr-2 font-semibold">
-            Manager:
-          </label>
-          <select
-            id="manager-select"
-            value={selectedManager}
-            onChange={(e) => setSelectedManager(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">All Managers</option>
-            {managers.map((manager) => (
-              <option key={manager.id} value={manager.name}>
-                {manager.name}
-              </option>
-            ))}
-          </select>
+    <>
+      <NavBar isLoading={isLoading} />
+      <main className="p-4 mt-8">
+        {/* Filter Controls */}
+        <div className="mb-4 flex flex-wrap gap-4">
+          <div className="flex items-center">
+            <label htmlFor="manager-select" className="mr-2 font-semibold">
+              Manager:
+            </label>
+            <select
+              id="manager-select"
+              value={selectedManager}
+              onChange={(e) => setSelectedManager(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All Managers</option>
+              {managers.map((manager) => (
+                <option key={manager.id} value={manager.name}>
+                  {manager.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center">
+            <label htmlFor="nwnOffering-select" className="mr-2 font-semibold">
+              NWN Offering:
+            </label>
+            <select
+              id="nwnOffering-select"
+              value={selectedNwnOffering}
+              onChange={(e) => setSelectedNwnOffering(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All Offerings</option>
+              {nwnOfferings.map((offering) => (
+                <option key={offering.id} value={offering.name}>
+                  {offering.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center">
+            <label htmlFor="apiType-select" className="mr-2 font-semibold">
+              API Type:
+            </label>
+            <select
+              id="apiType-select"
+              value={selectedApiType}
+              onChange={(e) => setSelectedApiType(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All Types</option>
+              {apiTypes.map((type) => (
+                <option key={type.id} value={type.name}>
+                  {type.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        <div className="flex items-center">
-          <label htmlFor="nwnOffering-select" className="mr-2 font-semibold">
-            NWN Offering:
-          </label>
-          <select
-            id="nwnOffering-select"
-            value={selectedNwnOffering}
-            onChange={(e) => setSelectedNwnOffering(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">All Offerings</option>
-            {nwnOfferings.map((offering) => (
-              <option key={offering.id} value={offering.name}>
-                {offering.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        {/* Debug Buttons (hidden) */}
+        <button
+          hidden
+          className="select-none"
+          onClick={handleDeleteAndRestore}
+        >
+          Delete and Restore
+        </button>
+        <button
+          hidden
+          className="select-none"
+          onClick={deleteTemps}
+        >
+          Delete temps
+        </button>
 
-        <div className="flex items-center">
-          <label htmlFor="apiType-select" className="mr-2 font-semibold">
-            API Type:
-          </label>
-          <select
-            id="apiType-select"
-            value={selectedApiType}
-            onChange={(e) => setSelectedApiType(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">All Types</option>
-            {apiTypes.map((type) => (
-              <option key={type.id} value={type.name}>
-                {type.name}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Debug Buttons (hidden) */}
-      <button
-        hidden
-        className="select-none"
-        onClick={handleDeleteAndRestore}
-      >
-        Delete and Restore
-      </button>
-      <button
-        hidden
-        className="select-none"
-        onClick={deleteTemps}
-      >
-        Delete temps
-      </button>
-
-      {/* Sidebar */}
-      <Sidebar isOpen={isOpen} onClose={handleCloseSidebar}>
-        <main>
-          <div className="p-6 bg-gray-100 min-h-screen">
-            {activePartnerOffering ? (
-              <div>
-                {/* Debug Buttons (hidden) */}
-                <button
-                  hidden
-                  onClick={async () => {
-                    await createPartnerOffering(
-                      "Test 1234",
-                      "Pragti Aggarwal <pragti@apexaiq.com>; Engineering support: lokesh@apexaiq.com",
-                      "https://nwn.okta.com/app/UserHome",
-                      "",
-                      "Connected",
-                      "",
-                      "ApexaiQ",
-                      "LOW",
-                      ["REST"],
-                      [""],
-                      [""],
-                      [""],
-                      [""],
-                      [""]
-                    );
-                  }}
-                >
-                  New Partner Offering
-                </button>
-                <button
-                  hidden
-                  className="select-none"
-                  onClick={handleOpenPopup}
-                >
-                  Test Form
-                </button>
-
-                <EditPartnerOfferingForm
-                  open={isPopupOpen}
-                  onClose={handleClosePopup}
-                  onSubmit={handleSubmitForm}
-                />
-
-                {/* Partner Offering Details */}
+        {/* Sidebar */}
+        <Sidebar isOpen={isOpen} onClose={handleCloseSidebar}>
+          <main>
+            <div className="p-6 bg-gray-100 min-h-screen">
+              {activePartnerOffering ? (
                 <div>
-                  <PartnerOfferingTile partnerOffering={activePartnerOffering} />
-                  <div className="mt-4 space-y-2">
-                    <div>
-                      <strong>Manager: </strong>
-                      {activePartnerOffering.nwnOffering?.manager?.name}
-                    </div>
-                    <div>
-                      <strong>Contact Info: </strong>
-                      {activePartnerOffering.contactInfo}
-                    </div>
-                    <RenderLinkOrText
-                      label="Dashboard: "
-                      value={activePartnerOffering.dashboard}
-                    />
-                    <div>
-                      <strong>Notes: </strong>
-                      {activePartnerOffering.notes}
-                    </div>
-                    <div>
-                      <strong>Status: </strong>
-                      {activePartnerOffering.status?.name}
-                    </div>
-                    <div>
-                      <strong>NWN Offering: </strong>
-                      {activePartnerOffering.nwnOffering?.name}
-                    </div>
-                    <div>
-                      <strong>Company: </strong>
-                      {activePartnerOffering.company?.name}
-                    </div>
-                    <div>
-                      <strong>Priority: </strong>
-                      {activePartnerOffering.priority?.name}
-                    </div>
+                  {/* Debug Buttons (hidden) */}
+                  <button
+                    hidden
+                    onClick={async () => {
+                      await createPartnerOffering(
+                        "Test 1234",
+                        "Pragti Aggarwal <pragti@apexaiq.com>; Engineering support: lokesh@apexaiq.com",
+                        "https://nwn.okta.com/app/UserHome",
+                        "",
+                        "Connected",
+                        "",
+                        "ApexaiQ",
+                        "LOW",
+                        ["REST"],
+                        [""],
+                        [""],
+                        [""],
+                        [""],
+                        [""]
+                      );
+                    }}
+                  >
+                    New Partner Offering
+                  </button>
+                  <button
+                    hidden
+                    className="select-none"
+                    onClick={handleOpenPopup}
+                  >
+                    Test Form
+                  </button>
 
-                    <ApiList partnerOffering={activePartnerOffering} />
+                  <EditPartnerOfferingForm
+                    open={isPopupOpen}
+                    onClose={handleClosePopup}
+                    onSubmit={handleSubmitForm}
+                  />
+
+                  {/* Partner Offering Details */}
+                  <div>
+                    <PartnerOfferingTile partnerOffering={activePartnerOffering} />
+                    <div className="mt-4 space-y-2">
+                      <div>
+                        <strong>Manager: </strong>
+                        {activePartnerOffering.nwnOffering?.manager?.name}
+                      </div>
+                      <div>
+                        <strong>Contact Info: </strong>
+                        {activePartnerOffering.contactInfo}
+                      </div>
+                      <RenderLinkOrText
+                        label="Dashboard: "
+                        value={activePartnerOffering.dashboard}
+                      />
+                      <div>
+                        <strong>Notes: </strong>
+                        {activePartnerOffering.notes}
+                      </div>
+                      <div>
+                        <strong>Status: </strong>
+                        {activePartnerOffering.status?.name}
+                      </div>
+                      <div>
+                        <strong>NWN Offering: </strong>
+                        {activePartnerOffering.nwnOffering?.name}
+                      </div>
+                      <div>
+                        <strong>Company: </strong>
+                        {activePartnerOffering.company?.name}
+                      </div>
+                      <div>
+                        <strong>Priority: </strong>
+                        {activePartnerOffering.priority?.name}
+                      </div>
+
+                      <ApiList partnerOffering={activePartnerOffering} />
+                    </div>
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div className="text-gray-500">No item selected</div>
-            )}
-          </div>
-        </main>
-      </Sidebar>
+              ) : (
+                <div className="text-gray-500">No item selected</div>
+              )}
+            </div>
+          </main>
+        </Sidebar>
 
-      {/* Item Grid */}
-      <ItemGrid>
-        {filteredPartnerOfferings.map((partnerOffering) => (
-          <PartnerOfferingTileMemo
-            key={partnerOffering.id}
-            partnerOffering={partnerOffering}
-            isHighlighted={activePartnerOffering?.id === partnerOffering.id}
-            onClick={() => activateSidebar(partnerOffering)}
-          />
-        ))}
-      </ItemGrid>
-    </main>
+        {/* Item Grid */}
+        <ItemGrid>
+          {filteredPartnerOfferings.map((partnerOffering) => (
+            <PartnerOfferingTileMemo
+              key={partnerOffering.id}
+              partnerOffering={partnerOffering}
+              isHighlighted={activePartnerOffering?.id === partnerOffering.id}
+              onClick={() => activateSidebar(partnerOffering)}
+            />
+          ))}
+        </ItemGrid>
+      </main>
+    </>
   );
 }
 

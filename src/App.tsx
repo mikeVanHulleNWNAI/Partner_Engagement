@@ -1,4 +1,3 @@
-import NavBar from './NavBar'
 import UserInterface from './UserInterface';
 import { BODY_COLOR } from "./Utils/Constants";
 import { adjustColorHSL } from "./Utils/adjustColor";
@@ -9,7 +8,6 @@ function App() {
 
   return (
     <div className="App">
-      <NavBar />
       <UserInterface />
     </div>
   );
