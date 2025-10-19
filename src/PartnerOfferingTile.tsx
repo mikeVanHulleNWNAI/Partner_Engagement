@@ -1,8 +1,9 @@
 import { partnerOfferingType } from "./Types";
 
-function PartnerOfferingTile({ partnerOffering, onClick }:
+function PartnerOfferingTile({ partnerOffering, onClick, isHighlighted = false }:
     {
         partnerOffering: partnerOfferingType
+        isHighlighted?: boolean
         onClick?: () => void
     }) {
 
@@ -27,7 +28,7 @@ function PartnerOfferingTile({ partnerOffering, onClick }:
 
     return (
         <div
-            className={`${tileColor} rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden select-none ${onClick ? 'cursor-pointer' : ''}`}
+            className={`${tileColor} rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden select-none ${onClick ? 'cursor-pointer' : ''} ${isHighlighted ? 'ring-4 ring-blue-500 ring-offset-2' : ''}`}
             onClick={onClick}
         >
             <div className="m-2">

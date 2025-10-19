@@ -8,15 +8,26 @@ import EditPartnerOfferingForm from "./EditPartnerOfferingForm";
 import PartnerOfferingTile from "./PartnerOfferingTile";
 import { partnerOfferingType } from "./Types";
 
-const ProductOfferingItem = memo<{ partnerOffering: partnerOfferingType; onClick: () => void }>(
-  ({ partnerOffering, onClick }) => (
-    <PartnerOfferingTile
-      key={partnerOffering.id}
-      partnerOffering={partnerOffering}
-      onClick={onClick}
-    />
-  )
-);
+// the memo may make redrawing more efficent
+const PartnerOfferingTileMemo = memo<{
+  partnerOffering: partnerOfferingType
+  isHighlighted?: boolean
+  onClick: () => void
+}>
+  (
+    ({
+      partnerOffering,
+      isHighlighted,
+      onClick,
+    }) => (
+      <PartnerOfferingTile
+        key={partnerOffering.id}
+        partnerOffering={partnerOffering}
+        isHighlighted={isHighlighted}
+        onClick={onClick}
+      />
+    )
+  );
 
 function UserInterface() {
   const [partnerOfferings, setPartnerOfferings] = useState<partnerOfferingType[]>([]);
@@ -189,24 +200,24 @@ function UserInterface() {
     };
   }, []);
 
-  const deleteTemps = async() => {
+  const deleteTemps = async () => {
     const test = partnerOfferings.filter((value) => value.company.name === "ApexaiQ");
-    test.forEach(async(value) => await deletePartnerOffering(value.id));
+    test.forEach(async (value) => await deletePartnerOffering(value.id));
     await createPartnerOffering(
-        "",
-        "Pragti Aggarwal <pragti@apexaiq.com>; Engineering support: lokesh@apexaiq.com",
-        "https://nwn.okta.com/app/UserHome",
-        "",
-        "Connected",
-        "",
-        "ApexaiQ",
-        "LOW",
-        ["REST"],
-        ["https://app.apexaiq.com/docs"],
-        ["https://www.apexaiq.com/resources/"],
-        [""],
-        [""],
-        [""]);
+      "",
+      "Pragti Aggarwal <pragti@apexaiq.com>; Engineering support: lokesh@apexaiq.com",
+      "https://nwn.okta.com/app/UserHome",
+      "",
+      "Connected",
+      "",
+      "ApexaiQ",
+      "LOW",
+      ["REST"],
+      ["https://app.apexaiq.com/docs"],
+      ["https://www.apexaiq.com/resources/"],
+      [""],
+      [""],
+      [""]);
   }
 
   const activateSidebar = (
@@ -294,7 +305,12 @@ function UserInterface() {
       <button hidden className="select-none" onClick={async () => {
         await deleteTemps();
       }}>Delete temps</button>
-      <Sidebar isOpen={isOpen} onClose={() => setIsOpen(false)}>
+      <Sidebar
+        isOpen={isOpen}
+        onClose={() => {
+          setActivePartnerOffering(undefined);
+          setIsOpen(false)
+        }}>
         <div className="p-6 mt-14">
           {activePartnerOffering ? (
             <div>
@@ -327,16 +343,17 @@ function UserInterface() {
               <div>
                 <ul>
                   <li>
-                    <div className="text-2xl font-bold">
-                      {activePartnerOffering.offeringName}
-                    </div>
+                    <PartnerOfferingTile
+                      partnerOffering={activePartnerOffering}
+                    />
+                    <div><strong>Manager: </strong>{activePartnerOffering.nwnOffering?.manager?.name}</div>
                     <div><strong>ContactInfo: </strong>{activePartnerOffering.contactInfo}</div>
                     <div><strong>Dashboard: </strong>{activePartnerOffering.dashboard}</div>
                     <div><strong>Notes: </strong>{activePartnerOffering.notes}</div>
                     <div><strong>Status: </strong>{activePartnerOffering.status.name}</div>
-                    <div><strong>NWN Offering: </strong>{activePartnerOffering.nwnOffering.name}</div>
-                    <div><strong>Company: </strong>{activePartnerOffering.company.name}</div>
-                    <div><strong>Priority: </strong>{activePartnerOffering.priority.name}</div>
+                    <div><strong>NWN Offering: </strong>{activePartnerOffering.nwnOffering?.name}</div>
+                    <div><strong>Company: </strong>{activePartnerOffering.company?.name}</div>
+                    <div><strong>Priority: </strong>{activePartnerOffering.priority?.name}</div>
                     <ApiList
                       partnerOffering={activePartnerOffering}
                     />
@@ -345,15 +362,16 @@ function UserInterface() {
               </div>
             </div>
           ) : (
-            "Loading..."
+            "Non selected"
           )}
         </div>
       </Sidebar>
       <ItemGrid>
         {partnerOfferings.map((partnerOffering) => (
-          <ProductOfferingItem
+          <PartnerOfferingTileMemo
             key={partnerOffering.id}
             partnerOffering={partnerOffering}
+            isHighlighted={activePartnerOffering?.id === partnerOffering.id}
             onClick={() => activateSidebar(partnerOffering)}
           />
         ))}
