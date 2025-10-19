@@ -271,7 +271,8 @@ function UserInterface() {
   return (
     <>
       <NavBar isLoading={isLoading} />
-      <main className="p-4 mt-8">
+      <main>
+        <br/>
         {/* Filter Controls */}
         <div className="mb-4 flex flex-wrap gap-4">
           <div className="flex items-center">
@@ -351,7 +352,7 @@ function UserInterface() {
         {/* Sidebar */}
         <Sidebar isOpen={isOpen} onClose={handleCloseSidebar}>
           <main>
-            <div className="p-6 bg-gray-100 min-h-screen">
+            <div className="p-4 bg-gray-100">
               {activePartnerOffering ? (
                 <div>
                   {/* Debug Buttons (hidden) */}
