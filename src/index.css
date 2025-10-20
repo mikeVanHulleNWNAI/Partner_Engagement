@@ -10,10 +10,6 @@ body {
   align-items: center;
 }
 
-main {
-  padding-top: 64px;
-}
-
 button {
   border-radius: 8px;
   border: 1px solid transparent;

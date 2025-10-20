@@ -26,29 +26,10 @@ const PartnerOfferingTileMemo = memo<{
   )
 );
 
-// Selection set constant to avoid duplication
-const PARTNER_OFFERING_SELECTION_SET = [
-  'id',
-  'offeringName',
-  'contactInfo',
-  'dashboard',
-  'notes',
-  'status.name',
-  'nwnOffering.name',
-  'nwnOffering.manager.name',
-  'company.name',
-  'priority.name',
-  'apis.id',
-  'apis.docLink',
-  'apis.trainingLink',
-  'apis.sandboxEnvironment',
-  'apis.endpoint',
-  'apis.apiType.name',
-  'apis.authenticationType.name',
-  'apis.authenticationInfo',
-] as const;
-
 function UserInterface() {
+  // NavBar height can not be less then 16
+  const navBarHeight: number = 16;
+
   // Data state
   const [allPartnerOfferings, setAllPartnerOfferings] = useState<partnerOfferingType[]>([]);
   const [managers, setManagers] = useState<Array<{ id: string; name: string }>>([]);
@@ -64,7 +45,7 @@ function UserInterface() {
   });
 
   // Compute overall loading state
-  const isLoading = useMemo(() => 
+  const isLoading = useMemo(() =>
     Object.values(loadingStates).some(state => state),
     [loadingStates]
   );
@@ -83,7 +64,26 @@ function UserInterface() {
   useEffect(() => {
     // Subscribe to PartnerOfferings
     const partnerOfferingSubscription = CLIENT.models.PartnerOffering.observeQuery({
-      selectionSet: PARTNER_OFFERING_SELECTION_SET
+      selectionSet: [
+        'id',
+        'offeringName',
+        'contactInfo',
+        'dashboard',
+        'notes',
+        'status.name',
+        'nwnOffering.name',
+        'nwnOffering.manager.name',
+        'company.name',
+        'priority.name',
+        'apis.id',
+        'apis.docLink',
+        'apis.trainingLink',
+        'apis.sandboxEnvironment',
+        'apis.endpoint',
+        'apis.apiType.name',
+        'apis.authenticationType.name',
+        'apis.authenticationInfo',
+      ]
     }).subscribe({
       next: async (data) => {
         // Check if any items have null status (Amplify bug workaround)
@@ -99,7 +99,28 @@ function UserInterface() {
             if (item.status === null) {
               const refetchedItem = await CLIENT.models.PartnerOffering.get(
                 { id: item.id },
-                { selectionSet: PARTNER_OFFERING_SELECTION_SET }
+                {
+                  selectionSet: [
+                    'id',
+                    'offeringName',
+                    'contactInfo',
+                    'dashboard',
+                    'notes',
+                    'status.name',
+                    'nwnOffering.name',
+                    'nwnOffering.manager.name',
+                    'company.name',
+                    'priority.name',
+                    'apis.id',
+                    'apis.docLink',
+                    'apis.trainingLink',
+                    'apis.sandboxEnvironment',
+                    'apis.endpoint',
+                    'apis.apiType.name',
+                    'apis.authenticationType.name',
+                    'apis.authenticationInfo',
+                  ]
+                }
               );
               return refetchedItem.data;
             }
@@ -257,9 +278,9 @@ function UserInterface() {
 
   return (
     <>
-      <NavBar isLoading={isLoading} />
-      <main>
-        <br/>
+      <NavBar isLoading={isLoading} height={navBarHeight}/>
+      <main className={`pt-${navBarHeight}`}>
+        <br />
         {/* Filter Controls */}
         <div className="mb-4 flex flex-wrap gap-4">
           <div className="flex items-center">
@@ -336,98 +357,6 @@ function UserInterface() {
           Delete temps
         </button>
 
-        {/* Sidebar */}
-        <Sidebar isOpen={isOpen} onClose={handleCloseSidebar}>
-          <main>
-            <div className="p-4 bg-gray-100">
-              {activePartnerOffering ? (
-                <div>
-                  {/* Debug Buttons (hidden) */}
-                  <button
-                    hidden
-                    onClick={async () => {
-                      await createPartnerOffering(
-                        "Test 1234",
-                        "Pragti Aggarwal <pragti@apexaiq.com>; Engineering support: lokesh@apexaiq.com",
-                        "https://nwn.okta.com/app/UserHome",
-                        "",
-                        "Connected",
-                        "",
-                        "ApexaiQ",
-                        "LOW",
-                        ["REST"],
-                        [""],
-                        [""],
-                        [""],
-                        [""],
-                        [""]
-                      );
-                    }}
-                  >
-                    New Partner Offering
-                  </button>
-                  <button
-                    hidden
-                    className="select-none"
-                    onClick={handleOpenPopup}
-                  >
-                    Test Form
-                  </button>
-
-                  <EditPartnerOfferingForm
-                    open={isPopupOpen}
-                    onClose={handleClosePopup}
-                    onSubmit={handleSubmitForm}
-                  />
-
-                  {/* Partner Offering Details */}
-                  <div>
-                    <PartnerOfferingTile partnerOffering={activePartnerOffering} />
-                    <div className="mt-4 space-y-2">
-                      <div>
-                        <strong>Manager: </strong>
-                        {activePartnerOffering.nwnOffering?.manager?.name}
-                      </div>
-                      <div>
-                        <strong>Contact Info: </strong>
-                        {activePartnerOffering.contactInfo}
-                      </div>
-                      <RenderLinkOrText
-                        label="Dashboard: "
-                        value={activePartnerOffering.dashboard}
-                      />
-                      <div>
-                        <strong>Notes: </strong>
-                        {activePartnerOffering.notes}
-                      </div>
-                      <div>
-                        <strong>Status: </strong>
-                        {activePartnerOffering.status?.name}
-                      </div>
-                      <div>
-                        <strong>NWN Offering: </strong>
-                        {activePartnerOffering.nwnOffering?.name}
-                      </div>
-                      <div>
-                        <strong>Company: </strong>
-                        {activePartnerOffering.company?.name}
-                      </div>
-                      <div>
-                        <strong>Priority: </strong>
-                        {activePartnerOffering.priority?.name}
-                      </div>
-
-                      <ApiList partnerOffering={activePartnerOffering} />
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-gray-500">No item selected</div>
-              )}
-            </div>
-          </main>
-        </Sidebar>
-
         {/* Item Grid */}
         <ItemGrid>
           {filteredPartnerOfferings.map((partnerOffering) => (
@@ -439,6 +368,101 @@ function UserInterface() {
             />
           ))}
         </ItemGrid>
+
+        {/* Sidebar */}
+        <Sidebar
+          isOpen={isOpen}
+          onClose={handleCloseSidebar}
+          backgroundColor='bg-gray-100'
+          positionFromTop={navBarHeight}
+        >
+          <div className="p-4">
+            {activePartnerOffering ? (
+              <div>
+                {/* Debug Buttons (hidden) */}
+                <button
+                  hidden
+                  onClick={async () => {
+                    await createPartnerOffering(
+                      "Test 1234",
+                      "Pragti Aggarwal <pragti@apexaiq.com>; Engineering support: lokesh@apexaiq.com",
+                      "https://nwn.okta.com/app/UserHome",
+                      "",
+                      "Connected",
+                      "",
+                      "ApexaiQ",
+                      "LOW",
+                      ["REST"],
+                      [""],
+                      [""],
+                      [""],
+                      [""],
+                      [""]
+                    );
+                  }}
+                >
+                  New Partner Offering
+                </button>
+                <button
+                  hidden
+                  className="select-none"
+                  onClick={handleOpenPopup}
+                >
+                  Test Form
+                </button>
+
+                <EditPartnerOfferingForm
+                  open={isPopupOpen}
+                  onClose={handleClosePopup}
+                  onSubmit={handleSubmitForm}
+                />
+
+                {/* Partner Offering Details */}
+                <div>
+                  <PartnerOfferingTile partnerOffering={activePartnerOffering} />
+                  <div className="mt-4 space-y-2">
+                    <div>
+                      <strong>Manager: </strong>
+                      {activePartnerOffering.nwnOffering?.manager?.name}
+                    </div>
+                    <div>
+                      <strong>Contact Info: </strong>
+                      {activePartnerOffering.contactInfo}
+                    </div>
+                    <RenderLinkOrText
+                      label="Dashboard: "
+                      value={activePartnerOffering.dashboard}
+                    />
+                    <div>
+                      <strong>Notes: </strong>
+                      {activePartnerOffering.notes}
+                    </div>
+                    <div>
+                      <strong>Status: </strong>
+                      {activePartnerOffering.status?.name}
+                    </div>
+                    <div>
+                      <strong>NWN Offering: </strong>
+                      {activePartnerOffering.nwnOffering?.name}
+                    </div>
+                    <div>
+                      <strong>Company: </strong>
+                      {activePartnerOffering.company?.name}
+                    </div>
+                    <div>
+                      <strong>Priority: </strong>
+                      {activePartnerOffering.priority?.name}
+                    </div>
+
+                    <ApiList partnerOffering={activePartnerOffering} />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-gray-500">No item selected</div>
+            )}
+          </div>
+        </Sidebar>
       </main>
     </>
   );

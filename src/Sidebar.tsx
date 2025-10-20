@@ -1,13 +1,22 @@
 import { useState, useRef, useEffect } from 'react';
+import { ChevronRight } from 'lucide-react';
 
 // Sidebar Component
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
   children: React.ReactNode;
+  backgroundColor?: string;
+  positionFromTop: number;
 }
 
-function Sidebar({ isOpen, onClose, children }: SidebarProps) {
+function Sidebar({ 
+    isOpen, 
+    onClose, 
+    children, 
+    backgroundColor = 'bg-white',
+    positionFromTop = 16
+  }: SidebarProps) {
   const [width, setWidth] = useState(384); // Default width (w-96 = 384px)
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
@@ -21,7 +30,7 @@ function Sidebar({ isOpen, onClose, children }: SidebarProps) {
 
       const windowWidth = window.innerWidth;
       const newWidth = windowWidth - e.clientX;
-      
+
       if (newWidth >= minWidth && newWidth <= maxWidth) {
         setWidth(newWidth);
       }
@@ -64,9 +73,8 @@ function Sidebar({ isOpen, onClose, children }: SidebarProps) {
       <div
         ref={sidebarRef}
         style={{ width: `${width}px` }}
-        className={`overflow-y-auto fixed top-0 right-0 h-full bg-white shadow-xl z-40 transform transition-transform duration-300 ease-in-out ${
-          isOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}
+        className={`overflow-y-auto fixed top-${positionFromTop} right-0 h-full ${backgroundColor} shadow-xl z-40 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}
       >
         {/* Resize Handle */}
         <div
@@ -78,7 +86,15 @@ function Sidebar({ isOpen, onClose, children }: SidebarProps) {
         >
           <div className="absolute left-0 top-0 h-full w-2 -translate-x-1/2" />
         </div>
-
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="z-50 !p-1.5 !rounded-md !bg-white !hover:bg-gray-100 !border !border-gray-300 shadow-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          aria-label="Close sidebar"
+          title="Close sidebar"
+        >
+          <ChevronRight className="w-4 h-4 text-gray-600" />
+        </button>
         {children}
       </div>
     </>
