@@ -79,8 +79,9 @@ function UserInterface() {
   const [selectedNwnOffering, setSelectedNwnOffering] = useState<string>("");
   const [selectedApiType, setSelectedApiType] = useState<string>("");
 
-  // Subscribe to PartnerOfferings (without filters in subscription)
+  // Combined subscription effect for all data
   useEffect(() => {
+    // Subscribe to PartnerOfferings
     const partnerOfferingSubscription = CLIENT.models.PartnerOffering.observeQuery({
       selectionSet: PARTNER_OFFERING_SELECTION_SET
     }).subscribe({
@@ -132,13 +133,7 @@ function UserInterface() {
       }
     });
 
-    return () => {
-      partnerOfferingSubscription.unsubscribe();
-    };
-  }, []);
-
-  // Subscribe to Managers
-  useEffect(() => {
+    // Subscribe to Managers
     const managerSubscription = CLIENT.models.Manager.observeQuery({
       selectionSet: ['id', 'name']
     }).subscribe({
@@ -153,13 +148,7 @@ function UserInterface() {
       }
     });
 
-    return () => {
-      managerSubscription.unsubscribe();
-    };
-  }, []);
-
-  // Subscribe to NWN Offerings
-  useEffect(() => {
+    // Subscribe to NWN Offerings
     const nwnOfferingSubscription = CLIENT.models.NwnOffering.observeQuery({
       selectionSet: ['id', 'name']
     }).subscribe({
@@ -174,13 +163,7 @@ function UserInterface() {
       }
     });
 
-    return () => {
-      nwnOfferingSubscription.unsubscribe();
-    };
-  }, []);
-
-  // Subscribe to API Types
-  useEffect(() => {
+    // Subscribe to API Types
     const apiTypeSubscription = CLIENT.models.ApiType.observeQuery({
       selectionSet: ['id', 'name']
     }).subscribe({
@@ -195,7 +178,11 @@ function UserInterface() {
       }
     });
 
+    // Cleanup all subscriptions
     return () => {
+      partnerOfferingSubscription.unsubscribe();
+      managerSubscription.unsubscribe();
+      nwnOfferingSubscription.unsubscribe();
       apiTypeSubscription.unsubscribe();
     };
   }, []);
