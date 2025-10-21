@@ -8,34 +8,47 @@ interface NavBarProps {
 }
 
 export default function NavBar({ 
-        isLoading = false, 
-        height = 16 
-    }: NavBarProps) {
+    isLoading = false, 
+    height = 16 
+}: NavBarProps) {
     const navHeight = Math.max(height, 16);
     
     return (
         <AppBar
             position="fixed"
-            className="shadow-none"
-            style={{
-                backgroundColor: `${adjustColorHSL(NAVBAR_COLOR, 0)}`,
-                borderBottom: `2px solid ${adjustColorHSL(NAVBAR_COLOR, -15)}`
+            sx={{
+                boxShadow: 'none',
+                backgroundColor: adjustColorHSL(NAVBAR_COLOR, 0),
+                borderBottom: `2px solid ${adjustColorHSL(NAVBAR_COLOR, -15)}`,
             }}
         >
             <Toolbar 
-                className="flex justify-start"
-                style={{ height: `${navHeight * 4}px` }}
+                sx={{ 
+                    display: 'flex',
+                    justifyContent: 'flex-start',
+                    height: `${navHeight * 4}px`,
+                    minHeight: `${navHeight * 4}px`,
+                }}
             >
-                <Typography className="text-black relative text-left" variant="h5" fontWeight='bold'>
+                <Typography 
+                    variant="h5"
+                    component="h1"
+                    sx={{ 
+                        fontWeight: 'bold',
+                        color: 'black',
+                        textAlign: 'left',
+                        position: 'relative'
+                    }}
+                >
                     Partner Offerings
                 </Typography>
                 {isLoading && (
                     <CircularProgress
                         size={24}
-                        className="ml-2 text-black"
+                        sx={{ ml: 2, color: 'black' }}
                     />
                 )}
             </Toolbar>
         </AppBar>
-    )
+    );
 }

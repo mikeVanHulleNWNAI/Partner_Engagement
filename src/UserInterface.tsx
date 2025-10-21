@@ -1,6 +1,7 @@
 import { memo, useEffect, useState, useCallback, useMemo } from "react";
+import { Box, Button, FormControl, InputLabel, Select, MenuItem, Typography } from '@mui/material';
 import { createInitialDataSettings, createPartnerOffering, deleteAll, deletePartnerOffering } from "./Utils/CreateData"
-import { CLIENT } from "./Utils/Constants";
+import { BODY_COLOR, CLIENT } from "./Utils/Constants";
 import ItemGrid from "./ItemGrid";
 import Sidebar from "./Sidebar";
 import ApiList from "./ApiList";
@@ -9,6 +10,7 @@ import PartnerOfferingTile from "./PartnerOfferingTile";
 import NavBar from "./NavBar";
 import { partnerOfferingType } from "./Types";
 import { RenderLinkOrText } from "./RenderLinkOrText";
+import { adjustColorHSL } from "./Utils/adjustColor";
 
 // Memoized tile component for better performance
 const PartnerOfferingTileMemo = memo<{
@@ -279,83 +281,101 @@ function UserInterface() {
   return (
     <>
       <NavBar isLoading={isLoading} height={navBarHeight}/>
-      <main className={`pt-${navBarHeight}`}>
-        <br />
+      <Box
+        sx={{
+          pt: `${navBarHeight * 4}px`,
+          background: `linear-gradient(180deg, ${adjustColorHSL(BODY_COLOR, +30)}, ${adjustColorHSL(BODY_COLOR, +50)})`,
+        }}
+      >
+        <Box sx={{ mb: 2 }} />
+        
         {/* Filter Controls */}
-        <div className="mb-4 flex flex-wrap gap-4">
-          <div className="flex items-center">
-            <label htmlFor="manager-select" className="mr-2 font-semibold">
-              Manager:
-            </label>
-            <select
+        <Box 
+          sx={{ 
+            mb: 2, 
+            display: 'flex', 
+            flexWrap: 'wrap', 
+            gap: 2,
+            px: 2,
+          }}
+        >
+          <FormControl 
+            size="small" 
+            sx={{ minWidth: 200 }}
+          >
+            <InputLabel id="manager-select-label">Manager</InputLabel>
+            <Select
+              labelId="manager-select-label"
               id="manager-select"
               value={selectedManager}
+              label="Manager"
               onChange={(e) => setSelectedManager(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="">All Managers</option>
+              <MenuItem value="">All Managers</MenuItem>
               {managers.map((manager) => (
-                <option key={manager.id} value={manager.name}>
+                <MenuItem key={manager.id} value={manager.name}>
                   {manager.name}
-                </option>
+                </MenuItem>
               ))}
-            </select>
-          </div>
+            </Select>
+          </FormControl>
 
-          <div className="flex items-center">
-            <label htmlFor="nwnOffering-select" className="mr-2 font-semibold">
-              NWN Offering:
-            </label>
-            <select
+          <FormControl 
+            size="small" 
+            sx={{ minWidth: 200 }}
+          >
+            <InputLabel id="nwnOffering-select-label">NWN Offering</InputLabel>
+            <Select
+              labelId="nwnOffering-select-label"
               id="nwnOffering-select"
               value={selectedNwnOffering}
+              label="NWN Offering"
               onChange={(e) => setSelectedNwnOffering(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="">All Offerings</option>
+              <MenuItem value="">All Offerings</MenuItem>
               {nwnOfferings.map((offering) => (
-                <option key={offering.id} value={offering.name}>
+                <MenuItem key={offering.id} value={offering.name}>
                   {offering.name}
-                </option>
+                </MenuItem>
               ))}
-            </select>
-          </div>
+            </Select>
+          </FormControl>
 
-          <div className="flex items-center">
-            <label htmlFor="apiType-select" className="mr-2 font-semibold">
-              API Type:
-            </label>
-            <select
+          <FormControl 
+            size="small" 
+            sx={{ minWidth: 200 }}
+          >
+            <InputLabel id="apiType-select-label">API Type</InputLabel>
+            <Select
+              labelId="apiType-select-label"
               id="apiType-select"
               value={selectedApiType}
+              label="API Type"
               onChange={(e) => setSelectedApiType(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="">All Types</option>
+              <MenuItem value="">All Types</MenuItem>
               {apiTypes.map((type) => (
-                <option key={type.id} value={type.name}>
+                <MenuItem key={type.id} value={type.name}>
                   {type.name}
-                </option>
+                </MenuItem>
               ))}
-            </select>
-          </div>
-        </div>
+            </Select>
+          </FormControl>
+        </Box>
 
         {/* Debug Buttons (hidden) */}
-        <button
-          hidden
-          className="select-none"
+        <Button
+          sx={{ display: 'none' }}
           onClick={handleDeleteAndRestore}
         >
           Delete and Restore
-        </button>
-        <button
-          hidden
-          className="select-none"
+        </Button>
+        <Button
+          sx={{ display: 'none' }}
           onClick={deleteTemps}
         >
           Delete temps
-        </button>
+        </Button>
 
         {/* Item Grid */}
         <ItemGrid>
@@ -373,15 +393,15 @@ function UserInterface() {
         <Sidebar
           isOpen={isOpen}
           onClose={handleCloseSidebar}
-          backgroundColor='bg-gray-100'
+          backgroundColor={`${adjustColorHSL(BODY_COLOR, +50)}`}
           positionFromTop={navBarHeight}
         >
-          <div className="p-4">
+          <Box sx={{ p: 2 }}>
             {activePartnerOffering ? (
-              <div>
+              <Box>
                 {/* Debug Buttons (hidden) */}
-                <button
-                  hidden
+                <Button
+                  sx={{ display: 'none' }}
                   onClick={async () => {
                     await createPartnerOffering(
                       "Test 1234",
@@ -402,14 +422,13 @@ function UserInterface() {
                   }}
                 >
                   New Partner Offering
-                </button>
-                <button
-                  hidden
-                  className="select-none"
+                </Button>
+                <Button
+                  sx={{ display: 'none' }}
                   onClick={handleOpenPopup}
                 >
                   Test Form
-                </button>
+                </Button>
 
                 <EditPartnerOfferingForm
                   open={isPopupOpen}
@@ -418,52 +437,89 @@ function UserInterface() {
                 />
 
                 {/* Partner Offering Details */}
-                <div>
+                <Box>
                   <PartnerOfferingTile partnerOffering={activePartnerOffering} />
-                  <div className="mt-4 space-y-2">
-                    <div>
-                      <strong>Manager: </strong>
-                      {activePartnerOffering.nwnOffering?.manager?.name}
-                    </div>
-                    <div>
-                      <strong>Contact Info: </strong>
-                      {activePartnerOffering.contactInfo}
-                    </div>
+                  <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <Box>
+                      <Typography component="span" sx={{ fontWeight: 'bold' }}>
+                        Manager:
+                      </Typography>
+                      {' '}
+                      <Typography component="span">
+                        {activePartnerOffering.nwnOffering?.manager?.name}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography component="span" sx={{ fontWeight: 'bold' }}>
+                        Contact Info:
+                      </Typography>
+                      {' '}
+                      <Typography component="span">
+                        {activePartnerOffering.contactInfo}
+                      </Typography>
+                    </Box>
                     <RenderLinkOrText
-                      label="Dashboard: "
+                      label="Dashboard"
                       value={activePartnerOffering.dashboard}
                     />
-                    <div>
-                      <strong>Notes: </strong>
-                      {activePartnerOffering.notes}
-                    </div>
-                    <div>
-                      <strong>Status: </strong>
-                      {activePartnerOffering.status?.name}
-                    </div>
-                    <div>
-                      <strong>NWN Offering: </strong>
-                      {activePartnerOffering.nwnOffering?.name}
-                    </div>
-                    <div>
-                      <strong>Company: </strong>
-                      {activePartnerOffering.company?.name}
-                    </div>
-                    <div>
-                      <strong>Priority: </strong>
-                      {activePartnerOffering.priority?.name}
-                    </div>
+                    <Box>
+                      <Typography component="span" sx={{ fontWeight: 'bold' }}>
+                        Notes:
+                      </Typography>
+                      {' '}
+                      <Typography component="span">
+                        {activePartnerOffering.notes}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography component="span" sx={{ fontWeight: 'bold' }}>
+                        Status:
+                      </Typography>
+                      {' '}
+                      <Typography component="span">
+                        {activePartnerOffering.status?.name}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography component="span" sx={{ fontWeight: 'bold' }}>
+                        NWN Offering:
+                      </Typography>
+                      {' '}
+                      <Typography component="span">
+                        {activePartnerOffering.nwnOffering?.name}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography component="span" sx={{ fontWeight: 'bold' }}>
+                        Company:
+                      </Typography>
+                      {' '}
+                      <Typography component="span">
+                        {activePartnerOffering.company?.name}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography component="span" sx={{ fontWeight: 'bold' }}>
+                        Priority:
+                      </Typography>
+                      {' '}
+                      <Typography component="span">
+                        {activePartnerOffering.priority?.name}
+                      </Typography>
+                    </Box>
 
                     <ApiList partnerOffering={activePartnerOffering} />
-                  </div>
-                </div>
-              </div>
+                  </Box>
+                </Box>
+              </Box>
             ) : (
-              <div className="text-gray-500">No item selected</div>
+              <Typography sx={{ color: 'text.secondary' }}>
+                No item selected
+              </Typography>
             )}
-          </div>
+          </Box>
         </Sidebar>
-      </main>
+      </Box>
     </>
   );
 }

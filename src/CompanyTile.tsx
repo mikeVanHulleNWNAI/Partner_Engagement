@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Card, CardContent, Box, Typography } from '@mui/material';
 import type { Schema } from "../amplify/data/resource";
 
 function CompanyTile({ company, onClick }:
@@ -27,19 +28,56 @@ function CompanyTile({ company, onClick }:
     const offeringLength = partnerOfferings.length;
 
     return (
-        <div
-            className={`bg-gray-200 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden select-none h-32 ${onClick ? 'cursor-pointer' : ''}`}
+        <Card
             onClick={onClick}
+            sx={{
+                backgroundColor: 'grey.200',
+                borderRadius: 2,
+                boxShadow: 2,
+                overflow: 'hidden',
+                userSelect: 'none',
+                height: 128,
+                cursor: onClick ? 'pointer' : 'default',
+                transition: 'box-shadow 0.3s',
+                '&:hover': {
+                    boxShadow: 6,
+                },
+            }}
         >
-            <div className={`${hasOffering ? "text-green-600 " : ""}m-2 h-full flex flex-col justify-between pb-2`}>
-                <div>{company.name}</div>
-                {hasOffering && (
-                    <div className="text-green-600">
-                        {offeringLength}
-                    </div>
-                )}
-            </div>
-        </div>
+            <CardContent 
+                sx={{ 
+                    height: '100%',
+                    p: 1,
+                    '&:last-child': {
+                        pb: 1,
+                    },
+                }}
+            >
+                <Box 
+                    sx={{ 
+                        height: '100%',
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        justifyContent: 'space-between',
+                        color: hasOffering ? 'success.main' : 'inherit',
+                    }}
+                >
+                    <Typography>
+                        {company.name}
+                    </Typography>
+                    {hasOffering && (
+                        <Typography 
+                            sx={{ 
+                                color: 'success.main',
+                                fontWeight: 'medium',
+                            }}
+                        >
+                            {offeringLength}
+                        </Typography>
+                    )}
+                </Box>
+            </CardContent>
+        </Card>
     );
 }
 

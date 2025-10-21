@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { ChevronRight } from 'lucide-react';
+import { Box, IconButton, Drawer } from '@mui/material';
+import { ChevronRightIcon } from 'lucide-react';
 
-// Sidebar Component
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
@@ -14,10 +14,10 @@ function Sidebar({
     isOpen, 
     onClose, 
     children, 
-    backgroundColor = 'bg-white',
+    backgroundColor = '#ffffff',
     positionFromTop = 16
   }: SidebarProps) {
-  const [width, setWidth] = useState(384); // Default width (w-96 = 384px)
+  const [width, setWidth] = useState(384); // Default width (384px)
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
 
@@ -60,44 +60,90 @@ function Sidebar({
   };
 
   return (
-    <>
-      {/* Overlay */}
-      {isOpen && (
-        <div
-          onClick={onClose}
-          className="fixed inset-0 z-30 transition-opacity"
-        />
-      )}
-
-      {/* Sidebar */}
-      <div
-        ref={sidebarRef}
-        style={{ width: `${width}px` }}
-        className={`overflow-y-auto fixed top-${positionFromTop} right-0 h-full ${backgroundColor} shadow-xl z-40 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'
-          }`}
-      >
+    <Drawer
+      anchor="right"
+      open={isOpen}
+      onClose={onClose}
+      sx={{
+        '& .MuiDrawer-paper': {
+          width: `${width}px`,
+          top: `${positionFromTop * 4}px`,
+          height: `calc(100% - ${positionFromTop * 4}px)`,
+          backgroundColor: backgroundColor,
+          boxShadow: 3,
+          overflowY: 'auto',
+        },
+      }}
+      ModalProps={{
+        keepMounted: false,
+      }}
+    >
+      <Box ref={sidebarRef} sx={{ position: 'relative', height: '100%' }}>
         {/* Resize Handle */}
-        <div
+        <Box
           onMouseDown={handleMouseDown}
-          className="absolute left-0 top-0 h-full w-1 cursor-ew-resize bg-gray-300 hover:bg-blue-500 active:bg-blue-600 transition-colors"
-          style={{
-            background: isResizing ? '#3b82f6' : undefined,
+          sx={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            height: '100%',
+            width: '4px',
+            cursor: 'ew-resize',
+            backgroundColor: isResizing ? 'primary.main' : 'grey.300',
+            '&:hover': {
+              backgroundColor: 'primary.main',
+            },
+            '&:active': {
+              backgroundColor: 'primary.dark',
+            },
+            transition: 'background-color 0.2s',
+            zIndex: 10,
           }}
         >
-          <div className="absolute left-0 top-0 h-full w-2 -translate-x-1/2" />
-        </div>
+          <Box
+            sx={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              height: '100%',
+              width: '8px',
+              transform: 'translateX(-50%)',
+            }}
+          />
+        </Box>
+
         {/* Close Button */}
-        <button
+        <IconButton
           onClick={onClose}
-          className="z-50 !p-1.5 !rounded-md !bg-white !hover:bg-gray-100 !border !border-gray-300 shadow-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
           aria-label="Close sidebar"
           title="Close sidebar"
-        >
-          <ChevronRight className="w-4 h-4 text-gray-600" />
-        </button>
-        {children}
-      </div>
-    </>
+          sx={{
+            position: 'absolute',
+            top: 8,
+            left: 8,
+            zIndex: 50,
+            p: 0.75,
+            backgroundColor: 'background.paper',
+            border: 1,
+            borderColor: 'grey.300',
+            boxShadow: 1,
+            '&:hover': {
+              backgroundColor: 'grey.100',
+            },
+            '&:focus': {
+              outline: 'none',
+              boxShadow: (theme) => `0 0 0 2px ${theme.palette.primary.main}`,
+            },
+          }}>
+          <ChevronRightIcon style={{ width: 16, height: 16, color: '#4b5563' }} />
+        </IconButton>
+
+        {/* Content */}
+        <Box sx={{ pt: 4 }}>
+          {children}
+        </Box>
+      </Box>
+    </Drawer>
   );
 }
 

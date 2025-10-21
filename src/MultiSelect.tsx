@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Box, Paper, Chip, Typography, MenuItem, ClickAwayListener } from '@mui/material';
 import { Check, ChevronDown } from 'lucide-react';
 
 type Props = {
@@ -15,11 +16,11 @@ const MultiSelect = ({options, selectedOptions, onChange} : Props) => {
     useEffect(() => {
         // determine if prevSelected is not equal to selected
         let notEqual = false;
-        if (prevSelected.length != selected.length) 
+        if (prevSelected.length !== selected.length) 
             notEqual = true;
         else {
             for(let i = 0; i < prevSelected.length; i++) {
-                if (prevSelected[i] != selected[i]) {
+                if (prevSelected[i] !== selected[i]) {
                     notEqual = true;
                     break;
                 }
@@ -47,60 +48,119 @@ const MultiSelect = ({options, selectedOptions, onChange} : Props) => {
         setSelected(prev => prev.filter(item => item !== option));
     };
 
+    const handleClickAway = () => {
+        setIsOpen(false);
+    };
+
     return (
-        <div className="relative">
-            {/* Main select box */}
-            <div
-                onClick={() => setIsOpen(!isOpen)}
-                className="bg-white border border-gray-300 rounded-lg px-2 py-1 cursor-pointer hover:border-gray-400 transition-colors min-h-[42px] flex items-center justify-between"
-            >
-                <div className="flex flex-wrap gap-2 flex-1">
-                    {selected.length === 0 ? (
-                        <span className="text-gray-400">Select protocols...</span>
-                    ) : (
-                        selected.map(item => (
-                            <span
-                                key={item}
-                                className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm flex items-center gap-1"
-                            >
-                                {item}
-                                <button
-                                    onClick={(e) => {
+        <ClickAwayListener onClickAway={handleClickAway}>
+            <Box sx={{ position: 'relative' }}>
+                {/* Main select box */}
+                <Box
+                    onClick={() => setIsOpen(!isOpen)}
+                    sx={{
+                        backgroundColor: 'background.paper',
+                        border: 1,
+                        borderColor: 'grey.300',
+                        borderRadius: 2,
+                        px: 1,
+                        py: 0.5,
+                        cursor: 'pointer',
+                        minHeight: '42px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        transition: 'border-color 0.2s',
+                        '&:hover': {
+                            borderColor: 'grey.400',
+                        },
+                    }}
+                >
+                    <Box 
+                        sx={{ 
+                            display: 'flex', 
+                            flexWrap: 'wrap', 
+                            gap: 1, 
+                            flex: 1 
+                        }}
+                    >
+                        {selected.length === 0 ? (
+                            <Typography sx={{ color: 'text.disabled' }}>
+                                Select protocols...
+                            </Typography>
+                        ) : (
+                            selected.map(item => (
+                                <Chip
+                                    key={item}
+                                    label={item}
+                                    size="small"
+                                    onDelete={(e) => {
                                         e.stopPropagation();
                                         removeOption(item);
                                     }}
-                                    className="hover:text-blue-900"
-                                >
-                                    ×
-                                </button>
-                            </span>
-                        ))
-                    )}
-                </div>
-                <ChevronDown
-                    className={`w-5 h-5 text-gray-400 transition-transform ${isOpen ? 'transform rotate-180' : ''
-                        }`}
-                />
-            </div>
+                                    sx={{
+                                        backgroundColor: 'primary.light',
+                                        color: 'primary.dark',
+                                        '& .MuiChip-deleteIcon': {
+                                            color: 'primary.dark',
+                                            '&:hover': {
+                                                color: 'primary.main',
+                                            },
+                                        },
+                                    }}
+                                />
+                            ))
+                        )}
+                    </Box>
+                    <ChevronDown
+                        style={{
+                            width: 20,
+                            height: 20,
+                            color: '#9ca3af',
+                            transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                            transition: 'transform 0.2s',
+                        }}
+                    />
+                </Box>
 
-            {/* Dropdown */}
-            {isOpen && (
-                <div className="absolute z-10 w-full mt-2 bg-white border border-gray-300 rounded-lg shadow-lg">
-                    {options.map(option => (
-                        <div
-                            key={option}
-                            onClick={() => toggleOption(option)}
-                            className="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center justify-between transition-colors"
-                        >
-                            <span className="text-gray-700">{option}</span>
-                            {selected.includes(option) && (
-                                <Check className="w-5 h-5 text-blue-600" />
-                            )}
-                        </div>
-                    ))}
-                </div>
-            )}
-        </div>
+                {/* Dropdown */}
+                {isOpen && (
+                    <Paper
+                        sx={{
+                            position: 'absolute',
+                            zIndex: 10,
+                            width: '100%',
+                            mt: 1,
+                            borderRadius: 2,
+                            boxShadow: 3,
+                            maxHeight: 300,
+                            overflowY: 'auto',
+                        }}
+                    >
+                        {options.map(option => (
+                            <MenuItem
+                                key={option}
+                                onClick={() => toggleOption(option)}
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    px: 2,
+                                    py: 1,
+                                }}
+                            >
+                                <Typography sx={{ color: 'text.primary' }}>
+                                    {option}
+                                </Typography>
+                                {selected.includes(option) && (
+                                    <Check style={{ width: 20, height: 20, color: '#2563eb' }} />
+                                )}
+                            </MenuItem>
+                        ))}
+                    </Paper>
+                )}
+            </Box>
+        </ClickAwayListener>
     );
 }
 

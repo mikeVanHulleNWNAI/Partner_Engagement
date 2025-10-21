@@ -1,4 +1,5 @@
 import React, { ReactNode } from 'react';
+import { Box } from '@mui/material';
 
 interface ItemGridProps {
   children: ReactNode;
@@ -6,13 +7,25 @@ interface ItemGridProps {
 
 const ItemGrid: React.FC<ItemGridProps> = ({ children }) => {
   return (
-    <div className="bg-transparent p-8">
-      <div className="mx-auto">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
+    <Box sx={{ backgroundColor: 'transparent', p: 4 }}>
+      <Box sx={{ mx: 'auto' }}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: 'repeat(1, 1fr)',
+              sm: 'repeat(2, 1fr)',
+              md: 'repeat(3, 1fr)',
+              lg: 'repeat(4, 1fr)',
+              xl: 'repeat(5, 1fr)',
+            },
+            gap: 3,
+          }}
+        >
           {children}
-        </div>
-      </div>
-    </div>
+        </Box>
+      </Box>
+    </Box>
   );
 };
 

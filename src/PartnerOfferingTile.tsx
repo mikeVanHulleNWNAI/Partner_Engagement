@@ -1,3 +1,4 @@
+import { Card, CardContent, Box, Typography } from '@mui/material';
 import { partnerOfferingType } from "./Types";
 
 function PartnerOfferingTile({ partnerOffering, onClick, isHighlighted = false }:
@@ -7,44 +8,109 @@ function PartnerOfferingTile({ partnerOffering, onClick, isHighlighted = false }
         onClick?: () => void
     }) {
 
-    let tileColor = "bg-gray-200";
+    let tileColor = '#e5e7eb'; // gray-200
     if (partnerOffering.priority) {
         switch (partnerOffering.priority.name) {
-            case "LOW": tileColor = "bg-gray-200";
+            case "LOW": 
+                tileColor = '#e5e7eb'; // gray-200
                 break;
-            case "MEDIUM": tileColor = "bg-yellow-200";
+            case "MEDIUM": 
+                tileColor = '#fef08a'; // yellow-200
                 break;
-            case "HIGH": tileColor = "bg-red-200";
+            case "HIGH": 
+                tileColor = '#fecaca'; // red-200
                 break;
         }
     }
 
     return (
-        <div
-            className={`${tileColor} rounded-lg shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden select-none ${onClick ? 'cursor-pointer hover:scale-105' : ''} ${isHighlighted ? 'ring-4 ring-blue-500 ring-offset-2' : ''}`}
+        <Card
             onClick={onClick}
+            sx={{
+                backgroundColor: tileColor,
+                borderRadius: 2,
+                boxShadow: 2,
+                overflow: 'hidden',
+                userSelect: 'none',
+                transition: 'all 0.3s',
+                cursor: onClick ? 'pointer' : 'default',
+                ...(isHighlighted && {
+                    outline: '4px solid',
+                    outlineColor: 'primary.main',
+                    outlineOffset: '2px',
+                }),
+                '&:hover': {
+                    boxShadow: onClick ? 6 : 2,
+                    ...(onClick && {
+                        transform: 'scale(1.05)',
+                    }),
+                },
+            }}
         >
-            <div className="p-4 space-y-3">
-                <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                    <h3 className="font-semibold text-sm text-gray-700 uppercase tracking-wide">
-                        {partnerOffering.nwnOffering?.name}
-                    </h3>
-                </div>
-                
-                <div className="border-l-4 border-gray-400 pl-3">
-                    <p className="text-lg font-bold text-gray-900">
-                        {partnerOffering.company?.name}
-                    </p>
-                </div>
-                
-                <div className="pt-2 border-t border-gray-300">
-                    <p className="text-sm text-gray-600">
-                        {partnerOffering.offeringName}
-                    </p>
-                </div>
-            </div>
-        </div>
+            <CardContent sx={{ p: 2 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                    {/* Header with dot indicator */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box 
+                            sx={{ 
+                                width: 8, 
+                                height: 8, 
+                                borderRadius: '50%', 
+                                backgroundColor: 'primary.main' 
+                            }} 
+                        />
+                        <Typography 
+                            variant="subtitle2" 
+                            sx={{ 
+                                fontWeight: 600,
+                                color: 'text.secondary',
+                                textTransform: 'uppercase',
+                                letterSpacing: 0.5,
+                            }}
+                        >
+                            {partnerOffering.nwnOffering?.name}
+                        </Typography>
+                    </Box>
+                    
+                    {/* Company name with border */}
+                    <Box 
+                        sx={{ 
+                            borderLeft: 4, 
+                            borderColor: 'grey.400',
+                            pl: 1.5,
+                        }}
+                    >
+                        <Typography 
+                            variant="h6" 
+                            sx={{ 
+                                fontWeight: 700,
+                                color: 'grey.900',
+                            }}
+                        >
+                            {partnerOffering.company?.name}
+                        </Typography>
+                    </Box>
+                    
+                    {/* Offering name */}
+                    <Box 
+                        sx={{ 
+                            pt: 1, 
+                            borderTop: 1, 
+                            borderColor: 'grey.300',
+                        }}
+                    >
+                        <Typography 
+                            variant="body2" 
+                            sx={{ 
+                                color: 'text.secondary',
+                            }}
+                        >
+                            {partnerOffering.offeringName}
+                        </Typography>
+                    </Box>
+                </Box>
+            </CardContent>
+        </Card>
     );
 }
 
