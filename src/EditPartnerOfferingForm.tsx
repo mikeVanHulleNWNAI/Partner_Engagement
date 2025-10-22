@@ -174,14 +174,6 @@ const EditPartnerOfferingForm: React.FC<EditPartnerOfferingProps> = ({
     }
   };
 
-  // returns a string array of NWN Offering and their managers
-  const getNwnOfferingAndManagers = (): { id: string; name: string }[] => {
-    return nwnOfferingOptions.map((o) => {
-      const managerName = managerOptions.find((v) => v.id === o.manager.id)?.name
-      return { id: o.id, name: o.name + " - " + managerName }
-    })
-  };
-
   return (
     <Dialog closeAfterTransition={false} open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>Enter Details</DialogTitle>
@@ -228,8 +220,8 @@ const EditPartnerOfferingForm: React.FC<EditPartnerOfferingProps> = ({
           {/* TODO: 9879 add manager */}
           <SelectionValidation
             label="NWN Offering"
-            value={formData.nwnOffering.name + " - " + formData.nwnOffering.manager.name}
-            options={getNwnOfferingAndManagers()}
+            value={formData.nwnOffering.name}
+            options={nwnOfferingOptions}
             fullWidth
             onChange={(e) => handleNestedChange("nwnOffering", "name", e.target.value)}
           />

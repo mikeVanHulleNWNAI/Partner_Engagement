@@ -36,7 +36,7 @@ function UserInterface() {
   const [allPartnerOfferings, setAllPartnerOfferings] = useState<partnerOfferingType[]>([]);
 
   const [connectionStatusOptions, setConnectionStatusOptions] = useState<Array<{ id: string; name: string }>>([]);
-  const [nwnOfferingOptions, setNwnOfferingOptions] = useState<Array<{ id: string; name: string }>>([]);
+  const [nwnOfferingOptions, setNwnOfferingOptions] = useState<Array<{ id: string; name: string; manager: { id: string } }>>([]);
   const [managerOptions, setManagerOptions] = useState<Array<{ id: string; name: string }>>([]);
   const [companyOptions, setCompanyOptions] = useState<Array<{ id: string; name: string }>>([]);
   const [priorityOptions, setPriorityOptions] = useState<Array<{ id: string; name: string }>>([]);
@@ -80,17 +80,24 @@ function UserInterface() {
         'contactInfo',
         'dashboard',
         'notes',
+        'status.id',
         'status.name',
+        'nwnOffering.id',
         'nwnOffering.name',
+        'nwnOffering.manager.id',
         'nwnOffering.manager.name',
+        'company.id',
         'company.name',
+        'priority.id',
         'priority.name',
         'apis.id',
         'apis.docLink',
         'apis.trainingLink',
         'apis.sandboxEnvironment',
         'apis.endpoint',
+        'apis.apiType.id',
         'apis.apiType.name',
+        'apis.authenticationType.id',
         'apis.authenticationType.name',
         'apis.authenticationInfo',
       ]
@@ -116,17 +123,24 @@ function UserInterface() {
                     'contactInfo',
                     'dashboard',
                     'notes',
+                    'status.id',
                     'status.name',
+                    'nwnOffering.id',
                     'nwnOffering.name',
+                    'nwnOffering.manager.id',
                     'nwnOffering.manager.name',
+                    'company.id',
                     'company.name',
+                    'priority.id',
                     'priority.name',
                     'apis.id',
                     'apis.docLink',
                     'apis.trainingLink',
                     'apis.sandboxEnvironment',
                     'apis.endpoint',
+                    'apis.apiType.id',
                     'apis.apiType.name',
+                    'apis.authenticationType.id',
                     'apis.authenticationType.name',
                     'apis.authenticationInfo',
                   ]
@@ -185,7 +199,7 @@ function UserInterface() {
     }).subscribe({
       next: (data) => {
         const offerings = data.items
-          .filter((item): item is { id: string; name: string; manager: { id: string }} =>
+          .filter((item): item is { id: string; name: string; manager: { id: string } } =>
             item !== null && item !== undefined && item.name !== ""
           )
           .sort((a, b) => a.name.localeCompare(b.name));
