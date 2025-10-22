@@ -34,16 +34,24 @@ function UserInterface() {
 
   // Data state
   const [allPartnerOfferings, setAllPartnerOfferings] = useState<partnerOfferingType[]>([]);
-  const [managers, setManagers] = useState<Array<{ id: string; name: string }>>([]);
-  const [nwnOfferings, setNwnOfferings] = useState<Array<{ id: string; name: string }>>([]);
-  const [apiTypes, setApiTypes] = useState<Array<{ id: string; name: string }>>([]);
+
+  const [connectionStatusOptions, setConnectionStatusOptions] = useState<Array<{ id: string; name: string }>>([]);
+  const [nwnOfferingOptions, setNwnOfferingOptions] = useState<Array<{ id: string; name: string }>>([]);
+  const [managerOptions, setManagerOptions] = useState<Array<{ id: string; name: string }>>([]);
+  const [companyOptions, setCompanyOptions] = useState<Array<{ id: string; name: string }>>([]);
+  const [priorityOptions, setPriorityOptions] = useState<Array<{ id: string; name: string }>>([]);
+  const [apiTypeOptions, setApiTypeOptions] = useState<Array<{ id: string; name: string }>>([]);
+  const [authenticationTypeOptions, setAuthenticationTypeOptions] = useState<Array<{ id: string; name: string }>>([]);
 
   // Loading state
   const [loadingStates, setLoadingStates] = useState({
-    partnerOfferings: true,
+    connectionStatuses: true,
     managers: true,
     nwnOfferings: true,
-    apiTypes: true
+    companies: true,
+    partnerOfferings: true,
+    apiTypes: true,
+    authenticationTypes: true
   });
 
   // Compute overall loading state
@@ -156,6 +164,36 @@ function UserInterface() {
       }
     });
 
+    // Subscribe to Connection Status
+    const connectionStatusSubscription = CLIENT.models.ConnectionStatus.observeQuery({
+      selectionSet: ['id', 'name']
+    }).subscribe({
+      next: (data) => {
+        const connectionStatuses = data.items
+          .filter((item): item is { id: string; name: string } =>
+            item !== null && item !== undefined && item.name !== ""
+          )
+          .sort((a, b) => a.name.localeCompare(b.name));
+        setConnectionStatusOptions(connectionStatuses);
+        setLoadingStates(prev => ({ ...prev, connectionStatuses: false }));
+      }
+    });
+
+    // Subscribe to NWN Offerings
+    const nwnOfferingSubscription = CLIENT.models.NwnOffering.observeQuery({
+      selectionSet: ['id', 'name', 'manager.id']
+    }).subscribe({
+      next: (data) => {
+        const offerings = data.items
+          .filter((item): item is { id: string; name: string; manager: { id: string }} =>
+            item !== null && item !== undefined && item.name !== ""
+          )
+          .sort((a, b) => a.name.localeCompare(b.name));
+        setNwnOfferingOptions(offerings);
+        setLoadingStates(prev => ({ ...prev, nwnOfferings: false }));
+      }
+    });
+
     // Subscribe to Managers
     const managerSubscription = CLIENT.models.Manager.observeQuery({
       selectionSet: ['id', 'name']
@@ -166,23 +204,38 @@ function UserInterface() {
             item !== null && item !== undefined && item.name !== ""
           )
           .sort((a, b) => a.name.localeCompare(b.name));
-        setManagers(managers);
+        setManagerOptions(managers);
         setLoadingStates(prev => ({ ...prev, managers: false }));
       }
     });
 
-    // Subscribe to NWN Offerings
-    const nwnOfferingSubscription = CLIENT.models.NwnOffering.observeQuery({
+    // Subscribe to Companies
+    const companySubscription = CLIENT.models.Company.observeQuery({
       selectionSet: ['id', 'name']
     }).subscribe({
       next: (data) => {
-        const offerings = data.items
+        const companies = data.items
           .filter((item): item is { id: string; name: string } =>
             item !== null && item !== undefined && item.name !== ""
           )
           .sort((a, b) => a.name.localeCompare(b.name));
-        setNwnOfferings(offerings);
-        setLoadingStates(prev => ({ ...prev, nwnOfferings: false }));
+        setCompanyOptions(companies);
+        setLoadingStates(prev => ({ ...prev, companies: false }));
+      }
+    });
+
+    // Subscribe to Priorities
+    const prioritySubscription = CLIENT.models.Priority.observeQuery({
+      selectionSet: ['id', 'name']
+    }).subscribe({
+      next: (data) => {
+        const priorities = data.items
+          .filter((item): item is { id: string; name: string } =>
+            item !== null && item !== undefined && item.name !== ""
+          )
+          .sort((a, b) => a.name.localeCompare(b.name));
+        setPriorityOptions(priorities);
+        setLoadingStates(prev => ({ ...prev, priotities: false }));
       }
     });
 
@@ -191,22 +244,41 @@ function UserInterface() {
       selectionSet: ['id', 'name']
     }).subscribe({
       next: (data) => {
-        const types = data.items
+        const apiTypes = data.items
           .filter((item): item is { id: string; name: string } =>
             item !== null && item !== undefined && item.name !== ""
           )
           .sort((a, b) => a.name.localeCompare(b.name));
-        setApiTypes(types);
+        setApiTypeOptions(apiTypes);
         setLoadingStates(prev => ({ ...prev, apiTypes: false }));
+      }
+    });
+
+    // Subscribe to Authentication Types
+    const authenticationTypesSubscription = CLIENT.models.AuthenticationType.observeQuery({
+      selectionSet: ['id', 'name']
+    }).subscribe({
+      next: (data) => {
+        const authenticationTypes = data.items
+          .filter((item): item is { id: string; name: string } =>
+            item !== null && item !== undefined && item.name !== ""
+          )
+          .sort((a, b) => a.name.localeCompare(b.name));
+        setAuthenticationTypeOptions(authenticationTypes);
+        setLoadingStates(prev => ({ ...prev, authenticationTypes: false }));
       }
     });
 
     // Cleanup all subscriptions
     return () => {
       partnerOfferingSubscription.unsubscribe();
+      connectionStatusSubscription.unsubscribe();
       managerSubscription.unsubscribe();
+      companySubscription.unsubscribe();
+      prioritySubscription.unsubscribe();
       nwnOfferingSubscription.unsubscribe();
       apiTypeSubscription.unsubscribe();
+      authenticationTypesSubscription.unsubscribe();
     };
   }, []);
 
@@ -243,8 +315,9 @@ function UserInterface() {
     setIsPopupOpen(false);
   }, []);
 
-  const handleSubmitForm = useCallback((data: { name: string; email: string }) => {
-    console.log('Form submitted with data:', data);
+  const handleSubmitForm = useCallback((partnerOffering: partnerOfferingType) => {
+    console.log('Form submitted with partnerOffering:', partnerOffering);
+    setIsPopupOpen(false);
     // Perform actions with the submitted data, e.g., send to an API
   }, []);
 
@@ -280,7 +353,7 @@ function UserInterface() {
 
   return (
     <>
-      <NavBar isLoading={isLoading} height={navBarHeight}/>
+      <NavBar isLoading={isLoading} height={navBarHeight} />
       <Box
         sx={{
           pt: `${navBarHeight * 4}px`,
@@ -288,19 +361,19 @@ function UserInterface() {
         }}
       >
         <Box sx={{ mb: 2 }} />
-        
+
         {/* Filter Controls */}
-        <Box 
-          sx={{ 
-            mb: 2, 
-            display: 'flex', 
-            flexWrap: 'wrap', 
+        <Box
+          sx={{
+            mb: 2,
+            display: 'flex',
+            flexWrap: 'wrap',
             gap: 2,
             px: 2,
           }}
         >
-          <FormControl 
-            size="small" 
+          <FormControl
+            size="small"
             sx={{ minWidth: 200 }}
           >
             <InputLabel id="manager-select-label">Manager</InputLabel>
@@ -312,7 +385,7 @@ function UserInterface() {
               onChange={(e) => setSelectedManager(e.target.value)}
             >
               <MenuItem value="">All Managers</MenuItem>
-              {managers.map((manager) => (
+              {managerOptions.map((manager) => (
                 <MenuItem key={manager.id} value={manager.name}>
                   {manager.name}
                 </MenuItem>
@@ -320,8 +393,8 @@ function UserInterface() {
             </Select>
           </FormControl>
 
-          <FormControl 
-            size="small" 
+          <FormControl
+            size="small"
             sx={{ minWidth: 200 }}
           >
             <InputLabel id="nwnOffering-select-label">NWN Offering</InputLabel>
@@ -333,7 +406,7 @@ function UserInterface() {
               onChange={(e) => setSelectedNwnOffering(e.target.value)}
             >
               <MenuItem value="">All Offerings</MenuItem>
-              {nwnOfferings.map((offering) => (
+              {nwnOfferingOptions.map((offering) => (
                 <MenuItem key={offering.id} value={offering.name}>
                   {offering.name}
                 </MenuItem>
@@ -341,8 +414,8 @@ function UserInterface() {
             </Select>
           </FormControl>
 
-          <FormControl 
-            size="small" 
+          <FormControl
+            size="small"
             sx={{ minWidth: 200 }}
           >
             <InputLabel id="apiType-select-label">API Type</InputLabel>
@@ -354,7 +427,7 @@ function UserInterface() {
               onChange={(e) => setSelectedApiType(e.target.value)}
             >
               <MenuItem value="">All Types</MenuItem>
-              {apiTypes.map((type) => (
+              {apiTypeOptions.map((type) => (
                 <MenuItem key={type.id} value={type.name}>
                   {type.name}
                 </MenuItem>
@@ -424,17 +497,27 @@ function UserInterface() {
                   New Partner Offering
                 </Button>
                 <Button
-                  sx={{ display: 'none' }}
+                  sx={{}}
                   onClick={handleOpenPopup}
                 >
                   Test Form
                 </Button>
 
-                <EditPartnerOfferingForm
-                  open={isPopupOpen}
-                  onClose={handleClosePopup}
-                  onSubmit={handleSubmitForm}
-                />
+                {isPopupOpen &&
+                  <EditPartnerOfferingForm
+                    open={isPopupOpen}
+                    onClose={handleClosePopup}
+                    onSubmit={handleSubmitForm}
+                    partnerOfferingData={structuredClone(activePartnerOffering)}
+                    connectionStatusOptions={connectionStatusOptions}
+                    nwnOfferingOptions={nwnOfferingOptions}
+                    managerOptions={managerOptions}
+                    companyOptions={companyOptions}
+                    priorityOptions={priorityOptions}
+                    apiTypeOptions={apiTypeOptions}
+                    authenticationTypeOptions={authenticationTypeOptions}
+                  />
+                }
 
                 {/* Partner Offering Details */}
                 <Box>
@@ -473,7 +556,7 @@ function UserInterface() {
                     </Box>
                     <Box>
                       <Typography component="span" sx={{ fontWeight: 'bold' }}>
-                        Status:
+                        Connection Status:
                       </Typography>
                       {' '}
                       <Typography component="span">
