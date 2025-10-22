@@ -1,11 +1,13 @@
-import { FormControl, InputLabel, MenuItem, Select, SelectChangeEvent } from '@mui/material';
+import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
+import { IdNameType } from '../Types';
+import { useState } from 'react';
 
 interface SelectionValidationProps {
     label: string;
-    value: string;
-    options: { id: string; name: string }[]
+    value: IdNameType;
+    options: IdNameType[]
     fullWidth?: boolean;
-    onChange: (event: SelectChangeEvent<string>) => void;
+    onChange: (idNameType: IdNameType) => void;
 }
 
 const SelectionValidation: React.FC<SelectionValidationProps> = ({
@@ -16,19 +18,25 @@ const SelectionValidation: React.FC<SelectionValidationProps> = ({
     onChange
 }) => {
 
+    const [selectedValue, setSelectedValue] = useState<IdNameType>(value);
+
+    const handleClick = (idNameType: IdNameType) => {
+        setSelectedValue(idNameType);
+        onChange(idNameType);
+    }
+
     return (
         <FormControl variant="standard">
             <InputLabel>{label}</InputLabel>
             <Select
                 type="text"
-                value={value}
-                onChange={onChange}
+                value={selectedValue.name}
                 fullWidth={fullWidth}
             >
                 {options.map((option) => (
                     <MenuItem
-                        key={option.id}
                         value={option.name}
+                        onClick={() => handleClick(option)}
                     >
                         {option.name}
                     </MenuItem>

@@ -8,7 +8,7 @@ import ApiList from "./ApiList";
 import EditPartnerOfferingForm from "./EditPartnerOfferingForm";
 import PartnerOfferingTile from "./PartnerOfferingTile";
 import NavBar from "./NavBar";
-import { partnerOfferingType } from "./Types";
+import { IdNameAndManagerIdNameType, IdNameType, partnerOfferingType } from './Types';
 import { RenderLinkOrText } from "./RenderLinkOrText";
 import { adjustColorHSL } from "./Utils/adjustColor";
 
@@ -35,13 +35,13 @@ function UserInterface() {
   // Data state
   const [allPartnerOfferings, setAllPartnerOfferings] = useState<partnerOfferingType[]>([]);
 
-  const [connectionStatusOptions, setConnectionStatusOptions] = useState<Array<{ id: string; name: string }>>([]);
-  const [nwnOfferingOptions, setNwnOfferingOptions] = useState<Array<{ id: string; name: string; manager: { id: string } }>>([]);
-  const [managerOptions, setManagerOptions] = useState<Array<{ id: string; name: string }>>([]);
-  const [companyOptions, setCompanyOptions] = useState<Array<{ id: string; name: string }>>([]);
-  const [priorityOptions, setPriorityOptions] = useState<Array<{ id: string; name: string }>>([]);
-  const [apiTypeOptions, setApiTypeOptions] = useState<Array<{ id: string; name: string }>>([]);
-  const [authenticationTypeOptions, setAuthenticationTypeOptions] = useState<Array<{ id: string; name: string }>>([]);
+  const [connectionStatusOptions, setConnectionStatusOptions] = useState<Array<IdNameType>>([]);
+  const [nwnOfferingOptions, setNwnOfferingOptions] = useState<Array<IdNameAndManagerIdNameType>>([]);
+  const [managerOptions, setManagerOptions] = useState<Array<IdNameType>>([]);
+  const [companyOptions, setCompanyOptions] = useState<Array<IdNameType>>([]);
+  const [priorityOptions, setPriorityOptions] = useState<Array<IdNameType>>([]);
+  const [apiTypeOptions, setApiTypeOptions] = useState<Array<IdNameType>>([]);
+  const [authenticationTypeOptions, setAuthenticationTypeOptions] = useState<Array<IdNameType>>([]);
 
   // Loading state
   const [loadingStates, setLoadingStates] = useState({
@@ -184,7 +184,7 @@ function UserInterface() {
     }).subscribe({
       next: (data) => {
         const connectionStatuses = data.items
-          .filter((item): item is { id: string; name: string } =>
+          .filter((item): item is IdNameType =>
             item !== null && item !== undefined && item.name !== ""
           )
           .sort((a, b) => a.name.localeCompare(b.name));
@@ -195,15 +195,20 @@ function UserInterface() {
 
     // Subscribe to NWN Offerings
     const nwnOfferingSubscription = CLIENT.models.NwnOffering.observeQuery({
-      selectionSet: ['id', 'name', 'manager.id']
+      selectionSet: ['id', 'name', 'manager.id', 'manager.name']
     }).subscribe({
       next: (data) => {
         const offerings = data.items
-          .filter((item): item is { id: string; name: string; manager: { id: string } } =>
+          .filter((item) =>
             item !== null && item !== undefined && item.name !== ""
           )
           .sort((a, b) => a.name.localeCompare(b.name));
-        setNwnOfferingOptions(offerings);
+        setNwnOfferingOptions(
+          offerings.map((o) => ({
+            nwnOffering: { id: o.id, name: o.name },
+            manager: { id: o.manager.id, name: o.manager.name }
+          }))
+        );
         setLoadingStates(prev => ({ ...prev, nwnOfferings: false }));
       }
     });
@@ -214,7 +219,7 @@ function UserInterface() {
     }).subscribe({
       next: (data) => {
         const managers = data.items
-          .filter((item): item is { id: string; name: string } =>
+          .filter((item): item is IdNameType =>
             item !== null && item !== undefined && item.name !== ""
           )
           .sort((a, b) => a.name.localeCompare(b.name));
@@ -229,7 +234,7 @@ function UserInterface() {
     }).subscribe({
       next: (data) => {
         const companies = data.items
-          .filter((item): item is { id: string; name: string } =>
+          .filter((item): item is IdNameType =>
             item !== null && item !== undefined && item.name !== ""
           )
           .sort((a, b) => a.name.localeCompare(b.name));
@@ -244,7 +249,7 @@ function UserInterface() {
     }).subscribe({
       next: (data) => {
         const priorities = data.items
-          .filter((item): item is { id: string; name: string } =>
+          .filter((item): item is IdNameType =>
             item !== null && item !== undefined && item.name !== ""
           )
           .sort((a, b) => a.name.localeCompare(b.name));
@@ -259,7 +264,7 @@ function UserInterface() {
     }).subscribe({
       next: (data) => {
         const apiTypes = data.items
-          .filter((item): item is { id: string; name: string } =>
+          .filter((item): item is IdNameType =>
             item !== null && item !== undefined && item.name !== ""
           )
           .sort((a, b) => a.name.localeCompare(b.name));
@@ -274,7 +279,7 @@ function UserInterface() {
     }).subscribe({
       next: (data) => {
         const authenticationTypes = data.items
-          .filter((item): item is { id: string; name: string } =>
+          .filter((item): item is IdNameType =>
             item !== null && item !== undefined && item.name !== ""
           )
           .sort((a, b) => a.name.localeCompare(b.name));
@@ -421,8 +426,8 @@ function UserInterface() {
             >
               <MenuItem value="">All Offerings</MenuItem>
               {nwnOfferingOptions.map((offering) => (
-                <MenuItem key={offering.id} value={offering.name}>
-                  {offering.name}
+                <MenuItem key={offering.nwnOffering.id} value={offering.nwnOffering.name}>
+                  {offering.nwnOffering.name}
                 </MenuItem>
               ))}
             </Select>

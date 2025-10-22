@@ -572,8 +572,8 @@ export async function deleteAll() {
     await Promise.all(allCompanies.data.map((d) => CLIENT.models.Company.delete(d)))
 
     // Priority
-    const allPriroities = await CLIENT.models.Company.list();
-    await Promise.all(allPriroities.data.map((d) => CLIENT.models.Company.delete(d)));
+    const allPriroities = await CLIENT.models.Priority.list();
+    await Promise.all(allPriroities.data.map((d) => CLIENT.models.Priority.delete(d)));
 
     // Api
     const allApis = await CLIENT.models.Api.list();

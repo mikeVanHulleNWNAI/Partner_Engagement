@@ -6,40 +6,41 @@ export type partnerOfferingType = {
     dashboard: string;
     notes: string;
     status: {
-        readonly id: string;
-        readonly name: string;
+        id: string;
+        name: string;
     };
     nwnOffering: {
-        readonly id: string;
-        readonly name: string;
-        readonly manager: {
-            readonly id: string;
-            readonly name: string;
+        id: string;
+        name: string;
+        manager: {
+            id: string;
+            name: string;
         };
     };
     company: {
-        readonly id: string;
-        readonly name: string;
+        id: string;
+        name: string;
     };
     priority: {
-        readonly id: string;
-        readonly name: string;
+        id: string;
+        name: string;
     };
     apis: {
-        readonly id: string;
-        readonly docLink: string;
-        readonly trainingLink: string;
-        readonly sandboxEnvironment: string;
-        readonly endpoint: string;
-        readonly authenticationInfo: string;
-        readonly apiType: {
-            readonly id: string;
-            readonly name: string;
+        id: string;
+        docLink: string;
+        trainingLink: string;
+        sandboxEnvironment: string;
+        endpoint: string;
+        authenticationInfo: string;
+        apiType: {
+            id: string;
+            name: string;
         };
-        readonly authenticationType: {
-            readonly id: string;
-            readonly name: string;
+        authenticationType: {
+            id: string;
+            name: string;
         };
     }[];
 }
 
+export type IdNameType = { id: string; name: string };

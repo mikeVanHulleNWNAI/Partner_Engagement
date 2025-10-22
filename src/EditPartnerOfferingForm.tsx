@@ -8,22 +8,23 @@ import {
   TextField,
   Box,
 } from '@mui/material';
-import { partnerOfferingType } from './Types';
+import { IdNameAndManagerIdNameType, IdNameType, partnerOfferingType } from './Types';
 import UrlTextFieldValidation from './Validators/UrlTextFieldValidation';
 import SelectionValidation from './Validators/SelectionValidation';
+import SelectionNwnOfferingValidation from './Validators/SelectionNwnOfferingValidation';
 
 interface EditPartnerOfferingProps {
   open: boolean;
   onClose: () => void;
   onSubmit: (formData: partnerOfferingType) => void;
   partnerOfferingData: partnerOfferingType;
-  connectionStatusOptions: { id: string; name: string }[];
-  nwnOfferingOptions: { id: string; name: string; manager: { id: string } }[];
-  managerOptions: { id: string; name: string }[];
-  companyOptions: { id: string; name: string }[];
-  priorityOptions: { id: string; name: string }[];
-  apiTypeOptions: { id: string; name: string }[];
-  authenticationTypeOptions: { id: string; name: string }[];
+  connectionStatusOptions: IdNameType[];
+  nwnOfferingOptions: IdNameAndManagerIdNameType[];
+  managerOptions: IdNameType[];
+  companyOptions: IdNameType[];
+  priorityOptions: IdNameType[];
+  apiTypeOptions: IdNameType[];
+  authenticationTypeOptions: IdNameType[];
 }
 
 const EditPartnerOfferingForm: React.FC<EditPartnerOfferingProps> = ({
@@ -134,8 +135,8 @@ const EditPartnerOfferingForm: React.FC<EditPartnerOfferingProps> = ({
           endpoint: '',
           authenticationInfo: '',
           id: newId,
-          apiType: { name: '' },
-          authenticationType: { name: '' },
+          apiType: { id: '', name: '' },
+          authenticationType: { id: '', name: '' },
         },
       ],
     }));
@@ -212,32 +213,47 @@ const EditPartnerOfferingForm: React.FC<EditPartnerOfferingProps> = ({
           />
           <SelectionValidation
             label="Connection Status"
-            value={formData.status.name}
+            value={{ id: formData.status.id, name: formData.status.name }}
             options={connectionStatusOptions}
             fullWidth
-            onChange={(e) => handleNestedChange("status", "name", e.target.value)}
+            onChange={(e) => {
+              handleNestedChange("status", "id", e.id);
+              handleNestedChange("status", "name", e.name);
+            }}
           />
           {/* TODO: 9879 add manager */}
-          <SelectionValidation
+          <SelectionNwnOfferingValidation
             label="NWN Offering"
-            value={formData.nwnOffering.name}
+            value={{
+              nwnOffering: { id: formData.nwnOffering.id , name: formData.nwnOffering.name },
+              manager: { id: formData.nwnOffering.manager.id , name: formData.nwnOffering.manager.name }
+            }}
             options={nwnOfferingOptions}
             fullWidth
-            onChange={(e) => handleNestedChange("nwnOffering", "name", e.target.value)}
+            onChange={(e) => {
+              handleNestedChange("nwnOffering", "id", e.nwnOffering.id);
+              handleNestedChange("nwnOffering", "name", e.nwnOffering.name);
+            }}
           />
           <SelectionValidation
             label="Company"
-            value={formData.company.name}
+            value={{ id: formData.company.id , name: formData.company.name}}
             options={companyOptions}
             fullWidth
-            onChange={(e) => handleNestedChange("company", "name", e.target.value)}
+            onChange={(e) => {
+              handleNestedChange("company", "id", e.id);
+              handleNestedChange("company", "name", e.name);
+            }}
           />
           <SelectionValidation
             label="Priority"
-            value={formData.priority.name}
+            value={{ id: formData.priority.id , name: formData.priority.name}}
             options={priorityOptions}
             fullWidth
-            onChange={(e) => handleNestedChange("priority", "name", e.target.value)}
+            onChange={(e) => {
+              handleNestedChange("priority", "id", e.id);
+              handleNestedChange("priority", "name", e.name);
+            }}
           />
         </Box>
       </DialogContent>
