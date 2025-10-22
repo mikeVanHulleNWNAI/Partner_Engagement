@@ -95,6 +95,7 @@ const apiTypes = [
 ];
 
 const authenticationType = [
+    "Unknown",
     "Test authentication",
     ""
 ];
@@ -114,7 +115,7 @@ export async function createPartnerOffering(
     trainingLinkList: string[],
     sandboxEnvList: string[],
     authenticationTypeList: string[],
-    authenticationTypeInfoList: string[]
+    authenticationInfoList: string[]
 ) {
 
     // Create a uuid for the PartnerOffering because we are going to include
@@ -136,7 +137,7 @@ export async function createPartnerOffering(
     for (let i = 0; i < apiList.length; i++) {
         const apiTypeResult = await CLIENT.models.ApiType.list({ filter: { name: { eq: apiList[i] } } })
         const apiTypeId = apiTypeResult.data[0].id;
-        const authenticationTypeResult = await CLIENT.models.ApiType.list({ filter: { name: { eq: authenticationTypeList[i] } } })
+        const authenticationTypeResult = await CLIENT.models.AuthenticationType.list({ filter: { name: { eq: authenticationTypeList[i] } } })
         const authenticationTypeId = authenticationTypeResult.data[0].id;
         await CLIENT.models.Api.create({
             docLink: docLinkList[i],
@@ -146,7 +147,7 @@ export async function createPartnerOffering(
             partnerOfferingId: partnerOfferingId,
             apiTypeId: apiTypeId,
             authenticationTypeId: authenticationTypeId,
-            authenticationInfo: authenticationTypeInfoList[i]
+            authenticationInfo: authenticationInfoList[i]
         })
     }
 
@@ -295,7 +296,7 @@ async function createAllPartnerOfferings() {
         ["https://all.docs.genesys.com/Developer/APIbyService"],
         ["https://beyond.genesys.com/explore/"],
         ['{"Environment":"Sandbox"{'],
-        [""],
+        ["Unknown"],
         [""]);
     createPartnerOffering(
         "",
@@ -310,7 +311,7 @@ async function createAllPartnerOfferings() {
         ["https://documentation.five9.com/category/dev"],
         ["https://www.five9.com/contact-center-services/training"],
         ['{"Client ID": "122g33Y5tsTYjrGQpHVlCdUMjNxIsWfD",'],
-        [""],
+        ["Unknown"],
         [""]);
     createPartnerOffering(
         "",
@@ -325,7 +326,7 @@ async function createAllPartnerOfferings() {
         ["https://nwn-demo.command.verkada.com/admin/settings/api-integrations"],
         [""],
         [""],
-        [""],
+        ["Unknown"],
         [""]);
     createPartnerOffering(
         "",
@@ -340,7 +341,7 @@ async function createAllPartnerOfferings() {
         ["https://app.apexaiq.com/docs"],
         ["https://www.apexaiq.com/resources/"],
         [""],
-        [""],
+        ["Unknown"],
         [""]);
     createPartnerOffering(
         "AWS",
@@ -355,7 +356,7 @@ async function createAllPartnerOfferings() {
         ["https://docs.aws.amazon.com/", "https://github.com/awslabs/mcp"],
         ["https://www.aws.training/", "https://github.com/awslabs/mcp"],
         ["", "https://github.com/awslabs/mcp"],
-        ["", ""],
+        ["Unknown", "Unknown"],
         ["", ""]);
     createPartnerOffering(
         "Azure",
@@ -370,7 +371,7 @@ async function createAllPartnerOfferings() {
         ["https://github.com/Azure/azure-mcp", "", "https://learn.microsoft.com/en-us/rest/api/azure/"],
         ["https://github.com/Azure/azure-mcp", "", "https://learn.microsoft.com/en-us/training/azure/"],
         ["https://github.com/Azure/azure-mcp", "", ""],
-        ["", "", ""],
+        ["Unknown", "Unknown", "Unknown"],
         ["", "", ""]);
     createPartnerOffering(
         "",
@@ -385,7 +386,7 @@ async function createAllPartnerOfferings() {
         ["https://portal.nectar.software/docs"],
         ["https://support.nectarcorp.com/docs/training"],
         [""],
-        [""],
+        ["Unknown"],
         [""]);
     createPartnerOffering(
         "Connect",
@@ -400,7 +401,7 @@ async function createAllPartnerOfferings() {
         ["https://docs.aws.amazon.com/connect/latest/APIReference/connect-service-api.html"],
         ["https://aws.amazon.com/blogs/training-and-certification/category/contact-center/amazon-connect/"],
         [""],
-        [""],
+        ["Unknown"],
         [""]);
     createPartnerOffering(
         "Intune",
@@ -415,7 +416,7 @@ async function createAllPartnerOfferings() {
         ["https://learn.microsoft.com/en-us/purview/developer/"],
         ["https://learn.microsoft.com/en-us/training/purview/"],
         [""],
-        [""],
+        ["Unknown"],
         [""]);
     createPartnerOffering(
         "Teams",
@@ -430,7 +431,7 @@ async function createAllPartnerOfferings() {
         ["https://learn.microsoft.com/en-us/graph/api/resources/teams-api-overview?view=graph-rest-1.0"],
         ["https://learn.microsoft.com/en-us/training/modules/microsoft-intune/"],
         [""],
-        [""],
+        ["Unknown"],
         [""]);
     createPartnerOffering(
         "MIST",
@@ -445,7 +446,7 @@ async function createAllPartnerOfferings() {
         ["https://www.juniper.net/documentation/us/en/software/mist/automation-integration/topics/concept/restful-api-overview.html"],
         ["https://learningportal.juniper.net/juniper/user_activity_info.aspx?id=11584"],
         [""],
-        [""],
+        ["Unknown"],
         [""]);
     createPartnerOffering(
         "DNA Center",
@@ -460,7 +461,7 @@ async function createAllPartnerOfferings() {
         ["https://developer.cisco.com/docs/dna-center/overview/"],
         ["https://learningnetwork.cisco.com/s/cisco-dna-center-training-videos"],
         [""],
-        [""],
+        ["Unknown"],
         [""]);
     createPartnerOffering(
         "1000 eyes",
@@ -475,7 +476,7 @@ async function createAllPartnerOfferings() {
         [""],
         [""],
         [""],
-        [""],
+        ["Unknown"],
         [""]);
     createPartnerOffering(
         "Cat Center",
@@ -490,7 +491,7 @@ async function createAllPartnerOfferings() {
         [""],
         [""],
         [""],
-        [""],
+        ["Unknown"],
         [""]);
     createPartnerOffering(
         "Meraki",
@@ -505,7 +506,7 @@ async function createAllPartnerOfferings() {
         [""],
         [""],
         [""],
-        [""],
+        ["Unknown"],
         [""]);
     createPartnerOffering(
         "AIOps",
@@ -535,7 +536,7 @@ async function createAllPartnerOfferings() {
         ["https://developer.arubanetworks.com/central/docs/api-gateway, https://developer.greenlake.hpe.com/docs/greenlake/services"],
         ["https://sthpe-education.insite-la.com/us/en/training/portfolio/aruba.html; https://education.hpe.com/ww/en/training/portfolio/greenlake.html"],
         [""],
-        [""],
+        ["Unknown"],
         [""]);
     createPartnerOffering(
         "Workspace Analytics",
@@ -550,7 +551,7 @@ async function createAllPartnerOfferings() {
         ["https://developers.hp.com/hp-proactive-insights/api/hp-workforce-solutions-analytics-api"],
         ["https://education.hpe.com/ww/en/training/index.html"],
         [""],
-        [""],
+        ["Unknown"],
         [""]);
 }
 

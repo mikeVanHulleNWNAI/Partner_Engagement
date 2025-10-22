@@ -31,7 +31,6 @@ export type partnerOfferingType = {
         trainingLink: string;
         sandboxEnvironment: string;
         endpoint: string;
-        authenticationInfo: string;
         apiType: {
             id: string;
             name: string;
@@ -40,7 +39,10 @@ export type partnerOfferingType = {
             id: string;
             name: string;
         };
+        authenticationInfo: string;
     }[];
 }
 
 export type IdNameType = { id: string; name: string };
+
+export type IdNameAndManagerIdNameType = { nwnOffering: IdNameType, manager: IdNameType };

@@ -1,6 +1,6 @@
-import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
+import { FormControl, InputLabel, MenuItem, Select, SelectChangeEvent } from '@mui/material';
 import { IdNameAndManagerIdNameType } from '../Types';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface SelectionNwnOfferingValidationProps {
     label: string;
@@ -20,25 +20,38 @@ const SelectionNwnOfferingValidation: React.FC<SelectionNwnOfferingValidationPro
 
     const [selectedValue, setSelectedValue] = useState<IdNameAndManagerIdNameType>(value);
 
-    const handleClick = (idNameAndManagerType: IdNameAndManagerIdNameType) => {
-        setSelectedValue(idNameAndManagerType);
-        onChange(idNameAndManagerType);
+    useEffect(() => {
+        setSelectedValue(value);
+    }, [value])
+
+    const getDisplayValue = (item: IdNameAndManagerIdNameType) => {
+        return `${item.nwnOffering.name} - ${item.manager.name}`;
+    }
+
+    const handleChange = (event: SelectChangeEvent<string>) => {
+        const selected = options.find(
+            opt => getDisplayValue(opt) === event.target.value
+        );
+        if (selected) {
+            setSelectedValue(selected);
+            if (onChange)
+                onChange(selected);
+        }
     }
 
     return (
-        <FormControl variant="standard">
+        <FormControl variant="standard" fullWidth={fullWidth}>
             <InputLabel>{label}</InputLabel>
             <Select
-                type="text"
-                value={selectedValue.nwnOffering.name + " - " + selectedValue.manager.name}
-                fullWidth={fullWidth}
+                value={getDisplayValue(selectedValue)}
+                onChange={handleChange}
             >
                 {options.map((option) => (
                     <MenuItem
-                        value={option.nwnOffering.name + " - " + option.manager.name}
-                        onClick={() => handleClick(option)}
+                        value={getDisplayValue(option)}
+                        key={option.nwnOffering.id}
                     >
-                        {option.nwnOffering.name + " - " + option.manager.name}
+                        {getDisplayValue(option)}
                     </MenuItem>
                 ))}
             </Select>

@@ -1,13 +1,13 @@
-import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
+import { FormControl, InputLabel, MenuItem, Select, SelectChangeEvent } from '@mui/material';
 import { IdNameType } from '../Types';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface SelectionValidationProps {
     label: string;
     value: IdNameType;
     options: IdNameType[]
     fullWidth?: boolean;
-    onChange: (idNameType: IdNameType) => void;
+    onChange?: (idNameType: IdNameType) => void;
 }
 
 const SelectionValidation: React.FC<SelectionValidationProps> = ({
@@ -20,23 +20,30 @@ const SelectionValidation: React.FC<SelectionValidationProps> = ({
 
     const [selectedValue, setSelectedValue] = useState<IdNameType>(value);
 
-    const handleClick = (idNameType: IdNameType) => {
-        setSelectedValue(idNameType);
-        onChange(idNameType);
+    useEffect(() => {
+       setSelectedValue(value);
+    }, [value])
+
+    const handleChange = (event: SelectChangeEvent<string>) => {
+        const selected = options.find(opt => opt.name === event.target.value);
+        if (selected) {
+            setSelectedValue(selected);
+            if (onChange)
+                onChange(selected);
+        }
     }
 
     return (
-        <FormControl variant="standard">
+        <FormControl variant="standard" fullWidth={fullWidth}>
             <InputLabel>{label}</InputLabel>
             <Select
-                type="text"
                 value={selectedValue.name}
-                fullWidth={fullWidth}
+                onChange={handleChange}
             >
                 {options.map((option) => (
                     <MenuItem
                         value={option.name}
-                        onClick={() => handleClick(option)}
+                        key={option.id}
                     >
                         {option.name}
                     </MenuItem>

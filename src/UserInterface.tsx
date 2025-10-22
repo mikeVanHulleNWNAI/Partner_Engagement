@@ -530,7 +530,6 @@ function UserInterface() {
                     partnerOfferingData={structuredClone(activePartnerOffering)}
                     connectionStatusOptions={connectionStatusOptions}
                     nwnOfferingOptions={nwnOfferingOptions}
-                    managerOptions={managerOptions}
                     companyOptions={companyOptions}
                     priorityOptions={priorityOptions}
                     apiTypeOptions={apiTypeOptions}

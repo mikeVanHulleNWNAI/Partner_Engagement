@@ -7,6 +7,7 @@ import {
   DialogActions,
   TextField,
   Box,
+  Stack,
 } from '@mui/material';
 import { IdNameAndManagerIdNameType, IdNameType, partnerOfferingType } from './Types';
 import UrlTextFieldValidation from './Validators/UrlTextFieldValidation';
@@ -20,7 +21,6 @@ interface EditPartnerOfferingProps {
   partnerOfferingData: partnerOfferingType;
   connectionStatusOptions: IdNameType[];
   nwnOfferingOptions: IdNameAndManagerIdNameType[];
-  managerOptions: IdNameType[];
   companyOptions: IdNameType[];
   priorityOptions: IdNameType[];
   apiTypeOptions: IdNameType[];
@@ -34,7 +34,6 @@ const EditPartnerOfferingForm: React.FC<EditPartnerOfferingProps> = ({
   partnerOfferingData,
   connectionStatusOptions,
   nwnOfferingOptions,
-  managerOptions,
   companyOptions,
   priorityOptions,
   apiTypeOptions,
@@ -42,8 +41,8 @@ const EditPartnerOfferingForm: React.FC<EditPartnerOfferingProps> = ({
 }) => {
 
   const [formData, setFormData] = useState<partnerOfferingType>(partnerOfferingData);
-  const [expandedApis, setExpandedApis] = useState<Set<string>>(new Set(partnerOfferingData.apis.map(api => api.id)));
   const [valid, setValid] = useState(true);
+  const [activeApiNumber, setActiveApiNumber] = useState(formData.apis.length > 0 ? 0 : null);
 
   const handleChange = (
     field: string,
@@ -69,6 +68,7 @@ const EditPartnerOfferingForm: React.FC<EditPartnerOfferingProps> = ({
     }));
   };
 
+  /* TODO 9879: This one would only be used for managers since it is deep nested
   const handleDeepNestedChange = (
     parent: keyof partnerOfferingType,
     middle: string,
@@ -86,11 +86,12 @@ const EditPartnerOfferingForm: React.FC<EditPartnerOfferingProps> = ({
       },
     }));
   };
+  */
 
   const handleApiChange = (
     index: number,
     field: string,
-    value: object
+    value: unknown
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -104,7 +105,7 @@ const EditPartnerOfferingForm: React.FC<EditPartnerOfferingProps> = ({
     index: number,
     parent: string,
     field: string,
-    value: object
+    value: unknown
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -122,6 +123,7 @@ const EditPartnerOfferingForm: React.FC<EditPartnerOfferingProps> = ({
     }));
   };
 
+  /* TODO: 9879 need to add the ability to add and remove APIS
   const addApi = () => {
     const newId = `api-${Date.now()}`;
     setFormData((prev) => ({
@@ -155,18 +157,7 @@ const EditPartnerOfferingForm: React.FC<EditPartnerOfferingProps> = ({
       return newSet;
     });
   };
-
-  const toggleApiExpanded = (apiId: string) => {
-    setExpandedApis(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(apiId)) {
-        newSet.delete(apiId);
-      } else {
-        newSet.add(apiId);
-      }
-      return newSet;
-    });
-  };
+  */
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -221,12 +212,11 @@ const EditPartnerOfferingForm: React.FC<EditPartnerOfferingProps> = ({
               handleNestedChange("status", "name", e.name);
             }}
           />
-          {/* TODO: 9879 add manager */}
           <SelectionNwnOfferingValidation
             label="NWN Offering"
             value={{
-              nwnOffering: { id: formData.nwnOffering.id , name: formData.nwnOffering.name },
-              manager: { id: formData.nwnOffering.manager.id , name: formData.nwnOffering.manager.name }
+              nwnOffering: { id: formData.nwnOffering.id, name: formData.nwnOffering.name },
+              manager: { id: formData.nwnOffering.manager.id, name: formData.nwnOffering.manager.name }
             }}
             options={nwnOfferingOptions}
             fullWidth
@@ -237,7 +227,7 @@ const EditPartnerOfferingForm: React.FC<EditPartnerOfferingProps> = ({
           />
           <SelectionValidation
             label="Company"
-            value={{ id: formData.company.id , name: formData.company.name}}
+            value={{ id: formData.company.id, name: formData.company.name }}
             options={companyOptions}
             fullWidth
             onChange={(e) => {
@@ -247,7 +237,7 @@ const EditPartnerOfferingForm: React.FC<EditPartnerOfferingProps> = ({
           />
           <SelectionValidation
             label="Priority"
-            value={{ id: formData.priority.id , name: formData.priority.name}}
+            value={{ id: formData.priority.id, name: formData.priority.name }}
             options={priorityOptions}
             fullWidth
             onChange={(e) => {
@@ -255,6 +245,101 @@ const EditPartnerOfferingForm: React.FC<EditPartnerOfferingProps> = ({
               handleNestedChange("priority", "name", e.name);
             }}
           />
+          {activeApiNumber != null ? (
+            <>
+              <SelectionValidation
+                label="APIs"
+                value={{
+                  id: formData.apis[activeApiNumber].id,
+                  name: formData.apis[activeApiNumber].apiType.name
+                }}
+                options={formData.apis.map((a) => ({
+                  id: a.id,
+                  name: a.apiType.name
+                }))}
+                onChange={(e) => {
+                  setActiveApiNumber(formData.apis.findIndex((a) => a.id === e.id));
+                }}
+                fullWidth />
+              <Box
+                sx={{
+                  gap: 10,
+                  p: 2,
+                  border: '2px solid grey',
+                }}
+              >
+                <Stack direction="column" spacing={2}>
+                  <SelectionValidation
+                    label="API Type"
+                    value={{
+                      id: formData.apis[activeApiNumber].apiType.id,
+                      name: formData.apis[activeApiNumber].apiType.name
+                    }}
+                    options={apiTypeOptions}
+                    fullWidth
+                    onChange={(e) => {
+                      handleApiNestedChange(activeApiNumber, "apiType", "id", e.id);
+                      handleApiNestedChange(activeApiNumber, "apiType", "name", e.name);
+                    }}
+                  />
+                  <UrlTextFieldValidation
+                    label="Doc Link"
+                    urlValue={formData.apis[activeApiNumber].docLink}
+                    canBeEmpty={true}
+                    onChange={(e) => handleApiChange(activeApiNumber, 'docLink', e.target.value)}
+                    onValid={(validEntry) => setValid(validEntry)}
+                    fullWidth
+                  />
+                  <UrlTextFieldValidation
+                    label="Training Link"
+                    urlValue={formData.apis[activeApiNumber].trainingLink}
+                    canBeEmpty={true}
+                    onChange={(e) => handleApiChange(activeApiNumber, 'trainingLink', e.target.value)}
+                    onValid={(validEntry) => setValid(validEntry)}
+                    fullWidth
+                  />
+                  <TextField
+                    label="Sandbox Environment"
+                    type="text"
+                    value={formData.apis[activeApiNumber].sandboxEnvironment}
+                    onChange={(e) => handleApiChange(activeApiNumber, 'sandboxEndironment', e.target.value)}
+                    multiline
+                    rows={4}
+                    fullWidth
+                  />
+                  <TextField
+                    label="Endpoint"
+                    type="text"
+                    value={formData.apis[activeApiNumber].endpoint}
+                    onChange={(e) => handleApiChange(activeApiNumber, 'endpoint', e.target.value)}
+                    fullWidth
+                  />
+                  <SelectionValidation
+                    label="Authentication Type"
+                    value={{
+                      id: formData.apis[activeApiNumber].authenticationType?.id,
+                      name: formData.apis[activeApiNumber].authenticationType?.name
+                    }}
+                    options={authenticationTypeOptions}
+                    fullWidth
+                    onChange={(e) => {
+                      handleApiNestedChange(activeApiNumber, "authenticationType", "id", e.id);
+                      handleApiNestedChange(activeApiNumber, "authenticationType", "name", e.name);
+                    }}
+                  />
+                  <TextField
+                    label="Authentication Info"
+                    type="text"
+                    value={formData.apis[activeApiNumber].authenticationInfo}
+                    onChange={(e) => handleApiChange(activeApiNumber, 'authenticationInfo', e.target.value)}
+                    fullWidth
+                  />
+                </Stack>
+              </Box>
+            </>
+          ) : (
+            <div>No APIs</div>
+          )}
         </Box>
       </DialogContent>
       <DialogActions>
