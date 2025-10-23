@@ -9,22 +9,17 @@ import {
   Box,
   Stack,
 } from '@mui/material';
-import { IdNameAndManagerIdNameType, IdNameType, partnerOfferingType } from './Types';
+import { partnerOfferingType } from './Types';
 import UrlTextFieldValidation from './Validators/UrlTextFieldValidation';
 import SelectionValidation from './Validators/SelectionValidation';
 import SelectionNwnOfferingValidation from './Validators/SelectionNwnOfferingValidation';
+import { useDatabaseSubscription } from './DatabaseSubscriptionProvider';
 
 interface EditPartnerOfferingProps {
   open: boolean;
   onClose: () => void;
   onSubmit: (formData: partnerOfferingType) => void;
   partnerOfferingData: partnerOfferingType;
-  connectionStatusOptions: IdNameType[];
-  nwnOfferingOptions: IdNameAndManagerIdNameType[];
-  companyOptions: IdNameType[];
-  priorityOptions: IdNameType[];
-  apiTypeOptions: IdNameType[];
-  authenticationTypeOptions: IdNameType[];
 }
 
 const EditPartnerOfferingForm: React.FC<EditPartnerOfferingProps> = ({
@@ -32,17 +27,20 @@ const EditPartnerOfferingForm: React.FC<EditPartnerOfferingProps> = ({
   onClose,
   onSubmit,
   partnerOfferingData,
-  connectionStatusOptions,
-  nwnOfferingOptions,
-  companyOptions,
-  priorityOptions,
-  apiTypeOptions,
-  authenticationTypeOptions,
 }) => {
 
   const [formData, setFormData] = useState<partnerOfferingType>(partnerOfferingData);
   const [valid, setValid] = useState(true);
   const [activeApiNumber, setActiveApiNumber] = useState(formData.apis.length > 0 ? 0 : null);
+
+  const {
+    connectionStatusOptions,
+    nwnOfferingOptions,
+    companyOptions,
+    priorityOptions,
+    apiTypeOptions,
+    authenticationTypeOptions,
+  } = useDatabaseSubscription();
 
   const handleChange = (
     field: string,

@@ -1,16 +1,17 @@
-import { memo, useEffect, useState, useCallback, useMemo } from "react";
+import { memo, useState, useCallback, useMemo } from "react";
 import { Box, Button, FormControl, InputLabel, Select, MenuItem, Typography } from '@mui/material';
 import { createInitialDataSettings, createPartnerOffering, deleteAll, deletePartnerOffering } from "./Utils/CreateData"
-import { BODY_COLOR, CLIENT } from "./Utils/Constants";
+import { BODY_COLOR } from "./Utils/Constants";
 import ItemGrid from "./ItemGrid";
 import Sidebar from "./Sidebar";
 import ApiList from "./ApiList";
 import EditPartnerOfferingForm from "./EditPartnerOfferingForm";
 import PartnerOfferingTile from "./PartnerOfferingTile";
 import NavBar from "./NavBar";
-import { IdNameAndManagerIdNameType, IdNameType, partnerOfferingType } from './Types';
+import { partnerOfferingType } from './Types';
 import { RenderLinkOrText } from "./RenderLinkOrText";
 import { adjustColorHSL } from "./Utils/adjustColor";
+import { useDatabaseSubscription } from "./DatabaseSubscriptionProvider";
 
 // Memoized tile component for better performance
 const PartnerOfferingTileMemo = memo<{
@@ -32,33 +33,13 @@ function UserInterface() {
   // NavBar height can not be less then 16
   const navBarHeight: number = 16;
 
-  // Data state
-  const [allPartnerOfferings, setAllPartnerOfferings] = useState<partnerOfferingType[]>([]);
-
-  const [connectionStatusOptions, setConnectionStatusOptions] = useState<Array<IdNameType>>([]);
-  const [nwnOfferingOptions, setNwnOfferingOptions] = useState<Array<IdNameAndManagerIdNameType>>([]);
-  const [managerOptions, setManagerOptions] = useState<Array<IdNameType>>([]);
-  const [companyOptions, setCompanyOptions] = useState<Array<IdNameType>>([]);
-  const [priorityOptions, setPriorityOptions] = useState<Array<IdNameType>>([]);
-  const [apiTypeOptions, setApiTypeOptions] = useState<Array<IdNameType>>([]);
-  const [authenticationTypeOptions, setAuthenticationTypeOptions] = useState<Array<IdNameType>>([]);
-
-  // Loading state
-  const [loadingStates, setLoadingStates] = useState({
-    connectionStatuses: true,
-    managers: true,
-    nwnOfferings: true,
-    companies: true,
-    partnerOfferings: true,
-    apiTypes: true,
-    authenticationTypes: true
-  });
-
-  // Compute overall loading state
-  const isLoading = useMemo(() =>
-    Object.values(loadingStates).some(state => state),
-    [loadingStates]
-  );
+  const {
+    allPartnerOfferings,
+    nwnOfferingOptions,
+    managerOptions,
+    apiTypeOptions,
+    isLoading
+  } = useDatabaseSubscription();
 
   // UI state
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -69,237 +50,6 @@ function UserInterface() {
   const [selectedManager, setSelectedManager] = useState<string>("");
   const [selectedNwnOffering, setSelectedNwnOffering] = useState<string>("");
   const [selectedApiType, setSelectedApiType] = useState<string>("");
-
-  // Combined subscription effect for all data
-  useEffect(() => {
-    // Subscribe to PartnerOfferings
-    const partnerOfferingSubscription = CLIENT.models.PartnerOffering.observeQuery({
-      selectionSet: [
-        'id',
-        'offeringName',
-        'contactInfo',
-        'dashboard',
-        'notes',
-        'status.id',
-        'status.name',
-        'nwnOffering.id',
-        'nwnOffering.name',
-        'nwnOffering.manager.id',
-        'nwnOffering.manager.name',
-        'company.id',
-        'company.name',
-        'priority.id',
-        'priority.name',
-        'apis.id',
-        'apis.docLink',
-        'apis.trainingLink',
-        'apis.sandboxEnvironment',
-        'apis.endpoint',
-        'apis.apiType.id',
-        'apis.apiType.name',
-        'apis.authenticationType.id',
-        'apis.authenticationType.name',
-        'apis.authenticationInfo',
-      ]
-    }).subscribe({
-      next: async (data) => {
-        // Check if any items have null status (Amplify bug workaround)
-        const hasNullStatus = data.items.some(item => item.status === null);
-
-        if (hasNullStatus) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-
-        // Fix for Amplify bug #13267: refetch items with null status
-        const partnerOfferingMap = (await Promise.all(
-          data.items.map(async (item) => {
-            if (item.status === null) {
-              const refetchedItem = await CLIENT.models.PartnerOffering.get(
-                { id: item.id },
-                {
-                  selectionSet: [
-                    'id',
-                    'offeringName',
-                    'contactInfo',
-                    'dashboard',
-                    'notes',
-                    'status.id',
-                    'status.name',
-                    'nwnOffering.id',
-                    'nwnOffering.name',
-                    'nwnOffering.manager.id',
-                    'nwnOffering.manager.name',
-                    'company.id',
-                    'company.name',
-                    'priority.id',
-                    'priority.name',
-                    'apis.id',
-                    'apis.docLink',
-                    'apis.trainingLink',
-                    'apis.sandboxEnvironment',
-                    'apis.endpoint',
-                    'apis.apiType.id',
-                    'apis.apiType.name',
-                    'apis.authenticationType.id',
-                    'apis.authenticationType.name',
-                    'apis.authenticationInfo',
-                  ]
-                }
-              );
-              return refetchedItem.data;
-            }
-            return item;
-          })
-        ))
-          .filter((item): item is partnerOfferingType => item !== null && item !== undefined)
-          .sort((a, b) => {
-            // Sort by nwnOffering.name first
-            const nwnOfferingA = a.nwnOffering?.name?.toLowerCase() || '';
-            const nwnOfferingB = b.nwnOffering?.name?.toLowerCase() || '';
-            if (nwnOfferingA !== nwnOfferingB) {
-              return nwnOfferingA.localeCompare(nwnOfferingB);
-            }
-
-            // Then by company.name
-            const companyA = a.company?.name?.toLowerCase() || '';
-            const companyB = b.company?.name?.toLowerCase() || '';
-            if (companyA !== companyB) {
-              return companyA.localeCompare(companyB);
-            }
-
-            // Finally by offeringName
-            const offeringA = a.offeringName?.toLowerCase() || '';
-            const offeringB = b.offeringName?.toLowerCase() || '';
-            return offeringA.localeCompare(offeringB);
-          });
-
-        setAllPartnerOfferings(partnerOfferingMap);
-        setLoadingStates(prev => ({ ...prev, partnerOfferings: false }));
-      }
-    });
-
-    // Subscribe to Connection Status
-    const connectionStatusSubscription = CLIENT.models.ConnectionStatus.observeQuery({
-      selectionSet: ['id', 'name']
-    }).subscribe({
-      next: (data) => {
-        const connectionStatuses = data.items
-          .filter((item): item is IdNameType =>
-            item !== null && item !== undefined && item.name !== ""
-          )
-          .sort((a, b) => a.name.localeCompare(b.name));
-        setConnectionStatusOptions(connectionStatuses);
-        setLoadingStates(prev => ({ ...prev, connectionStatuses: false }));
-      }
-    });
-
-    // Subscribe to NWN Offerings
-    const nwnOfferingSubscription = CLIENT.models.NwnOffering.observeQuery({
-      selectionSet: ['id', 'name', 'manager.id', 'manager.name']
-    }).subscribe({
-      next: (data) => {
-        const offerings = data.items
-          .filter((item) =>
-            item !== null && item !== undefined && item.name !== ""
-          )
-          .sort((a, b) => a.name.localeCompare(b.name));
-        setNwnOfferingOptions(
-          offerings.map((o) => ({
-            nwnOffering: { id: o.id, name: o.name },
-            manager: { id: o.manager.id, name: o.manager.name }
-          }))
-        );
-        setLoadingStates(prev => ({ ...prev, nwnOfferings: false }));
-      }
-    });
-
-    // Subscribe to Managers
-    const managerSubscription = CLIENT.models.Manager.observeQuery({
-      selectionSet: ['id', 'name']
-    }).subscribe({
-      next: (data) => {
-        const managers = data.items
-          .filter((item): item is IdNameType =>
-            item !== null && item !== undefined && item.name !== ""
-          )
-          .sort((a, b) => a.name.localeCompare(b.name));
-        setManagerOptions(managers);
-        setLoadingStates(prev => ({ ...prev, managers: false }));
-      }
-    });
-
-    // Subscribe to Companies
-    const companySubscription = CLIENT.models.Company.observeQuery({
-      selectionSet: ['id', 'name']
-    }).subscribe({
-      next: (data) => {
-        const companies = data.items
-          .filter((item): item is IdNameType =>
-            item !== null && item !== undefined && item.name !== ""
-          )
-          .sort((a, b) => a.name.localeCompare(b.name));
-        setCompanyOptions(companies);
-        setLoadingStates(prev => ({ ...prev, companies: false }));
-      }
-    });
-
-    // Subscribe to Priorities
-    const prioritySubscription = CLIENT.models.Priority.observeQuery({
-      selectionSet: ['id', 'name']
-    }).subscribe({
-      next: (data) => {
-        const priorities = data.items
-          .filter((item): item is IdNameType =>
-            item !== null && item !== undefined && item.name !== ""
-          )
-          .sort((a, b) => a.name.localeCompare(b.name));
-        setPriorityOptions(priorities);
-        setLoadingStates(prev => ({ ...prev, priotities: false }));
-      }
-    });
-
-    // Subscribe to API Types
-    const apiTypeSubscription = CLIENT.models.ApiType.observeQuery({
-      selectionSet: ['id', 'name']
-    }).subscribe({
-      next: (data) => {
-        const apiTypes = data.items
-          .filter((item): item is IdNameType =>
-            item !== null && item !== undefined && item.name !== ""
-          )
-          .sort((a, b) => a.name.localeCompare(b.name));
-        setApiTypeOptions(apiTypes);
-        setLoadingStates(prev => ({ ...prev, apiTypes: false }));
-      }
-    });
-
-    // Subscribe to Authentication Types
-    const authenticationTypesSubscription = CLIENT.models.AuthenticationType.observeQuery({
-      selectionSet: ['id', 'name']
-    }).subscribe({
-      next: (data) => {
-        const authenticationTypes = data.items
-          .filter((item): item is IdNameType =>
-            item !== null && item !== undefined && item.name !== ""
-          )
-          .sort((a, b) => a.name.localeCompare(b.name));
-        setAuthenticationTypeOptions(authenticationTypes);
-        setLoadingStates(prev => ({ ...prev, authenticationTypes: false }));
-      }
-    });
-
-    // Cleanup all subscriptions
-    return () => {
-      partnerOfferingSubscription.unsubscribe();
-      connectionStatusSubscription.unsubscribe();
-      managerSubscription.unsubscribe();
-      companySubscription.unsubscribe();
-      prioritySubscription.unsubscribe();
-      nwnOfferingSubscription.unsubscribe();
-      apiTypeSubscription.unsubscribe();
-      authenticationTypesSubscription.unsubscribe();
-    };
-  }, []);
 
   // Apply filters client-side using useMemo for performance
   const filteredPartnerOfferings = useMemo(() => {
@@ -528,12 +278,6 @@ function UserInterface() {
                     onClose={handleClosePopup}
                     onSubmit={handleSubmitForm}
                     partnerOfferingData={structuredClone(activePartnerOffering)}
-                    connectionStatusOptions={connectionStatusOptions}
-                    nwnOfferingOptions={nwnOfferingOptions}
-                    companyOptions={companyOptions}
-                    priorityOptions={priorityOptions}
-                    apiTypeOptions={apiTypeOptions}
-                    authenticationTypeOptions={authenticationTypeOptions}
                   />
                 }
 
