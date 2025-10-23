@@ -87,19 +87,11 @@ export default function DialogMenu() {
         <>
             <Button
                 sx={{
-                    px: 4,
                     color: 'black',
-                    textAlign: 'left',
-                    position: 'relative'
                 }}
                 onClick={handleMenuClick}
                 startIcon={<MenuIcon />}
-                aria-controls={menuOpen ? 'main-menu' : undefined}
-                aria-haspopup="true"
-                aria-expanded={menuOpen ? 'true' : undefined}
-            >
-                Menu
-            </Button>
+            />
             <Menu
                 id="main-menu"
                 anchorEl={anchorEl}

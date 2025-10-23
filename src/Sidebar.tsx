@@ -1,22 +1,28 @@
 import { useState, useRef, useEffect } from 'react';
-import { Box, IconButton, Drawer } from '@mui/material';
+import { Box, IconButton, Drawer, Button, Typography } from '@mui/material';
 import { ChevronRightIcon } from 'lucide-react';
+import { partnerOfferingType } from './Types';
+import SidebarMenu from './Menus/SidebarMenu';
+import PartnerOfferingTile from './PartnerOfferingTile';
+import { RenderLinkOrText } from './RenderLinkOrText';
+import ApiList from './ApiList';
+import { createPartnerOffering } from './Utils/CreateData';
 
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
-  children: React.ReactNode;
+  activePartnerOffering?: partnerOfferingType;
   backgroundColor?: string;
   positionFromTop: number;
 }
 
-function Sidebar({ 
-    isOpen, 
-    onClose, 
-    children, 
-    backgroundColor = '#ffffff',
-    positionFromTop = 16
-  }: SidebarProps) {
+function Sidebar({
+  isOpen,
+  onClose,
+  activePartnerOffering,
+  backgroundColor = '#ffffff',
+  positionFromTop = 16
+}: SidebarProps) {
   const [width, setWidth] = useState(384); // Default width (384px)
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
@@ -140,7 +146,118 @@ function Sidebar({
 
         {/* Content */}
         <Box sx={{ pt: 4 }}>
-          {children}
+          <Box sx={{ p: 2 }}>
+            {activePartnerOffering ? (
+              <Box>
+                {/* Debug Buttons (hidden) */}
+                <Button
+                  sx={{ display: 'none' }}
+                  onClick={async () => {
+                    await createPartnerOffering(
+                      "Test 1234",
+                      "Pragti Aggarwal <pragti@apexaiq.com>; Engineering support: lokesh@apexaiq.com",
+                      "https://nwn.okta.com/app/UserHome",
+                      "",
+                      "Connected",
+                      "",
+                      "ApexaiQ",
+                      "LOW",
+                      ["REST"],
+                      [""],
+                      [""],
+                      [""],
+                      [""],
+                      [""]
+                    );
+                  }}
+                >
+                  New Partner Offering
+                </Button>
+                <SidebarMenu
+                  activePartnerOffering={activePartnerOffering}
+                />
+                {/* Partner Offering Details */}
+                <Box>
+                  <PartnerOfferingTile partnerOffering={activePartnerOffering} />
+                  <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <Box>
+                      <Typography component="span" sx={{ fontWeight: 'bold' }}>
+                        Manager:
+                      </Typography>
+                      {' '}
+                      <Typography component="span">
+                        {activePartnerOffering.nwnOffering?.manager?.name}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography component="span" sx={{ fontWeight: 'bold' }}>
+                        Contact Info:
+                      </Typography>
+                      {' '}
+                      <Typography component="span">
+                        {activePartnerOffering.contactInfo}
+                      </Typography>
+                    </Box>
+                    <RenderLinkOrText
+                      label="Dashboard"
+                      value={activePartnerOffering.dashboard}
+                    />
+                    <Box>
+                      <Typography component="span" sx={{ fontWeight: 'bold' }}>
+                        Notes:
+                      </Typography>
+                      {' '}
+                      <Typography component="span">
+                        {activePartnerOffering.notes}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography component="span" sx={{ fontWeight: 'bold' }}>
+                        Connection Status:
+                      </Typography>
+                      {' '}
+                      <Typography component="span">
+                        {activePartnerOffering.status?.name}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography component="span" sx={{ fontWeight: 'bold' }}>
+                        NWN Offering:
+                      </Typography>
+                      {' '}
+                      <Typography component="span">
+                        {activePartnerOffering.nwnOffering?.name}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography component="span" sx={{ fontWeight: 'bold' }}>
+                        Company:
+                      </Typography>
+                      {' '}
+                      <Typography component="span">
+                        {activePartnerOffering.company?.name}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography component="span" sx={{ fontWeight: 'bold' }}>
+                        Priority:
+                      </Typography>
+                      {' '}
+                      <Typography component="span">
+                        {activePartnerOffering.priority?.name}
+                      </Typography>
+                    </Box>
+
+                    <ApiList partnerOffering={activePartnerOffering} />
+                  </Box>
+                </Box>
+              </Box>
+            ) : (
+              <Typography sx={{ color: 'text.secondary' }}>
+                No item selected
+              </Typography>
+            )}
+          </Box>
         </Box>
       </Box>
     </Drawer>

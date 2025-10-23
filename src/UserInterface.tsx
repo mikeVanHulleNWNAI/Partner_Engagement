@@ -1,15 +1,12 @@
 import { memo, useState, useCallback, useMemo } from "react";
-import { Box, Button, FormControl, InputLabel, Select, MenuItem, Typography } from '@mui/material';
+import { Box, Button, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { createInitialDataSettings, createPartnerOffering, deleteAll, deletePartnerOffering } from "./Utils/CreateData"
 import { BODY_COLOR } from "./Utils/Constants";
 import ItemGrid from "./ItemGrid";
 import Sidebar from "./Sidebar";
-import ApiList from "./ApiList";
-import EditPartnerOfferingForm from "./EditPartnerOfferingForm";
 import PartnerOfferingTile from "./PartnerOfferingTile";
 import NavBar from "./NavBar";
 import { partnerOfferingType } from './Types';
-import { RenderLinkOrText } from "./RenderLinkOrText";
 import { adjustColorHSL } from "./Utils/adjustColor";
 import { useDatabaseSubscription } from "./DatabaseSubscriptionProvider";
 
@@ -42,9 +39,8 @@ function UserInterface() {
   } = useDatabaseSubscription();
 
   // UI state
-  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [activePartnerOffering, setActivePartnerOffering] = useState<partnerOfferingType>();
-  const [isPopupOpen, setIsPopupOpen] = useState(false);
 
   // Filter state
   const [selectedManager, setSelectedManager] = useState<string>("");
@@ -68,26 +64,12 @@ function UserInterface() {
   // Callbacks
   const activateSidebar = useCallback((productOffering: partnerOfferingType) => {
     setActivePartnerOffering(productOffering);
-    setIsOpen(true);
+    setIsSidebarOpen(true);
   }, []);
 
   const handleCloseSidebar = useCallback(() => {
     setActivePartnerOffering(undefined);
-    setIsOpen(false);
-  }, []);
-
-  const handleOpenPopup = useCallback(() => {
-    setIsPopupOpen(true);
-  }, []);
-
-  const handleClosePopup = useCallback(() => {
-    setIsPopupOpen(false);
-  }, []);
-
-  const handleSubmitForm = useCallback((partnerOffering: partnerOfferingType) => {
-    console.log('Form submitted with partnerOffering:', partnerOffering);
-    setIsPopupOpen(false);
-    // Perform actions with the submitted data, e.g., send to an API
+    setIsSidebarOpen(false);
   }, []);
 
   // Fixed async function - use Promise.all instead of forEach
@@ -122,7 +104,11 @@ function UserInterface() {
 
   return (
     <>
-      <NavBar isLoading={isLoading} height={navBarHeight} />
+      <NavBar 
+        isLoading={isLoading} 
+        height={navBarHeight} 
+        title="Partner Offerings"
+      />
       <Box
         sx={{
           pt: `${navBarHeight * 4}px`,
@@ -233,136 +219,12 @@ function UserInterface() {
 
         {/* Sidebar */}
         <Sidebar
-          isOpen={isOpen}
+          isOpen={isSidebarOpen}
           onClose={handleCloseSidebar}
+          activePartnerOffering={activePartnerOffering}
           backgroundColor={`${adjustColorHSL(BODY_COLOR, +50)}`}
           positionFromTop={navBarHeight}
         >
-          <Box sx={{ p: 2 }}>
-            {activePartnerOffering ? (
-              <Box>
-                {/* Debug Buttons (hidden) */}
-                <Button
-                  sx={{ display: 'none' }}
-                  onClick={async () => {
-                    await createPartnerOffering(
-                      "Test 1234",
-                      "Pragti Aggarwal <pragti@apexaiq.com>; Engineering support: lokesh@apexaiq.com",
-                      "https://nwn.okta.com/app/UserHome",
-                      "",
-                      "Connected",
-                      "",
-                      "ApexaiQ",
-                      "LOW",
-                      ["REST"],
-                      [""],
-                      [""],
-                      [""],
-                      [""],
-                      [""]
-                    );
-                  }}
-                >
-                  New Partner Offering
-                </Button>
-                <Button
-                  sx={{}}
-                  onClick={handleOpenPopup}
-                >
-                  Test Form
-                </Button>
-
-                {isPopupOpen &&
-                  <EditPartnerOfferingForm
-                    open={isPopupOpen}
-                    onClose={handleClosePopup}
-                    onSubmit={handleSubmitForm}
-                    partnerOfferingData={structuredClone(activePartnerOffering)}
-                  />
-                }
-
-                {/* Partner Offering Details */}
-                <Box>
-                  <PartnerOfferingTile partnerOffering={activePartnerOffering} />
-                  <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    <Box>
-                      <Typography component="span" sx={{ fontWeight: 'bold' }}>
-                        Manager:
-                      </Typography>
-                      {' '}
-                      <Typography component="span">
-                        {activePartnerOffering.nwnOffering?.manager?.name}
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography component="span" sx={{ fontWeight: 'bold' }}>
-                        Contact Info:
-                      </Typography>
-                      {' '}
-                      <Typography component="span">
-                        {activePartnerOffering.contactInfo}
-                      </Typography>
-                    </Box>
-                    <RenderLinkOrText
-                      label="Dashboard"
-                      value={activePartnerOffering.dashboard}
-                    />
-                    <Box>
-                      <Typography component="span" sx={{ fontWeight: 'bold' }}>
-                        Notes:
-                      </Typography>
-                      {' '}
-                      <Typography component="span">
-                        {activePartnerOffering.notes}
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography component="span" sx={{ fontWeight: 'bold' }}>
-                        Connection Status:
-                      </Typography>
-                      {' '}
-                      <Typography component="span">
-                        {activePartnerOffering.status?.name}
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography component="span" sx={{ fontWeight: 'bold' }}>
-                        NWN Offering:
-                      </Typography>
-                      {' '}
-                      <Typography component="span">
-                        {activePartnerOffering.nwnOffering?.name}
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography component="span" sx={{ fontWeight: 'bold' }}>
-                        Company:
-                      </Typography>
-                      {' '}
-                      <Typography component="span">
-                        {activePartnerOffering.company?.name}
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography component="span" sx={{ fontWeight: 'bold' }}>
-                        Priority:
-                      </Typography>
-                      {' '}
-                      <Typography component="span">
-                        {activePartnerOffering.priority?.name}
-                      </Typography>
-                    </Box>
-
-                    <ApiList partnerOffering={activePartnerOffering} />
-                  </Box>
-                </Box>
-              </Box>
-            ) : (
-              <Typography sx={{ color: 'text.secondary' }}>
-                No item selected
-              </Typography>
-            )}
-          </Box>
         </Sidebar>
       </Box>
     </>

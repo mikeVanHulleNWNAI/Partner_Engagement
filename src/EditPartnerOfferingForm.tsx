@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { FC, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -22,7 +22,7 @@ interface EditPartnerOfferingProps {
   partnerOfferingData: partnerOfferingType;
 }
 
-const EditPartnerOfferingForm: React.FC<EditPartnerOfferingProps> = ({
+const EditPartnerOfferingForm: FC<EditPartnerOfferingProps> = ({
   open,
   onClose,
   onSubmit,
