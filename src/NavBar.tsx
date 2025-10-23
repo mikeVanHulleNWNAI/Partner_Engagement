@@ -1,18 +1,19 @@
 import { AppBar, Toolbar, Typography, CircularProgress } from "@mui/material";
 import { NAVBAR_COLOR } from "./Utils/Constants";
 import { adjustColorHSL } from "./Utils/adjustColor";
+import DialogMenu from "./SpecialDialogs/DialogMenu";
 
 interface NavBarProps {
     isLoading?: boolean;
     height?: number;
 }
 
-export default function NavBar({ 
-    isLoading = false, 
-    height = 16 
+export default function NavBar({
+    isLoading = false,
+    height = 16
 }: NavBarProps) {
     const navHeight = Math.max(height, 16);
-    
+
     return (
         <AppBar
             position="fixed"
@@ -22,18 +23,18 @@ export default function NavBar({
                 borderBottom: `2px solid ${adjustColorHSL(NAVBAR_COLOR, -15)}`,
             }}
         >
-            <Toolbar 
-                sx={{ 
+            <Toolbar
+                sx={{
                     display: 'flex',
                     justifyContent: 'flex-start',
                     height: `${navHeight * 4}px`,
                     minHeight: `${navHeight * 4}px`,
                 }}
             >
-                <Typography 
+                <Typography
                     variant="h5"
                     component="h1"
-                    sx={{ 
+                    sx={{
                         fontWeight: 'bold',
                         color: 'black',
                         textAlign: 'left',
@@ -48,6 +49,7 @@ export default function NavBar({
                         sx={{ ml: 2, color: 'black' }}
                     />
                 )}
+                <DialogMenu />
             </Toolbar>
         </AppBar>
     );
