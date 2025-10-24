@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useReducer } from 'react';
+import React, { useCallback, useReducer } from 'react';
 import {
     Button,
     Menu,
@@ -7,6 +7,8 @@ import {
 import MenuIcon from '@mui/icons-material/Menu';
 import EditPartnerOfferingForm from '../Forms/EditPartnerOfferingForm';
 import { partnerOfferingType } from '../Types';
+import { CLIENT } from '../Utils/Constants';
+import { useDataStore } from '../DataStoreProvider';
 
 // Define state type
 interface SidebarMenuState {
@@ -43,16 +45,14 @@ function sidebarMenuReducer(state: SidebarMenuState, action: SidebarMenuAction):
     }
 }
 
-interface SidebarMenuProps {
-    activePartnerOffering: partnerOfferingType;
-}
-
-const SidebarMenu: FC<SidebarMenuProps> = ({
-    activePartnerOffering
-}) => {
+const SidebarMenu = () => {
     const [state, dispatch] = useReducer(sidebarMenuReducer, initialState);
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const menuOpen = Boolean(anchorEl);
+
+    const {
+        activePartnerOffering
+    } = useDataStore();
 
     const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget);
@@ -74,8 +74,7 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
 
     const handleEditPartnerOfferingSubmit = useCallback((partnerOffering: partnerOfferingType) => {
         dispatch({ type: 'CLOSE_EDITPARTNEROFFERING' });
-        console.log('Form submitted with partnerOffering:', partnerOffering);
-        // TODO: 9879 Perform actions with the submitted data, e.g., send to an API
+        CLIENT.models.PartnerOffering.update(partnerOffering);
     }, []);
 
     const handleDeletePartnerOfferingOpen = () => {
@@ -103,12 +102,16 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
             </Menu>
 
             {/* EditPartnerOfferingForm */}
-            <EditPartnerOfferingForm
-                open={state.editPartnerOffering}
-                onClose={handleEditPartnerOfferingClose}
-                onSubmit={handleEditPartnerOfferingSubmit}
-                partnerOfferingData={structuredClone(activePartnerOffering)}
-            />
+            {activePartnerOffering ? (
+                <EditPartnerOfferingForm
+                    open={state.editPartnerOffering}
+                    onClose={handleEditPartnerOfferingClose}
+                    onSubmit={handleEditPartnerOfferingSubmit}
+                    partnerOfferingData={structuredClone(activePartnerOffering)}
+                />
+            ) : (
+                "No Active Partner Offering"
+            )}
 
             {/* DeletePartnerOfferingForm */}
         </>

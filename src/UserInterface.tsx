@@ -35,12 +35,13 @@ function UserInterface() {
     nwnOfferingOptions,
     managerOptions,
     apiTypeOptions,
+    activePartnerOffering,
+    setActivePartnerOffering,
     isLoading,
   } = useDataStore();
 
   // UI state
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
-  const [activePartnerOffering, setActivePartnerOffering] = useState<partnerOfferingType>();
 
   // Filter state
   const [selectedManager, setSelectedManager] = useState<string>("");
@@ -62,8 +63,8 @@ function UserInterface() {
   }, [allPartnerOfferings, selectedManager, selectedNwnOffering, selectedApiType]);
 
   // Callbacks
-  const activateSidebar = useCallback((productOffering: partnerOfferingType) => {
-    setActivePartnerOffering(productOffering);
+  const activateSidebar = useCallback((partnerOffering: partnerOfferingType) => {
+    setActivePartnerOffering(partnerOffering);
     setIsSidebarOpen(true);
   }, []);
 
@@ -220,7 +221,6 @@ function UserInterface() {
         <Sidebar
           isOpen={isSidebarOpen}
           onClose={handleCloseSidebar}
-          activePartnerOffering={activePartnerOffering}
           backgroundColor={`${adjustColorHSL(BODY_COLOR, +50)}`}
           positionFromTop={navBarHeight}
         >

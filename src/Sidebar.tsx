@@ -1,17 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
 import { Box, IconButton, Drawer, Button, Typography } from '@mui/material';
 import { ChevronRightIcon } from 'lucide-react';
-import { partnerOfferingType } from './Types';
 import SidebarMenu from './Menus/SidebarMenu';
 import PartnerOfferingTile from './PartnerOfferingTile';
 import { RenderLinkOrText } from './RenderLinkOrText';
 import ApiList from './ApiList';
 import { createPartnerOffering } from './Utils/CreateData';
+import { useDataStore } from './DataStoreProvider';
 
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
-  activePartnerOffering?: partnerOfferingType;
   backgroundColor?: string;
   positionFromTop: number;
 }
@@ -19,7 +18,6 @@ interface SidebarProps {
 function Sidebar({
   isOpen,
   onClose,
-  activePartnerOffering,
   backgroundColor = '#ffffff',
   positionFromTop = 16
 }: SidebarProps) {
@@ -29,6 +27,10 @@ function Sidebar({
 
   const minWidth = 200;
   const maxWidth = 800;
+
+  const {
+    activePartnerOffering
+  } = useDataStore();
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -173,9 +175,7 @@ function Sidebar({
                 >
                   New Partner Offering
                 </Button>
-                <SidebarMenu
-                  activePartnerOffering={activePartnerOffering}
-                />
+                <SidebarMenu />
                 {/* Partner Offering Details */}
                 <Box>
                   <PartnerOfferingTile partnerOffering={activePartnerOffering} />

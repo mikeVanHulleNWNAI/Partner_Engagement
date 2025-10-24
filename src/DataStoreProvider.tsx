@@ -13,6 +13,10 @@ interface DataStoreState {
   apiTypeOptions: IdNameType[];
   authenticationTypeOptions: IdNameType[];
   
+  // Active selection
+  activePartnerOffering: partnerOfferingType | undefined;
+  setActivePartnerOffering: (offering: partnerOfferingType | undefined) => void;
+
   // Loading states
   isLoading: boolean;
   loadingStates: {
@@ -52,6 +56,9 @@ export const DataStoreProvider = ({ children }: DataStoreProviderProps) => {
   const [apiTypeOptions, setApiTypeOptions] = useState<IdNameType[]>([]);
   const [authenticationTypeOptions, setAuthenticationTypeOptions] = useState<IdNameType[]>([]);
 
+  // Active selection state
+  const [activePartnerOffering, setActivePartnerOffering] = useState<partnerOfferingType | undefined>(undefined);
+
   // Loading state
   const [loadingStates, setLoadingStates] = useState({
     connectionStatuses: true,
@@ -69,6 +76,24 @@ export const DataStoreProvider = ({ children }: DataStoreProviderProps) => {
     () => Object.values(loadingStates).some((state) => state),
     [loadingStates]
   );
+
+  // Keep activePartnerOffering in sync with allPartnerOfferings
+  useEffect(() => {
+    if (activePartnerOffering) {
+      // Find the updated version of the active offering
+      const updatedOffering = allPartnerOfferings.find(
+        (offering) => offering.id === activePartnerOffering.id
+      );
+      
+      if (updatedOffering) {
+        // Update to the latest version from the subscription
+        setActivePartnerOffering(updatedOffering);
+      } else {
+        // The offering was deleted, clear the selection
+        setActivePartnerOffering(undefined);
+      }
+    }
+  }, [allPartnerOfferings, activePartnerOffering]);
 
   // Combined subscription effect for all data
   useEffect(() => {
@@ -321,6 +346,8 @@ export const DataStoreProvider = ({ children }: DataStoreProviderProps) => {
       priorityOptions,
       apiTypeOptions,
       authenticationTypeOptions,
+      activePartnerOffering,
+      setActivePartnerOffering,
       isLoading,
       loadingStates,
     }),
@@ -333,6 +360,8 @@ export const DataStoreProvider = ({ children }: DataStoreProviderProps) => {
       priorityOptions,
       apiTypeOptions,
       authenticationTypeOptions,
+      activePartnerOffering,
+      setActivePartnerOffering,
       isLoading,
       loadingStates,
     ]
