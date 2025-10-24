@@ -1,6 +1,6 @@
 import { memo, useState, useCallback, useMemo } from "react";
 import { Box, Button, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
-import { createInitialDataSettings, createPartnerOffering, deleteAll, deletePartnerOffering } from "./Utils/CreateData"
+import { createInitialDataSettings, createPartnerOfferingRemove9879, deleteAll, deletePartnerOffering } from "./Utils/CreateData"
 import { BODY_COLOR } from "./Utils/Constants";
 import ItemGrid from "./ItemGrid";
 import Sidebar from "./Sidebar";
@@ -37,7 +37,6 @@ function UserInterface() {
     apiTypeOptions,
     activePartnerOffering,
     setActivePartnerOffering,
-    isLoading,
   } = useDataStore();
 
   // UI state
@@ -80,7 +79,7 @@ function UserInterface() {
     // Properly handle async operations
     await Promise.all(test.map(value => deletePartnerOffering(value.id)));
 
-    await createPartnerOffering(
+    await createPartnerOfferingRemove9879(
       "",
       "Pragti Aggarwal <pragti@apexaiq.com>; Engineering support: lokesh@apexaiq.com",
       "https://nwn.okta.com/app/UserHome",
@@ -106,7 +105,6 @@ function UserInterface() {
   return (
     <>
       <NavBar
-        isLoading={isLoading}
         height={navBarHeight}
       />
       <Box

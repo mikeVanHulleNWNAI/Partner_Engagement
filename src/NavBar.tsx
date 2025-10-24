@@ -2,6 +2,7 @@ import { AppBar, Toolbar, Typography, CircularProgress } from "@mui/material";
 import { NAVBAR_COLOR } from "./Utils/Constants";
 import { adjustColorHSL } from "./Utils/adjustColor";
 import NavBarMenu from "./Menus/NavBarMenu";
+import { useDataStore } from "./DataStoreProvider";
 
 interface NavBarProps {
     isLoading?: boolean;
@@ -9,10 +10,13 @@ interface NavBarProps {
 }
 
 export default function NavBar({
-    isLoading = false,
     height = 16
 }: NavBarProps) {
     const navHeight = Math.max(height, 16);
+
+    const {
+        isLoading
+    } = useDataStore();
 
     return (
         <AppBar
@@ -49,7 +53,9 @@ export default function NavBar({
                         sx={{ ml: 2, color: 'black' }}
                     />
                 )}
-                <NavBarMenu />
+                {!isLoading && (
+                    <NavBarMenu />
+                )}
             </Toolbar>
         </AppBar>
     );

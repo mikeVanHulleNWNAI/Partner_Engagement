@@ -5,7 +5,7 @@ import SidebarMenu from './Menus/SidebarMenu';
 import PartnerOfferingTile from './PartnerOfferingTile';
 import { RenderLinkOrText } from './RenderLinkOrText';
 import ApiList from './ApiList';
-import { createPartnerOffering } from './Utils/CreateData';
+import { createPartnerOfferingRemove9879 } from './Utils/CreateData';
 import { useDataStore } from './DataStoreProvider';
 
 interface SidebarProps {
@@ -155,7 +155,7 @@ function Sidebar({
                 <Button
                   sx={{ display: 'none' }}
                   onClick={async () => {
-                    await createPartnerOffering(
+                    await createPartnerOfferingRemove9879(
                       "Test 1234",
                       "Pragti Aggarwal <pragti@apexaiq.com>; Engineering support: lokesh@apexaiq.com",
                       "https://nwn.okta.com/app/UserHome",

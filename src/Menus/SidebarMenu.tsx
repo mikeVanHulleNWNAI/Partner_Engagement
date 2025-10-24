@@ -10,7 +10,7 @@ import { partnerOfferingType } from '../Types';
 import { CLIENT } from '../Utils/Constants';
 import { useDataStore } from '../DataStoreProvider';
 import AreYouSureForm from '../Forms/AreYouSureForm';
-import PartnerOfferingTile from '../PartnerOfferingTile';
+import { deletePartnerOffering } from '../Utils/CreateData';
 
 // Define state type
 interface SidebarMenuState {
@@ -82,6 +82,7 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
 
     const handleEditPartnerOfferingSubmit = useCallback((partnerOffering: partnerOfferingType) => {
         dispatch({ type: 'CLOSE_EDITPARTNEROFFERING' });
+        // TODO: 9879 need to write an update function in the CreateData.tsx module.
         CLIENT.models.PartnerOffering.update(partnerOffering);
     }, []);
 
@@ -101,8 +102,8 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
         onCloseSidebar();
         // delete the partner offering
         if (activePartnerOffering)
-            CLIENT.models.PartnerOffering.delete(activePartnerOffering)
-    }, []);
+            deletePartnerOffering(activePartnerOffering.id);
+    }, [activePartnerOffering, onCloseSidebar]);
 
     return (
         <>
@@ -119,8 +120,8 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
                 open={menuOpen}
                 onClose={handleMenuClose}
             >
-                <MenuItem onClick={handleEditPartnerOfferingOpen}>Edit</MenuItem>
-                <MenuItem onClick={handleDeletePartnerOfferingOpen}>Delete</MenuItem>
+                <MenuItem onClick={handleEditPartnerOfferingOpen}>Edit Partner Offering</MenuItem>
+                <MenuItem onClick={handleDeletePartnerOfferingOpen}>Delete Partner Offering</MenuItem>
             </Menu>
 
             {/* EditPartnerOfferingForm */}

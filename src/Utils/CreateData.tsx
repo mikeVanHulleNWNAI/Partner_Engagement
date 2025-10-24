@@ -1,3 +1,4 @@
+import { partnerOfferingType } from "../Types";
 import { CLIENT } from "./Constants";
 
 const managers = [
@@ -100,8 +101,42 @@ const authenticationType = [
     ""
 ];
 
-// add a ProductOffering
+// create a ProductOffering
 export async function createPartnerOffering(
+    newPartnerOffering: partnerOfferingType
+) {
+
+    // Create a uuid for the PartnerOffering because we are going to include
+    // in on the client side.  This way everything for PartnerOffering is updated once.
+    const partnerOfferingId = crypto.randomUUID();
+
+    newPartnerOffering.apis.forEach((i) => CLIENT.models.Api.create({
+        docLink: i.docLink,
+        trainingLink: i.trainingLink,
+        sandboxEnvironment: i.sandboxEnvironment,
+        endpoint: i.endpoint,
+        partnerOfferingId: partnerOfferingId,
+        apiTypeId: i.apiType.id,
+        authenticationTypeId: i.authenticationType.id,
+        authenticationInfo: i.authenticationInfo
+    }));
+
+    await CLIENT.models.PartnerOffering.create({
+        id: partnerOfferingId,
+        offeringName: newPartnerOffering.offeringName,
+        contactInfo: newPartnerOffering.contactInfo,
+        dashboard: newPartnerOffering.dashboard,
+        notes: newPartnerOffering.notes,
+        statusId: newPartnerOffering.status.id,
+        nwnOfferingId: newPartnerOffering.nwnOffering.id,
+        companyId: newPartnerOffering.company.id,
+        priorityId: newPartnerOffering.priority.id,
+    });
+}
+
+// add a partner offering
+// TODO: 9879 this is only here so we can create a seed database.  It should be removed later on.
+export async function createPartnerOfferingRemove9879(
     offeringName: string,
     contactInfo: string,
     dashboard: string,
@@ -164,6 +199,42 @@ export async function createPartnerOffering(
     });
 }
 
+export async function updatePartnerOffering(
+    newPartnerOffering: partnerOfferingType,
+    oldPartnerOffering: partnerOfferingType) {
+    // get the id of the partnerOffering
+    const partnerOfferingId = oldPartnerOffering.id;
+    // apis to delete
+    const deleteApis = oldPartnerOffering.apis.filter(item1 =>
+        !newPartnerOffering.apis.some(item2 => item2.id === item1.id));
+    deleteApis.forEach((i) => CLIENT.models.Api.delete({ id: i.id }));
+    // apis to add
+    const addApis = newPartnerOffering.apis.filter(item1 =>
+        !oldPartnerOffering.apis.some(item2 => item2.id === item1.id));
+    addApis.forEach((i) => CLIENT.models.Api.create({
+        docLink: i.docLink,
+        trainingLink: i.trainingLink,
+        sandboxEnvironment: i.sandboxEnvironment,
+        endpoint: i.endpoint,
+        partnerOfferingId: partnerOfferingId,
+        apiTypeId: i.apiType.id,
+        authenticationTypeId: i.authenticationType.id,
+        authenticationInfo: i.authenticationInfo
+    }));
+    // update the partner offering
+    CLIENT.models.PartnerOffering.update({
+        id: partnerOfferingId,
+        offeringName: newPartnerOffering.offeringName,
+        contactInfo: newPartnerOffering.contactInfo,
+        dashboard: newPartnerOffering.dashboard,
+        notes: newPartnerOffering.notes,
+        statusId: newPartnerOffering.status.id,
+        nwnOfferingId: newPartnerOffering.nwnOffering.id,
+        companyId: newPartnerOffering.company.id,
+        priorityId: newPartnerOffering.priority.id,
+    })
+}
+
 export async function deletePartnerOffering(id: string) {
     try {
         // First, get the partner offering with its APIs
@@ -178,7 +249,7 @@ export async function deletePartnerOffering(id: string) {
         if (partnerOfferingToDelete?.data?.apis) {
             // Call apis as a function to get the actual array
             const apisResult = partnerOfferingToDelete.data.apis;
-            
+
             if (apisResult && apisResult.length > 0) {
                 await Promise.all(
                     apisResult.map(api =>
@@ -283,7 +354,7 @@ export async function createInitialDataSettings() {
 }
 
 async function createAllPartnerOfferings() {
-    createPartnerOffering(
+    createPartnerOfferingRemove9879(
         "",
         "",
         "https://nwn-demo.command.verkada.com",
@@ -298,7 +369,7 @@ async function createAllPartnerOfferings() {
         ['{"Environment":"Sandbox"{'],
         ["Unknown"],
         [""]);
-    createPartnerOffering(
+    createPartnerOfferingRemove9879(
         "",
         "Brian Norton <brian.norton@five9.com>",
         " https://login.five9.com/and; https://admin.us.five9.net/.",
@@ -313,7 +384,7 @@ async function createAllPartnerOfferings() {
         ['{"Client ID": "122g33Y5tsTYjrGQpHVlCdUMjNxIsWfD",'],
         ["Unknown"],
         [""]);
-    createPartnerOffering(
+    createPartnerOfferingRemove9879(
         "",
         "",
         "https://nwn.okta.com/app/UserHome",
@@ -328,7 +399,7 @@ async function createAllPartnerOfferings() {
         [""],
         ["Unknown"],
         [""]);
-    createPartnerOffering(
+    createPartnerOfferingRemove9879(
         "",
         "Pragti Aggarwal <pragti@apexaiq.com>; Engineering support: lokesh@apexaiq.com",
         "https://nwn.okta.com/app/UserHome",
@@ -343,7 +414,7 @@ async function createAllPartnerOfferings() {
         [""],
         ["Unknown"],
         [""]);
-    createPartnerOffering(
+    createPartnerOfferingRemove9879(
         "AWS",
         "",
         "",
@@ -358,7 +429,7 @@ async function createAllPartnerOfferings() {
         ["", "https://github.com/awslabs/mcp"],
         ["Unknown", "Unknown"],
         ["", ""]);
-    createPartnerOffering(
+    createPartnerOfferingRemove9879(
         "Azure",
         "",
         "",
@@ -373,7 +444,7 @@ async function createAllPartnerOfferings() {
         ["https://github.com/Azure/azure-mcp", "", ""],
         ["Unknown", "Unknown", "Unknown"],
         ["", "", ""]);
-    createPartnerOffering(
+    createPartnerOfferingRemove9879(
         "",
         "Prakash Birdja <pbirdja@nectarcorp.com>",
         "https://us.nectar.services/dapi/doc",
@@ -388,7 +459,7 @@ async function createAllPartnerOfferings() {
         [""],
         ["Unknown"],
         [""]);
-    createPartnerOffering(
+    createPartnerOfferingRemove9879(
         "Connect",
         "Vu Le <vumle@amazon.com>",
         "https://console.aws.amazon.com/",
@@ -403,7 +474,7 @@ async function createAllPartnerOfferings() {
         [""],
         ["Unknown"],
         [""]);
-    createPartnerOffering(
+    createPartnerOfferingRemove9879(
         "Intune",
         "",
         "",
@@ -418,7 +489,7 @@ async function createAllPartnerOfferings() {
         [""],
         ["Unknown"],
         [""]);
-    createPartnerOffering(
+    createPartnerOfferingRemove9879(
         "Teams",
         "",
         "",
@@ -433,7 +504,7 @@ async function createAllPartnerOfferings() {
         [""],
         ["Unknown"],
         [""]);
-    createPartnerOffering(
+    createPartnerOfferingRemove9879(
         "MIST",
         "",
         "",
@@ -448,7 +519,7 @@ async function createAllPartnerOfferings() {
         [""],
         ["Unknown"],
         [""]);
-    createPartnerOffering(
+    createPartnerOfferingRemove9879(
         "DNA Center",
         "",
         "",
@@ -463,7 +534,7 @@ async function createAllPartnerOfferings() {
         [""],
         ["Unknown"],
         [""]);
-    createPartnerOffering(
+    createPartnerOfferingRemove9879(
         "1000 eyes",
         "",
         "",
@@ -478,7 +549,7 @@ async function createAllPartnerOfferings() {
         [""],
         ["Unknown"],
         [""]);
-    createPartnerOffering(
+    createPartnerOfferingRemove9879(
         "Cat Center",
         "",
         "",
@@ -493,7 +564,7 @@ async function createAllPartnerOfferings() {
         [""],
         ["Unknown"],
         [""]);
-    createPartnerOffering(
+    createPartnerOfferingRemove9879(
         "Meraki",
         "",
         "",
@@ -508,7 +579,7 @@ async function createAllPartnerOfferings() {
         [""],
         ["Unknown"],
         [""]);
-    createPartnerOffering(
+    createPartnerOfferingRemove9879(
         "AIOps",
         "",
         "",
@@ -523,7 +594,7 @@ async function createAllPartnerOfferings() {
         [],
         [],
         []);
-    createPartnerOffering(
+    createPartnerOfferingRemove9879(
         "Aruba Central",
         "",
         "",
@@ -538,7 +609,7 @@ async function createAllPartnerOfferings() {
         [""],
         ["Unknown"],
         [""]);
-    createPartnerOffering(
+    createPartnerOfferingRemove9879(
         "Workspace Analytics",
         "",
         "",
@@ -592,4 +663,3 @@ export async function deleteAll() {
     const allPartnerOfferings = await CLIENT.models.PartnerOffering.list();
     await Promise.all(allPartnerOfferings.data.map((d) => CLIENT.models.PartnerOffering.delete(d)));
 }
-

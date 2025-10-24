@@ -216,7 +216,7 @@ export const DataStoreProvider = ({ children }: DataStoreProviderProps) => {
         const connectionStatuses = data.items
           .filter(
             (item): item is IdNameType =>
-              item !== null && item !== undefined && item.name !== ''
+              item !== null && item !== undefined
           )
           .sort((a, b) => a.name.localeCompare(b.name));
         setConnectionStatusOptions(connectionStatuses);
@@ -230,7 +230,7 @@ export const DataStoreProvider = ({ children }: DataStoreProviderProps) => {
     }).subscribe({
       next: (data) => {
         const offerings = data.items
-          .filter((item) => item !== null && item !== undefined && item.name !== '')
+          .filter((item) => item !== null && item !== undefined)
           .sort((a, b) => a.name.localeCompare(b.name));
         setNwnOfferingOptions(
           offerings.map((o) => ({
@@ -250,7 +250,7 @@ export const DataStoreProvider = ({ children }: DataStoreProviderProps) => {
         const managers = data.items
           .filter(
             (item): item is IdNameType =>
-              item !== null && item !== undefined && item.name !== ''
+              item !== null && item !== undefined
           )
           .sort((a, b) => a.name.localeCompare(b.name));
         setManagerOptions(managers);
@@ -266,7 +266,7 @@ export const DataStoreProvider = ({ children }: DataStoreProviderProps) => {
         const companies = data.items
           .filter(
             (item): item is IdNameType =>
-              item !== null && item !== undefined && item.name !== ''
+              item !== null && item !== undefined
           )
           .sort((a, b) => a.name.localeCompare(b.name));
         setCompanyOptions(companies);
@@ -282,7 +282,7 @@ export const DataStoreProvider = ({ children }: DataStoreProviderProps) => {
         const priorities = data.items
           .filter(
             (item): item is IdNameType =>
-              item !== null && item !== undefined && item.name !== ''
+              item !== null && item !== undefined
           )
           .sort((a, b) => a.name.localeCompare(b.name));
         setPriorityOptions(priorities);
@@ -298,7 +298,7 @@ export const DataStoreProvider = ({ children }: DataStoreProviderProps) => {
         const apiTypes = data.items
           .filter(
             (item): item is IdNameType =>
-              item !== null && item !== undefined && item.name !== ''
+              item !== null && item !== undefined
           )
           .sort((a, b) => a.name.localeCompare(b.name));
         setApiTypeOptions(apiTypes);
@@ -315,7 +315,7 @@ export const DataStoreProvider = ({ children }: DataStoreProviderProps) => {
           const authenticationTypes = data.items
             .filter(
               (item): item is IdNameType =>
-                item !== null && item !== undefined && item.name !== ''
+                item !== null && item !== undefined
             )
             .sort((a, b) => a.name.localeCompare(b.name));
           setAuthenticationTypeOptions(authenticationTypes);

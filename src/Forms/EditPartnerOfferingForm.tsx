@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -33,6 +33,11 @@ const EditPartnerOfferingForm: FC<EditPartnerOfferingProps> = ({
   const [valid, setValid] = useState(true);
   const [activeApiNumber, setActiveApiNumber] = useState(formData.apis.length > 0 ? 0 : null);
 
+  useEffect(() => {
+    setFormData(partnerOfferingData);
+    setActiveApiNumber(partnerOfferingData.apis.length > 0 ? 0 : null);
+  }, [partnerOfferingData]);
+
   const {
     connectionStatusOptions,
     nwnOfferingOptions,
@@ -66,7 +71,6 @@ const EditPartnerOfferingForm: FC<EditPartnerOfferingProps> = ({
     }));
   };
 
-  /* TODO 9879: This one would only be used for managers since it is deep nested
   const handleDeepNestedChange = (
     parent: keyof partnerOfferingType,
     middle: string,
@@ -84,7 +88,6 @@ const EditPartnerOfferingForm: FC<EditPartnerOfferingProps> = ({
       },
     }));
   };
-  */
 
   const handleApiChange = (
     index: number,
@@ -221,6 +224,8 @@ const EditPartnerOfferingForm: FC<EditPartnerOfferingProps> = ({
             onChange={(e) => {
               handleNestedChange("nwnOffering", "id", e.nwnOffering.id);
               handleNestedChange("nwnOffering", "name", e.nwnOffering.name);
+              handleDeepNestedChange("nwnOffering", "manager", "id", e.manager.id);
+              handleDeepNestedChange("nwnOffering", "manager", "name", e.manager.name);
             }}
           />
           <SelectionValidation

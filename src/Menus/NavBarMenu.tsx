@@ -5,35 +5,38 @@ import {
     MenuItem,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import { IdNameType } from '../Types';
+import { IdNameType, partnerOfferingType } from '../Types';
 import EmptyForm from '../Forms/EmptyForm';
+import EditPartnerOfferingForm from '../Forms/EditPartnerOfferingForm';
+import { createPartnerOffering } from '../Utils/CreateData';
+import { useDataStore } from '../DataStoreProvider';
 
 // Define state type
 interface NavBarMenuState {
-    empty1: boolean;
+    createPartnerOffering: boolean;
     empty2: boolean;
 }
 
 // Define action types
 type NavBarMenuAction =
-    | { type: 'OPEN_EMPTY1' }
-    | { type: 'CLOSE_EMPTY1' }
+    | { type: 'OPEN_CREATEPARTNEROFFERING' }
+    | { type: 'CLOSE_CREATEPARTNEROFFERING' }
     | { type: 'OPEN_EMPTY2' }
     | { type: 'CLOSE_EMPTY2' }
 
 // Initial state
 const initialState: NavBarMenuState = {
-    empty1: false,
+    createPartnerOffering: false,
     empty2: false,
 };
 
 // Reducer function
 function navBarMenuReducer(state: NavBarMenuState, action: NavBarMenuAction): NavBarMenuState {
     switch (action.type) {
-        case 'OPEN_EMPTY1':
-            return { ...state, empty1: true };
-        case 'CLOSE_EMPTY1':
-            return { ...state, empty1: false };
+        case 'OPEN_CREATEPARTNEROFFERING':
+            return { ...state, createPartnerOffering: true };
+        case 'CLOSE_CREATEPARTNEROFFERING':
+            return { ...state, createPartnerOffering: false };
         case 'OPEN_EMPTY2':
             return { ...state, empty2: true };
         case 'CLOSE_EMPTY2':
@@ -48,6 +51,13 @@ const NavBarMenu = () => {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const menuOpen = Boolean(anchorEl);
 
+  const {
+    connectionStatusOptions,
+    nwnOfferingOptions,
+    companyOptions,
+    priorityOptions,
+  } = useDataStore();
+
     const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget);
     };
@@ -56,29 +66,28 @@ const NavBarMenu = () => {
         setAnchorEl(null);
     };
 
-    const handleEmpty1Open = () => {
-        dispatch({ type: 'OPEN_EMPTY1' });
+    const handleCreatePartnerOfferingOpen = () => {
+        dispatch({ type: 'OPEN_CREATEPARTNEROFFERING' });
         handleMenuClose();
     };
 
-    const handleEmpty1Close = () => {
-        dispatch({ type: 'CLOSE_EMPTY1' });
+    const handleCreatePartnerOfferingClose = () => {
+        dispatch({ type: 'CLOSE_CREATEPARTNEROFFERING' });
         handleMenuClose();
     };
 
-    const handleEmpty1Submit = useCallback((managerOptions: IdNameType[]) => {
-        dispatch({ type: 'CLOSE_EMPTY1' });
-        console.log("Submit " + managerOptions);
-        // TODO: 9879 Perform actions with the submitted data, e.g., send to an API
+    const handleCreatePartnerOfferingSubmit = useCallback((partnerOffering: partnerOfferingType) => {
+        dispatch({ type: 'CLOSE_CREATEPARTNEROFFERING' });
+        createPartnerOffering(partnerOffering);
     }, []);
 
     const handleEmpty2Open = () => {
-        dispatch({ type: 'OPEN_EMPTY1' });
+        dispatch({ type: 'OPEN_EMPTY2' });
         handleMenuClose();
     };
 
     const handleEmpty2Close = () => {
-        dispatch({ type: 'CLOSE_EMPTY1' });
+        dispatch({ type: 'CLOSE_EMPTY2' });
         handleMenuClose();
     };
 
@@ -87,6 +96,24 @@ const NavBarMenu = () => {
         console.log("Submit " + managerOptions);
         // TODO: 9879 Perform actions with the submitted data, e.g., send to an API
     }, []);
+
+    // these are used to determine if we have the options
+    const firstConnectionsStatus = 
+        connectionStatusOptions.length > 0 ?
+            connectionStatusOptions[0] :
+            { id: "", name: "" };
+    const firstNwnOffering =
+        nwnOfferingOptions.length > 0 ?
+            nwnOfferingOptions[0] :
+            {nwnOffering: { id: "", name: ""}, manager: { id: "", name: ""}};
+    const firstCompany =
+        companyOptions.length > 0 ?
+            companyOptions[0] :
+            { id: "", name: "" };
+    const firstPriority = 
+        priorityOptions.length > 0 ?
+            priorityOptions[0] :
+            { id: "", name: "" };
 
     return (
         <>
@@ -103,15 +130,34 @@ const NavBarMenu = () => {
                 open={menuOpen}
                 onClose={handleMenuClose}
             >
-                <MenuItem onClick={handleEmpty1Open}>Empty 1</MenuItem>
+                <MenuItem onClick={handleCreatePartnerOfferingOpen}>Create Partner Offering</MenuItem>
                 <MenuItem onClick={handleEmpty2Open}>Empty 2</MenuItem>
             </Menu>
 
-            {/* Empty1 */}
-            <EmptyForm
-                open={state.empty1}
-                onClose={handleEmpty1Close}
-                onSubmit={handleEmpty1Submit}
+            {/* CreatePartnerOffering */}
+            <EditPartnerOfferingForm
+                open={state.createPartnerOffering}
+                onClose={handleCreatePartnerOfferingClose}
+                onSubmit={handleCreatePartnerOfferingSubmit}
+                partnerOfferingData={{
+                    id: "",
+                    offeringName: "",
+                    contactInfo: "",
+                    dashboard: "",
+                    notes: "",
+                    status: firstConnectionsStatus,
+                    nwnOffering: {
+                        id: firstNwnOffering.nwnOffering.id,
+                        name: firstNwnOffering.nwnOffering.name,
+                        manager: {
+                            id: firstNwnOffering.manager.id,
+                            name: firstNwnOffering.manager.name
+                        }
+                    },
+                    company: firstCompany,
+                    priority: firstPriority,
+                    apis: []
+                }}
             />
 
             {/* Empty2 */}
