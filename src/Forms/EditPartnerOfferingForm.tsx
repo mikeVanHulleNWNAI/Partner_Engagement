@@ -9,11 +9,11 @@ import {
   Box,
   Stack,
 } from '@mui/material';
-import { partnerOfferingType } from './Types';
-import UrlTextFieldValidation from './Validators/UrlTextFieldValidation';
-import SelectionValidation from './Validators/SelectionValidation';
-import SelectionNwnOfferingValidation from './Validators/SelectionNwnOfferingValidation';
-import { useDatabaseSubscription } from './DatabaseSubscriptionProvider';
+import { partnerOfferingType } from '../Types';
+import UrlTextFieldValidation from '../Validators/UrlTextFieldValidation';
+import SelectionValidation from '../Validators/SelectionValidation';
+import SelectionNwnOfferingValidation from '../Validators/SelectionNwnOfferingValidation';
+import { useDataStore } from '../DataStoreProvider';
 
 interface EditPartnerOfferingProps {
   open: boolean;
@@ -40,7 +40,7 @@ const EditPartnerOfferingForm: FC<EditPartnerOfferingProps> = ({
     priorityOptions,
     apiTypeOptions,
     authenticationTypeOptions,
-  } = useDatabaseSubscription();
+  } = useDataStore();
 
   const handleChange = (
     field: string,

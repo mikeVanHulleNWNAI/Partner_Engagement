@@ -8,7 +8,7 @@ import PartnerOfferingTile from "./PartnerOfferingTile";
 import NavBar from "./NavBar";
 import { partnerOfferingType } from './Types';
 import { adjustColorHSL } from "./Utils/adjustColor";
-import { useDatabaseSubscription } from "./DatabaseSubscriptionProvider";
+import { useDataStore } from "./DataStoreProvider";
 
 // Memoized tile component for better performance
 const PartnerOfferingTileMemo = memo<{
@@ -35,8 +35,8 @@ function UserInterface() {
     nwnOfferingOptions,
     managerOptions,
     apiTypeOptions,
-    isLoading
-  } = useDatabaseSubscription();
+    isLoading,
+  } = useDataStore();
 
   // UI state
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
@@ -104,10 +104,9 @@ function UserInterface() {
 
   return (
     <>
-      <NavBar 
-        isLoading={isLoading} 
-        height={navBarHeight} 
-        title="Partner Offerings"
+      <NavBar
+        isLoading={isLoading}
+        height={navBarHeight}
       />
       <Box
         sx={{

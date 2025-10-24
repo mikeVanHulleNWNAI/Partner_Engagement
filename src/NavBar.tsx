@@ -1,7 +1,7 @@
 import { AppBar, Toolbar, Typography, CircularProgress } from "@mui/material";
 import { NAVBAR_COLOR } from "./Utils/Constants";
 import { adjustColorHSL } from "./Utils/adjustColor";
-import DialogMenu from "./SpecialDialogs/DialogMenu";
+import NavBarMenu from "./Menus/NavBarMenu";
 
 interface NavBarProps {
     isLoading?: boolean;
@@ -49,7 +49,7 @@ export default function NavBar({
                         sx={{ ml: 2, color: 'black' }}
                     />
                 )}
-                <DialogMenu />
+                <NavBarMenu />
             </Toolbar>
         </AppBar>
     );

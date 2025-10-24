@@ -5,7 +5,7 @@ import {
     MenuItem,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import EditPartnerOfferingForm from '../EditPartnerOfferingForm';
+import EditPartnerOfferingForm from '../Forms/EditPartnerOfferingForm';
 import { partnerOfferingType } from '../Types';
 
 // Define state type

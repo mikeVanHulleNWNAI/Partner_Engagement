@@ -1,14 +1,14 @@
 import { Box } from '@mui/material';
 import UserInterface from './UserInterface';
-import { DatabaseSubscriptionProvider } from './DatabaseSubscriptionProvider';
+import { DataStoreProvider } from './DataStoreProvider';
 
 function App() {
   return (
-    <DatabaseSubscriptionProvider>
+    <DataStoreProvider>
       <Box>
         <UserInterface />
       </Box>
-    </DatabaseSubscriptionProvider>
+    </DataStoreProvider>
   );
 }
 
