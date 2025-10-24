@@ -175,7 +175,9 @@ function Sidebar({
                 >
                   New Partner Offering
                 </Button>
-                <SidebarMenu />
+                <SidebarMenu 
+                  onCloseSidebar={onClose}
+                />
                 {/* Partner Offering Details */}
                 <Box>
                   <PartnerOfferingTile partnerOffering={activePartnerOffering} />

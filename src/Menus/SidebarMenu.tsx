@@ -1,4 +1,4 @@
-import React, { useCallback, useReducer } from 'react';
+import React, { FC, useCallback, useReducer } from 'react';
 import {
     Button,
     Menu,
@@ -9,6 +9,8 @@ import EditPartnerOfferingForm from '../Forms/EditPartnerOfferingForm';
 import { partnerOfferingType } from '../Types';
 import { CLIENT } from '../Utils/Constants';
 import { useDataStore } from '../DataStoreProvider';
+import AreYouSureForm from '../Forms/AreYouSureForm';
+import PartnerOfferingTile from '../PartnerOfferingTile';
 
 // Define state type
 interface SidebarMenuState {
@@ -45,7 +47,13 @@ function sidebarMenuReducer(state: SidebarMenuState, action: SidebarMenuAction):
     }
 }
 
-const SidebarMenu = () => {
+interface SidebarMenuProps {
+    onCloseSidebar: () => void;
+}
+
+const SidebarMenu: FC<SidebarMenuProps> = ({
+    onCloseSidebar
+}) => {
     const [state, dispatch] = useReducer(sidebarMenuReducer, initialState);
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const menuOpen = Boolean(anchorEl);
@@ -82,6 +90,20 @@ const SidebarMenu = () => {
         handleMenuClose();
     };
 
+    const handleDeletePartnerOfferingClose = () => {
+        dispatch({ type: 'CLOSE_DELETEPARTNEROFFERING' });
+        handleMenuClose();
+    };
+
+    const handleDeletePartnerOfferingYes = useCallback(() => {
+        dispatch({ type: 'CLOSE_DELETEPARTNEROFFERING' });
+        // close this sidebar
+        onCloseSidebar();
+        // delete the partner offering
+        if (activePartnerOffering)
+            CLIENT.models.PartnerOffering.delete(activePartnerOffering)
+    }, []);
+
     return (
         <>
             <Button
@@ -114,6 +136,13 @@ const SidebarMenu = () => {
             )}
 
             {/* DeletePartnerOfferingForm */}
+            <AreYouSureForm
+                open={state.deletePartnerOffering}
+                onClose={handleDeletePartnerOfferingClose}
+                onYes={handleDeletePartnerOfferingYes}
+                label="Are you sure you want to delete this Partner Offering?"
+            >
+            </AreYouSureForm>
         </>
     );
 }
