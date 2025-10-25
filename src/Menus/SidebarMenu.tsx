@@ -7,10 +7,9 @@ import {
 import MenuIcon from '@mui/icons-material/Menu';
 import EditPartnerOfferingForm from '../Forms/EditPartnerOfferingForm';
 import { partnerOfferingType } from '../Types';
-import { CLIENT } from '../Utils/Constants';
 import { useDataStore } from '../DataStoreProvider';
 import AreYouSureForm from '../Forms/AreYouSureForm';
-import { deletePartnerOffering } from '../Utils/CreateData';
+import { deletePartnerOffering, updatePartnerOffering } from '../Utils/CreateData';
 
 // Define state type
 interface SidebarMenuState {
@@ -82,8 +81,8 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
 
     const handleEditPartnerOfferingSubmit = useCallback((partnerOffering: partnerOfferingType) => {
         dispatch({ type: 'CLOSE_EDITPARTNEROFFERING' });
-        // TODO: 9879 need to write an update function in the CreateData.tsx module.
-        CLIENT.models.PartnerOffering.update(partnerOffering);
+        if (activePartnerOffering)
+            updatePartnerOffering(partnerOffering, activePartnerOffering);
     }, []);
 
     const handleDeletePartnerOfferingOpen = () => {

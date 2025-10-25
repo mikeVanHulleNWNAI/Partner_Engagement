@@ -205,13 +205,26 @@ export async function updatePartnerOffering(
     // get the id of the partnerOffering
     const partnerOfferingId = oldPartnerOffering.id;
     // apis to delete
-    const deleteApis = oldPartnerOffering.apis.filter(item1 =>
-        !newPartnerOffering.apis.some(item2 => item2.id === item1.id));
+    const deleteApis = oldPartnerOffering.apis.filter(
+        element => !newPartnerOffering.apis.find(x => x.id === element.id));
     deleteApis.forEach((i) => CLIENT.models.Api.delete({ id: i.id }));
     // apis to add
-    const addApis = newPartnerOffering.apis.filter(item1 =>
-        !oldPartnerOffering.apis.some(item2 => item2.id === item1.id));
+    const addApis = newPartnerOffering.apis.filter(
+        element => !oldPartnerOffering.apis.find(x => x.id === element.id));
+    const updateApis = newPartnerOffering.apis.filter(
+        element => !addApis.find(x => x.id === element.id));
     addApis.forEach((i) => CLIENT.models.Api.create({
+        docLink: i.docLink,
+        trainingLink: i.trainingLink,
+        sandboxEnvironment: i.sandboxEnvironment,
+        endpoint: i.endpoint,
+        partnerOfferingId: partnerOfferingId,
+        apiTypeId: i.apiType.id,
+        authenticationTypeId: i.authenticationType.id,
+        authenticationInfo: i.authenticationInfo
+    }));
+    updateApis.forEach((i) => CLIENT.models.Api.update({
+        id: i.id,
         docLink: i.docLink,
         trainingLink: i.trainingLink,
         sandboxEnvironment: i.sandboxEnvironment,

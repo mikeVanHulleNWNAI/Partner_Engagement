@@ -99,20 +99,16 @@ const NavBarMenu = () => {
 
     // these are used to determine if we have the options
     const firstConnectionsStatus = 
-        connectionStatusOptions.length > 0 ?
-            connectionStatusOptions[0] :
+        connectionStatusOptions.find((x) => x.name == "") || 
             { id: "", name: "" };
     const firstNwnOffering =
-        nwnOfferingOptions.length > 0 ?
-            nwnOfferingOptions[0] :
+        nwnOfferingOptions.find((x) => x.nwnOffering.name == "") || 
             {nwnOffering: { id: "", name: ""}, manager: { id: "", name: ""}};
     const firstCompany =
-        companyOptions.length > 0 ?
-            companyOptions[0] :
+        companyOptions.find((x) => x.name == "") || 
             { id: "", name: "" };
     const firstPriority = 
-        priorityOptions.length > 0 ?
-            priorityOptions[0] :
+        priorityOptions.find((x) => x.name == "") || 
             { id: "", name: "" };
 
     return (
