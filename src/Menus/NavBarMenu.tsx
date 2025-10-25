@@ -5,6 +5,8 @@ import {
     MenuItem,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
+import CreateIcon from '@mui/icons-material/Create';
+
 import { IdNameType, partnerOfferingType } from '../Types';
 import EmptyForm from '../Forms/EmptyForm';
 import EditPartnerOfferingForm from '../Forms/EditPartnerOfferingForm';
@@ -126,7 +128,7 @@ const NavBarMenu = () => {
                 open={menuOpen}
                 onClose={handleMenuClose}
             >
-                <MenuItem onClick={handleCreatePartnerOfferingOpen}>Create Partner Offering</MenuItem>
+                <MenuItem onClick={handleCreatePartnerOfferingOpen}><CreateIcon sx={{ marginRight: 1 }}/>Create Partner Offering</MenuItem>
                 <MenuItem onClick={handleEmpty2Open}>Empty 2</MenuItem>
             </Menu>
 

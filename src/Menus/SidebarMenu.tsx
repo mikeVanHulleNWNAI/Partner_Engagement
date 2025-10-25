@@ -10,6 +10,8 @@ import { partnerOfferingType } from '../Types';
 import { useDataStore } from '../DataStoreProvider';
 import AreYouSureForm from '../Forms/AreYouSureForm';
 import { deletePartnerOffering, updatePartnerOffering } from '../Utils/CreateData';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 // Define state type
 interface SidebarMenuState {
@@ -119,8 +121,14 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
                 open={menuOpen}
                 onClose={handleMenuClose}
             >
-                <MenuItem onClick={handleEditPartnerOfferingOpen}>Edit Partner Offering</MenuItem>
-                <MenuItem onClick={handleDeletePartnerOfferingOpen}>Delete Partner Offering</MenuItem>
+                <MenuItem onClick={handleEditPartnerOfferingOpen}>
+                    <EditIcon sx={{ marginRight: 1 }} />
+                    Edit Partner Offering
+                </MenuItem>
+                <MenuItem onClick={handleDeletePartnerOfferingOpen}>
+                    <DeleteIcon sx={{ marginRight: 1 }} />
+                    Delete Partner Offering
+                </MenuItem>
             </Menu>
 
             {/* EditPartnerOfferingForm */}
