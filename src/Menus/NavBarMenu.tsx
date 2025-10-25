@@ -22,9 +22,8 @@ interface NavBarMenuState {
 // Define action types
 type NavBarMenuAction =
     | { type: 'OPEN_CREATEPARTNEROFFERING' }
-    | { type: 'CLOSE_CREATEPARTNEROFFERING' }
     | { type: 'OPEN_EMPTY2' }
-    | { type: 'CLOSE_EMPTY2' }
+    | { type: 'CLOSE_ALL' }
 
 // Initial state
 const initialState: NavBarMenuState = {
@@ -37,12 +36,14 @@ function navBarMenuReducer(state: NavBarMenuState, action: NavBarMenuAction): Na
     switch (action.type) {
         case 'OPEN_CREATEPARTNEROFFERING':
             return { ...state, createPartnerOffering: true };
-        case 'CLOSE_CREATEPARTNEROFFERING':
-            return { ...state, createPartnerOffering: false };
         case 'OPEN_EMPTY2':
             return { ...state, empty2: true };
-        case 'CLOSE_EMPTY2':
-            return { ...state, empty2: false };
+        case 'CLOSE_ALL':
+            return { 
+                ...state, 
+                createPartnerOffering: false,
+                empty2: false
+            };
         default:
             return state;
     }
@@ -74,12 +75,12 @@ const NavBarMenu = () => {
     };
 
     const handleCreatePartnerOfferingClose = () => {
-        dispatch({ type: 'CLOSE_CREATEPARTNEROFFERING' });
+        dispatch({ type: 'CLOSE_ALL' });
         handleMenuClose();
     };
 
     const handleCreatePartnerOfferingSubmit = useCallback((partnerOffering: partnerOfferingType) => {
-        dispatch({ type: 'CLOSE_CREATEPARTNEROFFERING' });
+        dispatch({ type: 'CLOSE_ALL' });
         createPartnerOffering(partnerOffering);
     }, []);
 
@@ -89,12 +90,12 @@ const NavBarMenu = () => {
     };
 
     const handleEmpty2Close = () => {
-        dispatch({ type: 'CLOSE_EMPTY2' });
+        dispatch({ type: 'CLOSE_ALL' });
         handleMenuClose();
     };
 
     const handleEmpty2Submit = useCallback((managerOptions: IdNameType[]) => {
-        dispatch({ type: 'CLOSE_EMPTY2' });
+        dispatch({ type: 'CLOSE_ALL' });
         console.log("Submit " + managerOptions);
         // TODO: 9879 Perform actions with the submitted data, e.g., send to an API
     }, []);
@@ -128,7 +129,10 @@ const NavBarMenu = () => {
                 open={menuOpen}
                 onClose={handleMenuClose}
             >
-                <MenuItem onClick={handleCreatePartnerOfferingOpen}><CreateIcon sx={{ marginRight: 1 }}/>Create Partner Offering</MenuItem>
+                <MenuItem onClick={handleCreatePartnerOfferingOpen}>
+                    <CreateIcon sx={{ marginRight: 1 }} />
+                    Create Partner Offering
+                </MenuItem>
                 <MenuItem onClick={handleEmpty2Open}>Empty 2</MenuItem>
             </Menu>
 

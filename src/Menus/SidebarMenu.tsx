@@ -22,9 +22,8 @@ interface SidebarMenuState {
 // Define action types
 type SidebarMenuAction =
     | { type: 'OPEN_EDITPARTNEROFFERING' }
-    | { type: 'CLOSE_EDITPARTNEROFFERING' }
     | { type: 'OPEN_DELETEPARTNEROFFERING' }
-    | { type: 'CLOSE_DELETEPARTNEROFFERING' }
+    | { type: 'CLOSE_ALL' }
 
 // Initial state
 const initialState: SidebarMenuState = {
@@ -37,12 +36,14 @@ function sidebarMenuReducer(state: SidebarMenuState, action: SidebarMenuAction):
     switch (action.type) {
         case 'OPEN_EDITPARTNEROFFERING':
             return { ...state, editPartnerOffering: true };
-        case 'CLOSE_EDITPARTNEROFFERING':
-            return { ...state, editPartnerOffering: false };
         case 'OPEN_DELETEPARTNEROFFERING':
             return { ...state, deletePartnerOffering: true };
-        case 'CLOSE_DELETEPARTNEROFFERING':
-            return { ...state, deletePartnerOffering: false };
+        case 'CLOSE_ALL':
+            return { 
+                ...state, 
+                editPartnerOffering: false, 
+                deletePartnerOffering: false 
+            };
         default:
             return state;
     }
@@ -76,13 +77,8 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
         handleMenuClose();
     };
 
-    const handleEditPartnerOfferingClose = () => {
-        dispatch({ type: 'CLOSE_EDITPARTNEROFFERING' });
-        handleMenuClose();
-    };
-
     const handleEditPartnerOfferingSubmit = useCallback((partnerOffering: partnerOfferingType) => {
-        dispatch({ type: 'CLOSE_EDITPARTNEROFFERING' });
+        dispatch({ type: 'CLOSE_ALL' });
         if (activePartnerOffering)
             updatePartnerOffering(partnerOffering, activePartnerOffering);
     }, []);
@@ -92,13 +88,13 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
         handleMenuClose();
     };
 
-    const handleDeletePartnerOfferingClose = () => {
-        dispatch({ type: 'CLOSE_DELETEPARTNEROFFERING' });
+    const handleCloseAll = () => {
+        dispatch({ type: 'CLOSE_ALL' });
         handleMenuClose();
     };
 
     const handleDeletePartnerOfferingYes = useCallback(() => {
-        dispatch({ type: 'CLOSE_DELETEPARTNEROFFERING' });
+        dispatch({ type: 'CLOSE_ALL' });
         // close this sidebar
         onCloseSidebar();
         // delete the partner offering
@@ -135,7 +131,7 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
             {activePartnerOffering ? (
                 <EditPartnerOfferingForm
                     open={state.editPartnerOffering}
-                    onClose={handleEditPartnerOfferingClose}
+                    onClose={handleCloseAll}
                     onSubmit={handleEditPartnerOfferingSubmit}
                     partnerOfferingData={structuredClone(activePartnerOffering)}
                 />
@@ -146,7 +142,7 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
             {/* DeletePartnerOfferingForm */}
             <AreYouSureForm
                 open={state.deletePartnerOffering}
-                onClose={handleDeletePartnerOfferingClose}
+                onClose={handleCloseAll}
                 onYes={handleDeletePartnerOfferingYes}
                 label="Are you sure you want to delete this Partner Offering?"
             >
