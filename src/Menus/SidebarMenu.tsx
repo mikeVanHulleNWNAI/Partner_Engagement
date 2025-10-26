@@ -39,10 +39,10 @@ function sidebarMenuReducer(state: SidebarMenuState, action: SidebarMenuAction):
         case 'OPEN_DELETEPARTNEROFFERING':
             return { ...state, deletePartnerOffering: true };
         case 'CLOSE_ALL':
-            return { 
-                ...state, 
-                editPartnerOffering: false, 
-                deletePartnerOffering: false 
+            return {
+                ...state,
+                editPartnerOffering: false,
+                deletePartnerOffering: false
             };
         default:
             return state;
@@ -128,25 +128,25 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
             </Menu>
 
             {/* EditPartnerOfferingForm */}
-            {activePartnerOffering ? (
+            {state.editPartnerOffering && activePartnerOffering && (
                 <EditPartnerOfferingForm
                     open={state.editPartnerOffering}
                     onClose={handleCloseAll}
                     onSubmit={handleEditPartnerOfferingSubmit}
                     partnerOfferingData={structuredClone(activePartnerOffering)}
                 />
-            ) : (
-                "No Active Partner Offering"
             )}
 
             {/* DeletePartnerOfferingForm */}
-            <AreYouSureForm
-                open={state.deletePartnerOffering}
-                onClose={handleCloseAll}
-                onYes={handleDeletePartnerOfferingYes}
-                label="Are you sure you want to delete this Partner Offering?"
-            >
-            </AreYouSureForm>
+            {state.deletePartnerOffering && (
+                <AreYouSureForm
+                    open={state.deletePartnerOffering}
+                    onClose={handleCloseAll}
+                    onYes={handleDeletePartnerOfferingYes}
+                    label="Are you sure you want to delete this Partner Offering?"
+                >
+                </AreYouSureForm>
+            )}
         </>
     );
 }
