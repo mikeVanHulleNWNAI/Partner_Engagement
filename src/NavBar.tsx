@@ -5,7 +5,6 @@ import NavBarMenu from "./Menus/NavBarMenu";
 import { useDataStore } from "./DataStoreProvider";
 
 interface NavBarProps {
-    isLoading?: boolean;
     height?: number;
 }
 

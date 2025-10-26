@@ -128,7 +128,7 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
             </Menu>
 
             {/* EditPartnerOfferingForm */}
-            {state.editPartnerOffering && activePartnerOffering && (
+            {activePartnerOffering && (
                 <EditPartnerOfferingForm
                     open={state.editPartnerOffering}
                     onClose={handleCloseAll}
@@ -138,15 +138,13 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
             )}
 
             {/* DeletePartnerOfferingForm */}
-            {state.deletePartnerOffering && (
-                <AreYouSureForm
-                    open={state.deletePartnerOffering}
-                    onClose={handleCloseAll}
-                    onYes={handleDeletePartnerOfferingYes}
-                    label="Are you sure you want to delete this Partner Offering?"
-                >
-                </AreYouSureForm>
-            )}
+            <AreYouSureForm
+                open={state.deletePartnerOffering}
+                onClose={handleCloseAll}
+                onYes={handleDeletePartnerOfferingYes}
+                label="Are you sure you want to delete this Partner Offering?"
+            >
+            </AreYouSureForm>
         </>
     );
 }

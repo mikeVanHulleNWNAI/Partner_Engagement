@@ -116,8 +116,7 @@ const IdNamesForm: FC<IdNamesFormProps> = ({
         })
 
     const {
-        allPartnerOfferings,
-        isLoading
+        allPartnerOfferings
     } = useDataStore();
 
 
@@ -200,78 +199,74 @@ const IdNamesForm: FC<IdNamesFormProps> = ({
         <>
             <Dialog closeAfterTransition={false} open={open} onClose={onClose} maxWidth="sm" fullWidth>
                 <DialogTitle>Enter details for {entityType}</DialogTitle>
-                {!isLoading && (
-                    <>
-                        <IconButton
-                            onClick={handleAdd}
-                            color="primary"
-                            sx={{ alignSelf: 'flex-start', ml: 2, mt: 1 }}
-                        >
-                            <AddIcon />
-                        </IconButton>
-                        <DialogContent>
-                            <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
-                                {state.formData
-                                    .map((item, index) => {
-                                        const inUse = isIdInUse(item.id);
-                                        return (
-                                            <Box key={item.id} sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
-                                                <TextField
-                                                    key={item.id}
-                                                    label={item.name}
-                                                    ref={index === 0 ? firstFieldRef : null}
-                                                    type="text"
-                                                    value={item.name}
-                                                    onChange={(e) => {
-                                                        dispatch({
-                                                            type: 'UPDATE',
-                                                            idNameType: { id: item.id, name: e.target.value },
-                                                        })
-                                                    }}
-                                                    error={
-                                                        item.name.trim() === "" ||
-                                                        duplicateNames.includes(item.name.trim())
-                                                    }
-                                                    helperText={
-                                                        item.name.trim() === ""
-                                                            ? "Cannot be empty"
-                                                            : duplicateNames.includes(item.name.trim())
-                                                                ? "Duplicate name"
-                                                                : ""
-                                                    }
-                                                    fullWidth
-                                                />
-                                                <Tooltip
-                                                    title={inUse ? "Cannot delete - in use by partner offerings" : "Delete"}
-                                                    arrow
+                <IconButton
+                    onClick={handleAdd}
+                    color="primary"
+                    sx={{ alignSelf: 'flex-start', ml: 2, mt: 1 }}
+                >
+                    <AddIcon />
+                </IconButton>
+                <DialogContent>
+                    <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
+                        {state.formData
+                            .map((item, index) => {
+                                const inUse = isIdInUse(item.id);
+                                return (
+                                    <Box key={item.id} sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+                                        <TextField
+                                            key={item.id}
+                                            label={item.name}
+                                            ref={index === 0 ? firstFieldRef : null}
+                                            type="text"
+                                            value={item.name}
+                                            onChange={(e) => {
+                                                dispatch({
+                                                    type: 'UPDATE',
+                                                    idNameType: { id: item.id, name: e.target.value },
+                                                })
+                                            }}
+                                            error={
+                                                item.name.trim() === "" ||
+                                                duplicateNames.includes(item.name.trim())
+                                            }
+                                            helperText={
+                                                item.name.trim() === ""
+                                                    ? "Cannot be empty"
+                                                    : duplicateNames.includes(item.name.trim())
+                                                        ? "Duplicate name"
+                                                        : ""
+                                            }
+                                            fullWidth
+                                        />
+                                        <Tooltip
+                                            title={inUse ? "Cannot delete - in use by partner offerings" : "Delete"}
+                                            arrow
+                                        >
+                                            <span>
+                                                <IconButton
+                                                    color="error"
+                                                    onClick={() => handleDeleteClick(item)}
+                                                    disabled={inUse}
+                                                    sx={{ mt: 1 }}
                                                 >
-                                                    <span>
-                                                        <IconButton
-                                                            color="error"
-                                                            onClick={() => handleDeleteClick(item)}
-                                                            disabled={inUse}
-                                                            sx={{ mt: 1 }}
-                                                        >
-                                                            <DeleteIcon />
-                                                        </IconButton>
-                                                    </span>
-                                                </Tooltip>
-                                            </Box>
-                                        );
-                                    })}
-                            </Box>
-                        </DialogContent>
-                        <DialogActions>
-                            <Button onClick={onClose}>Cancel</Button>
-                            <Button
-                                onClick={handleSubmit} variant="contained"
-                                disabled={!isValid}
-                            >
-                                Submit
-                            </Button>
-                        </DialogActions>
-                    </>
-                )}
+                                                    <DeleteIcon />
+                                                </IconButton>
+                                            </span>
+                                        </Tooltip>
+                                    </Box>
+                                );
+                            })}
+                    </Box>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={onClose}>Cancel</Button>
+                    <Button
+                        onClick={handleSubmit} variant="contained"
+                        disabled={!isValid}
+                    >
+                        Submit
+                    </Button>
+                </DialogActions>
             </Dialog>
 
             <AreYouSureForm

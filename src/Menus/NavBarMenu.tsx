@@ -305,109 +305,93 @@ const NavBarMenu = () => {
             </Menu>
 
             {/* CreatePartnerOffering */}
-            {state.createPartnerOffering && (
-                <EditPartnerOfferingForm
-                    open={state.createPartnerOffering}
-                    onClose={handleCreatePartnerOfferingClose}
-                    onSubmit={handleCreatePartnerOfferingSubmit}
-                    partnerOfferingData={{
-                        id: "",
-                        offeringName: "",
-                        contactInfo: "",
-                        dashboard: "",
-                        notes: "",
-                        status: firstConnectionsStatus,
-                        nwnOffering: {
-                            id: firstNwnOffering.nwnOffering.id,
-                            name: firstNwnOffering.nwnOffering.name,
-                            manager: {
-                                id: firstNwnOffering.manager.id,
-                                name: firstNwnOffering.manager.name
-                            }
-                        },
-                        company: firstCompany,
-                        priority: firstPriority,
-                        apis: []
-                    }}
-                />
-            )}
+            <EditPartnerOfferingForm
+                open={state.createPartnerOffering}
+                onClose={handleCreatePartnerOfferingClose}
+                onSubmit={handleCreatePartnerOfferingSubmit}
+                partnerOfferingData={{
+                    id: "",
+                    offeringName: "",
+                    contactInfo: "",
+                    dashboard: "",
+                    notes: "",
+                    status: firstConnectionsStatus,
+                    nwnOffering: {
+                        id: firstNwnOffering.nwnOffering.id,
+                        name: firstNwnOffering.nwnOffering.name,
+                        manager: {
+                            id: firstNwnOffering.manager.id,
+                            name: firstNwnOffering.manager.name
+                        }
+                    },
+                    company: firstCompany,
+                    priority: firstPriority,
+                    apis: []
+                }}
+            />
 
             {/* Company */}
-            {state.editCompany && (
-                <IdNamesForm
-                    open={state.editCompany}
-                    onClose={handleCompanyClose}
-                    onSubmit={handleCompanySubmit}
-                    idNames={structuredClone(companyOptions)}
-                    entityType='Companies'
-                />
-            )}
+            <IdNamesForm
+                open={state.editCompany}
+                onClose={handleCompanyClose}
+                onSubmit={handleCompanySubmit}
+                idNames={structuredClone(companyOptions)}
+                entityType='Companies'
+            />
 
             {/* Priority */}
-            {state.editPriority && (
-                <IdNamesForm
-                    open={state.editPriority}
-                    onClose={handlePriorityClose}
-                    onSubmit={handlePrioritySubmit}
-                    idNames={structuredClone(priorityOptions)}
-                    entityType='Priorities'
-                />
-            )}
+            <IdNamesForm
+                open={state.editPriority}
+                onClose={handlePriorityClose}
+                onSubmit={handlePrioritySubmit}
+                idNames={structuredClone(priorityOptions)}
+                entityType='Priorities'
+            />
 
             {/* Status */}
-            {state.editStatus && (
-                <IdNamesForm
-                    open={state.editStatus}
-                    onClose={handleStatusClose}
-                    onSubmit={handleStatusSubmit}
-                    idNames={structuredClone(connectionStatusOptions)}
-                    entityType='Statuses'
-                />
-            )}
+            <IdNamesForm
+                open={state.editStatus}
+                onClose={handleStatusClose}
+                onSubmit={handleStatusSubmit}
+                idNames={structuredClone(connectionStatusOptions)}
+                entityType='Statuses'
+            />
 
             {/* NWN Offering */}
-            {state.editNwnOffering && (
-                <IdNamesForm
-                    open={state.editNwnOffering}
-                    onClose={handleNwnOfferingClose}
-                    onSubmit={handleNwnOfferingSubmit}
-                    idNames={structuredClone(nwnOfferingOptions.map(x => x.nwnOffering))}
-                    entityType='NWNOfferings'
-                />
-            )}
+            <IdNamesForm
+                open={state.editNwnOffering}
+                onClose={handleNwnOfferingClose}
+                onSubmit={handleNwnOfferingSubmit}
+                idNames={structuredClone(nwnOfferingOptions.map(x => x.nwnOffering))}
+                entityType='NWNOfferings'
+            />
 
             {/* Manager */}
-            {state.editManager && (
-                <IdNamesForm
-                    open={state.editManager}
-                    onClose={handleManagerClose}
-                    onSubmit={handleManagerSubmit}
-                    idNames={structuredClone(nwnOfferingOptions.map(x => x.manager))}
-                    entityType='Managers'
-                />
-            )}
+            <IdNamesForm
+                open={state.editManager}
+                onClose={handleManagerClose}
+                onSubmit={handleManagerSubmit}
+                idNames={structuredClone(nwnOfferingOptions.map(x => x.manager))}
+                entityType='Managers'
+            />
 
             {/* API Type */}
-            {state.editApiType && (
-                <IdNamesForm
-                    open={state.editApiType}
-                    onClose={handleApiTypeClose}
-                    onSubmit={handleApiTypeSubmit}
-                    idNames={structuredClone(apiTypeOptions)}
-                    entityType='ApiTypes'
-                />
-            )}
+            <IdNamesForm
+                open={state.editApiType}
+                onClose={handleApiTypeClose}
+                onSubmit={handleApiTypeSubmit}
+                idNames={structuredClone(apiTypeOptions)}
+                entityType='ApiTypes'
+            />
 
             {/* Authentication Type */}
-            {state.editAuthenticationType && (
-                <IdNamesForm
-                    open={state.editAuthenticationType}
-                    onClose={handleAuthenticationTypeClose}
-                    onSubmit={handleAuthenticationTypeSubmit}
-                    idNames={structuredClone(authenticationTypeOptions)} // TODO: 9879 You'll need to add authenticationTypeOptions to useDataStore
-                    entityType='AuthenticationTypes'
-                />
-            )}
+            <IdNamesForm
+                open={state.editAuthenticationType}
+                onClose={handleAuthenticationTypeClose}
+                onSubmit={handleAuthenticationTypeSubmit}
+                idNames={structuredClone(authenticationTypeOptions)} // TODO: 9879 You'll need to add authenticationTypeOptions to useDataStore
+                entityType='AuthenticationTypes'
+            />
         </>
     );
 }
