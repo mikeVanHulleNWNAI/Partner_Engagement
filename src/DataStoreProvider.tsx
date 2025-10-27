@@ -1,18 +1,18 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
 import { CLIENT } from './Utils/Constants';
-import { IdNameAndManagerIdNameType, IdNameType, partnerOfferingType } from './Types';
+import { IIdNameAndManager, IIdName, partnerOfferingType } from './Types';
 
 interface DataStoreState {
   // Data
   allPartnerOfferings: partnerOfferingType[];
-  connectionStatusOptions: IdNameType[];
-  nwnOfferingOptions: IdNameAndManagerIdNameType[];
-  managerOptions: IdNameType[];
-  companyOptions: IdNameType[];
-  priorityOptions: IdNameType[];
-  apiTypeOptions: IdNameType[];
-  authenticationTypeOptions: IdNameType[];
-  
+  connectionStatusOptions: IIdName[];
+  nwnOfferingOptions: IIdNameAndManager[];
+  managerOptions: IIdName[];
+  companyOptions: IIdName[];
+  priorityOptions: IIdName[];
+  apiTypeOptions: IIdName[];
+  authenticationTypeOptions: IIdName[];
+
   // Active selection
   activePartnerOffering: partnerOfferingType | undefined;
   setActivePartnerOffering: (offering: partnerOfferingType | undefined) => void;
@@ -48,13 +48,13 @@ interface DataStoreProviderProps {
 export const DataStoreProvider = ({ children }: DataStoreProviderProps) => {
   // Data state
   const [allPartnerOfferings, setAllPartnerOfferings] = useState<partnerOfferingType[]>([]);
-  const [connectionStatusOptions, setConnectionStatusOptions] = useState<IdNameType[]>([]);
-  const [nwnOfferingOptions, setNwnOfferingOptions] = useState<IdNameAndManagerIdNameType[]>([]);
-  const [managerOptions, setManagerOptions] = useState<IdNameType[]>([]);
-  const [companyOptions, setCompanyOptions] = useState<IdNameType[]>([]);
-  const [priorityOptions, setPriorityOptions] = useState<IdNameType[]>([]);
-  const [apiTypeOptions, setApiTypeOptions] = useState<IdNameType[]>([]);
-  const [authenticationTypeOptions, setAuthenticationTypeOptions] = useState<IdNameType[]>([]);
+  const [connectionStatusOptions, setConnectionStatusOptions] = useState<IIdName[]>([]);
+  const [nwnOfferingOptions, setNwnOfferingOptions] = useState<IIdNameAndManager[]>([]);
+  const [managerOptions, setManagerOptions] = useState<IIdName[]>([]);
+  const [companyOptions, setCompanyOptions] = useState<IIdName[]>([]);
+  const [priorityOptions, setPriorityOptions] = useState<IIdName[]>([]);
+  const [apiTypeOptions, setApiTypeOptions] = useState<IIdName[]>([]);
+  const [authenticationTypeOptions, setAuthenticationTypeOptions] = useState<IIdName[]>([]);
 
   // Active selection state
   const [activePartnerOffering, setActivePartnerOffering] = useState<partnerOfferingType | undefined>(undefined);
@@ -84,7 +84,7 @@ export const DataStoreProvider = ({ children }: DataStoreProviderProps) => {
       const updatedOffering = allPartnerOfferings.find(
         (offering) => offering.id === activePartnerOffering.id
       );
-      
+
       if (updatedOffering) {
         // Update to the latest version from the subscription
         setActivePartnerOffering(updatedOffering);
@@ -215,7 +215,7 @@ export const DataStoreProvider = ({ children }: DataStoreProviderProps) => {
       next: (data) => {
         const connectionStatuses = data.items
           .filter(
-            (item): item is IdNameType =>
+            (item): item is IIdName =>
               item !== null && item !== undefined
           )
           .sort((a, b) => a.name.localeCompare(b.name));
@@ -232,13 +232,15 @@ export const DataStoreProvider = ({ children }: DataStoreProviderProps) => {
         const offerings = data.items
           .filter((item) => item !== null && item !== undefined)
           .sort((a, b) => a.name.localeCompare(b.name));
+        try{
         setNwnOfferingOptions(
           offerings.map((o) => ({
-            nwnOffering: { id: o.id, name: o.name },
+            id: o.id, name: o.name,
             manager: { id: o.manager.id, name: o.manager.name },
           }))
         );
         setLoadingStates((prev) => ({ ...prev, nwnOfferings: false }));
+      }catch{}
       },
     });
 
@@ -249,7 +251,7 @@ export const DataStoreProvider = ({ children }: DataStoreProviderProps) => {
       next: (data) => {
         const managers = data.items
           .filter(
-            (item): item is IdNameType =>
+            (item): item is IIdName =>
               item !== null && item !== undefined
           )
           .sort((a, b) => a.name.localeCompare(b.name));
@@ -265,7 +267,7 @@ export const DataStoreProvider = ({ children }: DataStoreProviderProps) => {
       next: (data) => {
         const companies = data.items
           .filter(
-            (item): item is IdNameType =>
+            (item): item is IIdName =>
               item !== null && item !== undefined
           )
           .sort((a, b) => a.name.localeCompare(b.name));
@@ -281,7 +283,7 @@ export const DataStoreProvider = ({ children }: DataStoreProviderProps) => {
       next: (data) => {
         const priorities = data.items
           .filter(
-            (item): item is IdNameType =>
+            (item): item is IIdName =>
               item !== null && item !== undefined
           )
           .sort((a, b) => a.name.localeCompare(b.name));
@@ -297,7 +299,7 @@ export const DataStoreProvider = ({ children }: DataStoreProviderProps) => {
       next: (data) => {
         const apiTypes = data.items
           .filter(
-            (item): item is IdNameType =>
+            (item): item is IIdName =>
               item !== null && item !== undefined
           )
           .sort((a, b) => a.name.localeCompare(b.name));
@@ -314,7 +316,7 @@ export const DataStoreProvider = ({ children }: DataStoreProviderProps) => {
         next: (data) => {
           const authenticationTypes = data.items
             .filter(
-              (item): item is IdNameType =>
+              (item): item is IIdName =>
                 item !== null && item !== undefined
             )
             .sort((a, b) => a.name.localeCompare(b.name));

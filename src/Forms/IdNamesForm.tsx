@@ -1,4 +1,4 @@
-import React, { FC, useReducer } from 'react';
+import React, { useReducer } from 'react';
 import {
     Button,
     Dialog,
@@ -12,45 +12,43 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { IdNameType } from '../Types';
+import { IIdName, IIdNameAndManager } from '../Types';
 import { useDataStore } from '../DataStoreProvider';
 import AreYouSureForm from './AreYouSureForm';
 
-// TODO: 9879 need to make the buttons pretty
-
-interface IdNamesFormState {
-    formData: IdNameType[];
+interface IdNamesFormState<T extends IIdName> {
+    formData: T[];
     deleteConfirmOpen: boolean;
-    itemToDelete: IdNameType | null;
+    itemToDelete: T | null;
 }
 
-type IdNamesFormAction =
-    | { type: 'UPDATE', idNameType: IdNameType }
-    | { type: 'REMOVE', idNameType: IdNameType }
-    | { type: 'ADD', idNameType: IdNameType }
-    | { type: 'OPEN_DELETE_CONFIRM', idNameType: IdNameType }
+type IdNamesFormAction<T extends IIdName> =
+    | { type: 'UPDATE', idName: T }
+    | { type: 'REMOVE', idName: T }
+    | { type: 'ADD', idName: T }
+    | { type: 'OPEN_DELETE_CONFIRM', idName: T }
     | { type: 'CLOSE_DELETE_CONFIRM' }
     | { type: 'CONFIRM_DELETE' }
 
-function idNameFormReducer(state: IdNamesFormState, action: IdNamesFormAction): IdNamesFormState {
+function idNameFormReducer<T extends IIdName>(state: IdNamesFormState<T>, action: IdNamesFormAction<T>): IdNamesFormState<T> {
     switch (action.type) {
         case 'UPDATE':
             {
                 const updatedFormData = state.formData.map(x =>
-                    x.id === action.idNameType.id
-                        ? { ...x, name: action.idNameType.name }
+                    x.id === action.idName.id
+                        ? { ...x, ...action.idName }
                         : x
                 );
                 return { ...state, formData: updatedFormData };
             }
         case 'ADD':
             {
-                const updatedFormData = [action.idNameType, ...state.formData];
+                const updatedFormData = [action.idName, ...state.formData];
                 return { ...state, formData: updatedFormData };
             }
         case 'REMOVE':
             {
-                const updatedFormData = state.formData.filter(x => x.id !== action.idNameType.id);
+                const updatedFormData = state.formData.filter(x => x.id !== action.idName.id);
                 return { ...state, formData: updatedFormData };
             }
         case 'OPEN_DELETE_CONFIRM':
@@ -58,7 +56,7 @@ function idNameFormReducer(state: IdNamesFormState, action: IdNamesFormAction): 
                 return {
                     ...state,
                     deleteConfirmOpen: true,
-                    itemToDelete: action.idNameType
+                    itemToDelete: action.idName
                 };
             }
         case 'CLOSE_DELETE_CONFIRM':
@@ -83,40 +81,41 @@ function idNameFormReducer(state: IdNamesFormState, action: IdNamesFormAction): 
     }
 }
 
-type EntityType = 
+type EntityType =
     'Companies'
     | 'Priorities'
-    | 'Statuses'
+    | 'ConnectionStatuses'
     | 'NWNOfferings'
     | 'Managers'
     | 'ApiTypes'
     | 'AuthenticationTypes';
 
-interface IdNamesFormProps {
+interface IdNamesFormProps<T extends IIdName> {
     open: boolean;
     onClose: () => void;
-    onSubmit: (formData: IdNameType[]) => void;
-    idNames: IdNameType[];
+    onSubmit: (formData: T[]) => void;
+    idNames: T[];
     entityType: EntityType;
 }
 
-const IdNamesForm: FC<IdNamesFormProps> = ({
+function IdNamesForm<T extends IIdName>({
     open,
     onClose,
     onSubmit,
     idNames,
     entityType,
-}) => {
+}: IdNamesFormProps<T>) {
 
     const [state, dispatch] =
-        useReducer(idNameFormReducer, {
+        useReducer(idNameFormReducer<T>, {
             formData: idNames.filter(item => item.name !== ""),
             deleteConfirmOpen: false,
             itemToDelete: null
         })
 
     const {
-        allPartnerOfferings
+        allPartnerOfferings,
+        managerOptions
     } = useDataStore();
 
 
@@ -128,7 +127,7 @@ const IdNamesForm: FC<IdNamesFormProps> = ({
                     return offering.company.id === id;
                 case 'Priorities':
                     return offering.priority.id === id;
-                case 'Statuses':
+                case 'ConnectionStatuses':
                     return offering.status.id === id;
                 case 'NWNOfferings':
                     return offering.nwnOffering.id === id;
@@ -162,9 +161,24 @@ const IdNamesForm: FC<IdNamesFormProps> = ({
     const duplicateNames = getDuplicateNames();
 
     const handleAdd = () => {
+        // Create a basic IIdName object and cast to T
+        let newItem;
+        if (entityType !== 'NWNOfferings') {
+            newItem = { id: crypto.randomUUID(), name: "" } as T;
+        }
+        else {
+            // this is an NWNOffering
+            // find the blank manager
+            const manager = managerOptions.find(x => x.name === "")
+            newItem = {
+                id: crypto.randomUUID(),
+                name: "",
+                manager: { id: manager?.id, name: manager?.name }
+            } as unknown as T
+        }
         dispatch({
             type: 'ADD',
-            idNameType: { id: crypto.randomUUID(), name: "" }
+            idName: newItem
         })
 
         // Scroll to top after state updates
@@ -173,10 +187,10 @@ const IdNamesForm: FC<IdNamesFormProps> = ({
         }, 0);
     }
 
-    const handleDeleteClick = (item: IdNameType) => {
+    const handleDeleteClick = (item: T) => {
         dispatch({
             type: 'OPEN_DELETE_CONFIRM',
-            idNameType: item
+            idName: item
         });
     };
 
@@ -222,7 +236,7 @@ const IdNamesForm: FC<IdNamesFormProps> = ({
                                             onChange={(e) => {
                                                 dispatch({
                                                     type: 'UPDATE',
-                                                    idNameType: { id: item.id, name: e.target.value },
+                                                    idName: { ...item, name: e.target.value },
                                                 })
                                             }}
                                             error={
@@ -238,6 +252,37 @@ const IdNamesForm: FC<IdNamesFormProps> = ({
                                             }
                                             fullWidth
                                         />
+                                        {entityType === 'NWNOfferings' && (
+                                            <TextField
+                                                select
+                                                label="Manager"
+                                                value={(item as unknown as IIdNameAndManager).manager.id}
+                                                onChange={(e) => {
+                                                    const selectedManager = managerOptions.find(m => m.id === e.target.value);
+                                                    if (selectedManager) {
+                                                        dispatch({
+                                                            type: 'UPDATE',
+                                                            idName: {
+                                                                ...item,
+                                                                manager: selectedManager
+                                                            } as T,
+                                                        });
+                                                    }
+                                                }}
+                                                sx={{ minWidth: 200 }}
+                                                slotProps={{
+                                                    select: {
+                                                        native: true,
+                                                    },
+                                                }}
+                                            >
+                                                {managerOptions.map((manager) => (
+                                                    <option key={manager.id} value={manager.id}>
+                                                        {manager.name}
+                                                    </option>
+                                                ))}
+                                            </TextField>
+                                        )}
                                         <Tooltip
                                             title={inUse ? "Cannot delete - in use by partner offerings" : "Delete"}
                                             arrow
@@ -277,6 +322,6 @@ const IdNamesForm: FC<IdNamesFormProps> = ({
             />
         </>
     );
-};
+}
 
 export default IdNamesForm;

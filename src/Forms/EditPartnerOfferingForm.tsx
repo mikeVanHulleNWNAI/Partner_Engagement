@@ -216,14 +216,15 @@ const EditPartnerOfferingForm: FC<EditPartnerOfferingProps> = ({
           <SelectionNwnOfferingValidation
             label="NWN Offering"
             value={{
-              nwnOffering: { id: formData.nwnOffering.id, name: formData.nwnOffering.name },
+              id: formData.nwnOffering.id, 
+              name: formData.nwnOffering.name,
               manager: { id: formData.nwnOffering.manager.id, name: formData.nwnOffering.manager.name }
             }}
             options={nwnOfferingOptions}
             fullWidth
             onChange={(e) => {
-              handleNestedChange("nwnOffering", "id", e.nwnOffering.id);
-              handleNestedChange("nwnOffering", "name", e.nwnOffering.name);
+              handleNestedChange("nwnOffering", "id", e.id);
+              handleNestedChange("nwnOffering", "name", e.name);
               handleDeepNestedChange("nwnOffering", "manager", "id", e.manager.id);
               handleDeepNestedChange("nwnOffering", "manager", "name", e.manager.name);
             }}

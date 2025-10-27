@@ -160,8 +160,8 @@ function UserInterface() {
             >
               <MenuItem value="">All Offerings</MenuItem>
               {nwnOfferingOptions.map((offering) => (
-                <MenuItem key={offering.nwnOffering.id} value={offering.nwnOffering.name}>
-                  {offering.nwnOffering.name}
+                <MenuItem key={offering.id} value={offering.name}>
+                  {offering.name}
                 </MenuItem>
               ))}
             </Select>

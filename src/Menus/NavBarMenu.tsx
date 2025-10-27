@@ -14,10 +14,10 @@ import PersonIcon from '@mui/icons-material/Person';
 import ApiIcon from '@mui/icons-material/Api';
 import LockIcon from '@mui/icons-material/Lock';
 
-import { IdNameType, partnerOfferingType } from '../Types';
+import { IIdName, IIdNameAndManager, partnerOfferingType } from '../Types';
 import IdNamesForm from '../Forms/IdNamesForm';
 import EditPartnerOfferingForm from '../Forms/EditPartnerOfferingForm';
-import { createPartnerOffering } from '../Utils/CreateData';
+import { createPartnerOffering, updateAllEntities } from '../Utils/CreateData';
 import { useDataStore } from '../DataStoreProvider';
 
 // Define state type
@@ -99,6 +99,7 @@ const NavBarMenu = () => {
 
     const {
         connectionStatusOptions,
+        managerOptions,
         nwnOfferingOptions,
         companyOptions,
         priorityOptions,
@@ -139,10 +140,12 @@ const NavBarMenu = () => {
         handleMenuClose();
     };
 
-    const handleCompanySubmit = useCallback((companyOptions: IdNameType[]) => {
+    const handleCompanySubmit = useCallback((companies: IIdName[]) => {
         dispatch({ type: 'CLOSE_ALL' });
-        console.log("Submit " + companyOptions);
-        // TODO: 9879 Perform actions with the submitted data, e.g., send to an API
+        updateAllEntities(
+            'Company', 
+            companyOptions, 
+            companies)
     }, []);
 
     const handlePriorityOpen = () => {
@@ -155,10 +158,12 @@ const NavBarMenu = () => {
         handleMenuClose();
     };
 
-    const handlePrioritySubmit = useCallback((priorities: IdNameType[]) => {
+    const handlePrioritySubmit = useCallback((priorities: IIdName[]) => {
         dispatch({ type: 'CLOSE_ALL' });
-        console.log("Submit " + priorities);
-        // TODO: 9879 Perform actions with the submitted data, e.g., send to an API
+        updateAllEntities(
+            'Priority', 
+            priorityOptions, 
+            priorities)
     }, []);
 
     const handleStatusOpen = () => {
@@ -171,10 +176,12 @@ const NavBarMenu = () => {
         handleMenuClose();
     };
 
-    const handleStatusSubmit = useCallback((statuses: IdNameType[]) => {
+    const handleStatusSubmit = useCallback((connectionStatuses: IIdName[]) => {
         dispatch({ type: 'CLOSE_ALL' });
-        console.log("Submit " + statuses);
-        // TODO: 9879 Perform actions with the submitted data, e.g., send to an API
+        updateAllEntities(
+            'ConnectionStatus', 
+            connectionStatusOptions, 
+            connectionStatuses)
     }, []);
 
     const handleNwnOfferingOpen = () => {
@@ -187,10 +194,13 @@ const NavBarMenu = () => {
         handleMenuClose();
     };
 
-    const handleNwnOfferingSubmit = useCallback((nwnOfferings: IdNameType[]) => {
+    const handleNwnOfferingSubmit = useCallback((nwnOfferings: IIdNameAndManager[]) => {
         dispatch({ type: 'CLOSE_ALL' });
         console.log("Submit " + nwnOfferings);
-        // TODO: 9879 Perform actions with the submitted data, e.g., send to an API
+        updateAllEntities(
+            'NwnOffering', 
+            nwnOfferingOptions, 
+            nwnOfferings)
     }, []);
 
     const handleManagerOpen = () => {
@@ -203,10 +213,12 @@ const NavBarMenu = () => {
         handleMenuClose();
     };
 
-    const handleManagerSubmit = useCallback((managers: IdNameType[]) => {
+    const handleManagerSubmit = useCallback((managers: IIdName[]) => {
         dispatch({ type: 'CLOSE_ALL' });
-        console.log("Submit " + managers);
-        // TODO: 9879 Perform actions with the submitted data, e.g., send to an API
+        updateAllEntities(
+            'Manager', 
+            managerOptions, 
+            managers)
     }, []);
 
     const handleApiTypeOpen = () => {
@@ -219,10 +231,12 @@ const NavBarMenu = () => {
         handleMenuClose();
     };
 
-    const handleApiTypeSubmit = useCallback((apiTypes: IdNameType[]) => {
+    const handleApiTypeSubmit = useCallback((apiTypes: IIdName[]) => {
         dispatch({ type: 'CLOSE_ALL' });
-        console.log("Submit " + apiTypes);
-        // TODO: 9879 Perform actions with the submitted data, e.g., send to an API
+        updateAllEntities(
+            'ApiType', 
+            apiTypeOptions, 
+            apiTypes)
     }, []);
 
     const handleAuthenticationTypeOpen = () => {
@@ -235,10 +249,12 @@ const NavBarMenu = () => {
         handleMenuClose();
     };
 
-    const handleAuthenticationTypeSubmit = useCallback((authenticationTypes: IdNameType[]) => {
+    const handleAuthenticationTypeSubmit = useCallback((authenticationTypes: IIdName[]) => {
         dispatch({ type: 'CLOSE_ALL' });
-        console.log("Submit " + authenticationTypes);
-        // TODO: 9879 Perform actions with the submitted data, e.g., send to an API
+        updateAllEntities(
+            'AuthenticationType', 
+            authenticationTypeOptions, 
+            authenticationTypes)
     }, []);
 
     // these are used to determine if we have the options
@@ -246,8 +262,8 @@ const NavBarMenu = () => {
         connectionStatusOptions.find((x) => x.name == "") ||
         { id: "", name: "" };
     const firstNwnOffering =
-        nwnOfferingOptions.find((x) => x.nwnOffering.name == "") ||
-        { nwnOffering: { id: "", name: "" }, manager: { id: "", name: "" } };
+        nwnOfferingOptions.find((x) => x.name == "") ||
+        { id: "", name: "", manager: { id: "", name: "" } };
     const firstCompany =
         companyOptions.find((x) => x.name == "") ||
         { id: "", name: "" };
@@ -317,8 +333,8 @@ const NavBarMenu = () => {
                     notes: "",
                     status: firstConnectionsStatus,
                     nwnOffering: {
-                        id: firstNwnOffering.nwnOffering.id,
-                        name: firstNwnOffering.nwnOffering.name,
+                        id: firstNwnOffering.id,
+                        name: firstNwnOffering.name,
                         manager: {
                             id: firstNwnOffering.manager.id,
                             name: firstNwnOffering.manager.name
@@ -354,7 +370,7 @@ const NavBarMenu = () => {
                 onClose={handleStatusClose}
                 onSubmit={handleStatusSubmit}
                 idNames={structuredClone(connectionStatusOptions)}
-                entityType='Statuses'
+                entityType='ConnectionStatuses'
             />
 
             {/* NWN Offering */}
@@ -362,7 +378,7 @@ const NavBarMenu = () => {
                 open={state.editNwnOffering}
                 onClose={handleNwnOfferingClose}
                 onSubmit={handleNwnOfferingSubmit}
-                idNames={structuredClone(nwnOfferingOptions.map(x => x.nwnOffering))}
+                idNames={structuredClone(nwnOfferingOptions)}
                 entityType='NWNOfferings'
             />
 
@@ -371,7 +387,7 @@ const NavBarMenu = () => {
                 open={state.editManager}
                 onClose={handleManagerClose}
                 onSubmit={handleManagerSubmit}
-                idNames={structuredClone(nwnOfferingOptions.map(x => x.manager))}
+                idNames={structuredClone(managerOptions)}
                 entityType='Managers'
             />
 

@@ -1,4 +1,4 @@
-import { partnerOfferingType } from "../Types";
+import { IIdNameAndManager, partnerOfferingType } from "../Types";
 import { CLIENT } from "./Constants";
 
 const managers = [
@@ -200,19 +200,30 @@ export async function createPartnerOfferingRemove9879(
 }
 
 export async function updatePartnerOffering(
-    newPartnerOffering: partnerOfferingType,
-    oldPartnerOffering: partnerOfferingType) {
-    // get the id of the partnerOffering
-    const partnerOfferingId = oldPartnerOffering.id;
-    // apis to delete
-    const deleteApis = oldPartnerOffering.apis.filter(
-        element => !newPartnerOffering.apis.find(x => x.id === element.id));
+    oldPartnerOffering: partnerOfferingType,
+    newPartnerOffering: partnerOfferingType
+) {
+    // Get the id of the partnerOffering
+    const partnerOfferingId = newPartnerOffering.id;
+
+    const oldApis = oldPartnerOffering.apis || [];
+
+    // APIs to delete (exist in old but not in new)
+    const deleteApis = oldApis.filter(
+        element => !newPartnerOffering.apis.find(x => x.id === element.id)
+    );
     deleteApis.forEach((i) => CLIENT.models.Api.delete({ id: i.id }));
-    // apis to add
+
+    // APIs to add (exist in new but not in old)
     const addApis = newPartnerOffering.apis.filter(
-        element => !oldPartnerOffering.apis.find(x => x.id === element.id));
+        element => !oldApis.find(x => x.id === element.id)
+    );
+
+    // APIs to update (exist in both)
     const updateApis = newPartnerOffering.apis.filter(
-        element => !addApis.find(x => x.id === element.id));
+        element => !addApis.find(x => x.id === element.id)
+    );
+
     addApis.forEach((i) => CLIENT.models.Api.create({
         docLink: i.docLink,
         trainingLink: i.trainingLink,
@@ -223,6 +234,7 @@ export async function updatePartnerOffering(
         authenticationTypeId: i.authenticationType.id,
         authenticationInfo: i.authenticationInfo
     }));
+
     updateApis.forEach((i) => CLIENT.models.Api.update({
         id: i.id,
         docLink: i.docLink,
@@ -234,8 +246,9 @@ export async function updatePartnerOffering(
         authenticationTypeId: i.authenticationType.id,
         authenticationInfo: i.authenticationInfo
     }));
-    // update the partner offering
-    CLIENT.models.PartnerOffering.update({
+
+    // Update the partner offering
+    await CLIENT.models.PartnerOffering.update({
         id: partnerOfferingId,
         offeringName: newPartnerOffering.offeringName,
         contactInfo: newPartnerOffering.contactInfo,
@@ -245,7 +258,7 @@ export async function updatePartnerOffering(
         nwnOfferingId: newPartnerOffering.nwnOffering.id,
         companyId: newPartnerOffering.company.id,
         priorityId: newPartnerOffering.priority.id,
-    })
+    });
 }
 
 export async function deletePartnerOffering(id: string) {
@@ -277,6 +290,160 @@ export async function deletePartnerOffering(id: string) {
 
     } catch (error) {
         console.error('Error deleting partner offering:', error);
+    }
+}
+
+type EntityType =
+    | 'Company'
+    | 'Priority'
+    | 'ConnectionStatus'
+    | 'Manager'
+    | 'ApiType'
+    | 'AuthenticationType'
+    | 'NwnOffering';
+
+interface BaseEntity {
+    id: string;
+    name: string;
+}
+
+export async function updateAllEntities<T extends BaseEntity>(
+    entityType: EntityType,
+    oldEntities: T[],
+    newEntities: T[]
+) {
+    // Get all existing entities
+    let existingEntities: BaseEntity[] = [];
+
+    // don't touch any of the empties
+    existingEntities = oldEntities.filter(x => x.name !== "")
+
+    // Find entities to delete (exist in DB but not in newEntities)
+    const entitiesToDelete = existingEntities.filter(
+        existing => !newEntities.find(newEntity => newEntity.id === existing.id)
+    );
+
+    // Find entities to add (in newEntities but not in DB)
+    // Dont try to add the empties
+    const entitiesToAdd = newEntities.filter(
+        newEntity => existingEntities.find(existing => {existing.id === newEntity.id})
+    );
+
+    // Find entities to update (exist in both and have changes)
+    const entitiesToUpdate = newEntities.filter(
+        newEntity => {
+            const existing = existingEntities.find(e => e.id === newEntity.id);
+            if (!existing) 
+                return false;
+            
+            // Check if name has changed
+            if (existing.name !== newEntity.name) 
+                return true;
+            
+            // If NWNOfferings, also check if manager has changed
+            if (entityType === 'NwnOffering') {
+                const existingWithManager = existing as unknown as IIdNameAndManager;
+                const newWithManager = newEntity as unknown as IIdNameAndManager;
+                return existingWithManager.manager.id !== newWithManager.manager.id;
+            }
+            
+            return false;
+        }
+    );
+
+    // Delete
+    for (const entity of entitiesToDelete) {
+        switch (entityType) {
+            case 'Company':
+                await CLIENT.models.Company.delete({ id: entity.id });
+                break;
+            case 'Priority':
+                await CLIENT.models.Priority.delete({ id: entity.id });
+                break;
+            case 'ConnectionStatus':
+                await CLIENT.models.ConnectionStatus.delete({ id: entity.id });
+                break;
+            case 'Manager':
+                await CLIENT.models.Manager.delete({ id: entity.id });
+                break;
+            case 'ApiType':
+                await CLIENT.models.ApiType.delete({ id: entity.id });
+                break;
+            case 'AuthenticationType':
+                await CLIENT.models.AuthenticationType.delete({ id: entity.id });
+                break;
+            case 'NwnOffering':
+                await CLIENT.models.NwnOffering.delete({ id: entity.id });
+                break;
+        }
+    }
+
+    // Add
+    for (const entity of entitiesToAdd) {
+        switch (entityType) {
+            case 'Company':
+                await CLIENT.models.Company.create({ name: entity.name });
+                break;
+            case 'Priority':
+                await CLIENT.models.Priority.create({ name: entity.name });
+                break;
+            case 'ConnectionStatus':
+                await CLIENT.models.ConnectionStatus.create({ name: entity.name });
+                break;
+            case 'Manager':
+                await CLIENT.models.Manager.create({ name: entity.name });
+                break;
+            case 'ApiType':
+                await CLIENT.models.ApiType.create({ name: entity.name });
+                break;
+            case 'AuthenticationType':
+                await CLIENT.models.AuthenticationType.create({ name: entity.name });
+                break;
+            case 'NwnOffering':
+                {
+                    const nwnOfferingToAdd = entity as unknown as IIdNameAndManager;
+                    await CLIENT.models.NwnOffering.create({
+                        name: nwnOfferingToAdd.name,
+                        managerId: nwnOfferingToAdd.manager.id
+                    });
+                    break;
+                }
+        }
+    }
+
+    // Update
+    // TODO: 9879 we are updating entries that are not changed.  May need to filter those out.
+    for (const entity of entitiesToUpdate) {
+        switch (entityType) {
+            case 'Company':
+                await CLIENT.models.Company.update({ id: entity.id, name: entity.name });
+                break;
+            case 'Priority':
+                await CLIENT.models.Priority.update({ id: entity.id, name: entity.name });
+                break;
+            case 'ConnectionStatus':
+                await CLIENT.models.ConnectionStatus.update({ id: entity.id, name: entity.name });
+                break;
+            case 'Manager':
+                await CLIENT.models.Manager.update({ id: entity.id, name: entity.name });
+                break;
+            case 'ApiType':
+                await CLIENT.models.ApiType.update({ id: entity.id, name: entity.name });
+                break;
+            case 'AuthenticationType':
+                await CLIENT.models.AuthenticationType.update({ id: entity.id, name: entity.name });
+                break;
+            case 'NwnOffering':
+                {
+                    const nwnOfferingToUpdate = entity as unknown as IIdNameAndManager;
+                    await CLIENT.models.NwnOffering.update({
+                        id: nwnOfferingToUpdate.id,
+                        name: nwnOfferingToUpdate.name,
+                        managerId: nwnOfferingToUpdate.manager.id
+                    });
+                    break;
+                }
+        }
     }
 }
 

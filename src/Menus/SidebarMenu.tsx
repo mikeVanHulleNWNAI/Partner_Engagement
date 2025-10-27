@@ -6,12 +6,12 @@ import {
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import EditPartnerOfferingForm from '../Forms/EditPartnerOfferingForm';
-import { partnerOfferingType } from '../Types';
 import { useDataStore } from '../DataStoreProvider';
 import AreYouSureForm from '../Forms/AreYouSureForm';
 import { deletePartnerOffering, updatePartnerOffering } from '../Utils/CreateData';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { partnerOfferingType } from '../Types';
 
 // Define state type
 interface SidebarMenuState {
@@ -77,11 +77,14 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
         handleMenuClose();
     };
 
-    const handleEditPartnerOfferingSubmit = useCallback((partnerOffering: partnerOfferingType) => {
+    const handleEditPartnerOfferingSubmit = useCallback((newPartnerOffering: partnerOfferingType) => {
         dispatch({ type: 'CLOSE_ALL' });
         if (activePartnerOffering)
-            updatePartnerOffering(partnerOffering, activePartnerOffering);
-    }, []);
+            updatePartnerOffering(
+                activePartnerOffering,
+                newPartnerOffering,
+            );
+    }, [activePartnerOffering]);
 
     const handleDeletePartnerOfferingOpen = () => {
         dispatch({ type: 'OPEN_DELETEPARTNEROFFERING' });

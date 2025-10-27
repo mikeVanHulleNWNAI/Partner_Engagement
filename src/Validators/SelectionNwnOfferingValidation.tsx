@@ -1,13 +1,13 @@
 import { FormControl, InputLabel, MenuItem, Select, SelectChangeEvent } from '@mui/material';
-import { IdNameAndManagerIdNameType } from '../Types';
+import { IIdNameAndManager } from '../Types';
 import { useEffect, useState } from 'react';
 
 interface SelectionNwnOfferingValidationProps {
     label: string;
-    value: IdNameAndManagerIdNameType;
-    options: IdNameAndManagerIdNameType[]
+    value: IIdNameAndManager;
+    options: IIdNameAndManager[]
     fullWidth?: boolean;
-    onChange: (idNameType: IdNameAndManagerIdNameType) => void;
+    onChange: (idNameType: IIdNameAndManager) => void;
 }
 
 const SelectionNwnOfferingValidation: React.FC<SelectionNwnOfferingValidationProps> = ({
@@ -18,14 +18,14 @@ const SelectionNwnOfferingValidation: React.FC<SelectionNwnOfferingValidationPro
     onChange
 }) => {
 
-    const [selectedValue, setSelectedValue] = useState<IdNameAndManagerIdNameType>(value);
+    const [selectedValue, setSelectedValue] = useState<IIdNameAndManager>(value);
 
     useEffect(() => {
         setSelectedValue(value);
     }, [value])
 
-    const getDisplayValue = (item: IdNameAndManagerIdNameType) => {
-        return `${item.nwnOffering.name} - ${item.manager.name}`;
+    const getDisplayValue = (item: IIdNameAndManager) => {
+        return `${item.name} - ${item.manager.name}`;
     }
 
     const handleChange = (event: SelectChangeEvent<string>) => {
@@ -49,7 +49,7 @@ const SelectionNwnOfferingValidation: React.FC<SelectionNwnOfferingValidationPro
                 {options.map((option) => (
                     <MenuItem
                         value={getDisplayValue(option)}
-                        key={option.nwnOffering.id}
+                        key={option.id}
                     >
                         {getDisplayValue(option)}
                     </MenuItem>

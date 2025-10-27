@@ -43,6 +43,11 @@ export type partnerOfferingType = {
     }[];
 }
 
-export type IdNameType = { id: string; name: string };
+export interface IIdName { 
+    id: string; 
+    name: string 
+}
 
-export type IdNameAndManagerIdNameType = { nwnOffering: IdNameType, manager: IdNameType };
+export interface IIdNameAndManager extends IIdName { 
+    manager: IIdName 
+}
