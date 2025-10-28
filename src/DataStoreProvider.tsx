@@ -323,6 +323,112 @@ export const DataStoreProvider = ({ children }: DataStoreProviderProps) => {
         },
       });
 
+    // Subscribe to API changes to trigger PartnerOffering refresh
+    // Track previous API snapshot to detect actual changes
+    let previousApiSnapshot = new Map<string, string>();
+    
+    const apiSubscription = CLIENT.models.Api.observeQuery({
+      selectionSet: ['id', 'partnerOfferingId', 'docLink', 'trainingLink', 'sandboxEnvironment', 'endpoint', 'apiTypeId', 'authenticationTypeId', 'authenticationInfo'],
+    }).subscribe({
+      next: async (data) => {
+        // Create current snapshot of all APIs
+        const currentApiSnapshot = new Map<string, string>();
+        const partnerOfferingIdsToRefresh = new Set<string>();
+        
+        // Build current snapshot and detect changes
+        for (const api of data.items) {
+          if (api?.id && api?.partnerOfferingId) {
+            const apiFingerprint = JSON.stringify({
+              id: api.id,
+              partnerOfferingId: api.partnerOfferingId,
+              docLink: api.docLink,
+              trainingLink: api.trainingLink,
+              sandboxEnvironment: api.sandboxEnvironment,
+              endpoint: api.endpoint,
+              apiTypeId: api.apiTypeId,
+              authenticationTypeId: api.authenticationTypeId,
+              authenticationInfo: api.authenticationInfo,
+            });
+            
+            currentApiSnapshot.set(api.id, apiFingerprint);
+            
+            // Check if this API changed or is new
+            const previousFingerprint = previousApiSnapshot.get(api.id);
+            if (!previousFingerprint || previousFingerprint !== apiFingerprint) {
+              partnerOfferingIdsToRefresh.add(api.partnerOfferingId);
+            }
+          }
+        }
+        
+        // Check for deleted APIs
+        for (const [apiId, fingerprint] of previousApiSnapshot.entries()) {
+          if (!currentApiSnapshot.has(apiId)) {
+            // API was deleted, extract partnerOfferingId from fingerprint
+            const data = JSON.parse(fingerprint);
+            if (data.partnerOfferingId) {
+              partnerOfferingIdsToRefresh.add(data.partnerOfferingId);
+            }
+          }
+        }
+        
+        // Update snapshot for next comparison
+        previousApiSnapshot = currentApiSnapshot;
+        
+        // Only refetch PartnerOfferings that actually changed
+        if (partnerOfferingIdsToRefresh.size > 0) {
+          console.log('Refreshing PartnerOfferings:', Array.from(partnerOfferingIdsToRefresh));
+          
+          for (const offeringId of partnerOfferingIdsToRefresh) {
+            const refetchedOffering = await CLIENT.models.PartnerOffering.get(
+              { id: offeringId },
+              {
+                selectionSet: [
+                  'id',
+                  'offeringName',
+                  'contactInfo',
+                  'dashboard',
+                  'notes',
+                  'status.id',
+                  'status.name',
+                  'nwnOffering.id',
+                  'nwnOffering.name',
+                  'nwnOffering.manager.id',
+                  'nwnOffering.manager.name',
+                  'company.id',
+                  'company.name',
+                  'priority.id',
+                  'priority.name',
+                  'apis.id',
+                  'apis.docLink',
+                  'apis.trainingLink',
+                  'apis.sandboxEnvironment',
+                  'apis.endpoint',
+                  'apis.apiType.id',
+                  'apis.apiType.name',
+                  'apis.authenticationType.id',
+                  'apis.authenticationType.name',
+                  'apis.authenticationInfo',
+                ],
+              }
+            );
+
+            if (refetchedOffering.data) {
+              // Update the offering in the list
+              setAllPartnerOfferings((prev) => {
+                const index = prev.findIndex((o) => o.id === offeringId);
+                if (index >= 0) {
+                  const updated = [...prev];
+                  updated[index] = refetchedOffering.data as partnerOfferingType;
+                  return updated;
+                }
+                return prev;
+              });
+            }
+          }
+        }
+      },
+    });
+
     // Cleanup all subscriptions
     return () => {
       partnerOfferingSubscription.unsubscribe();
@@ -333,6 +439,7 @@ export const DataStoreProvider = ({ children }: DataStoreProviderProps) => {
       nwnOfferingSubscription.unsubscribe();
       apiTypeSubscription.unsubscribe();
       authenticationTypesSubscription.unsubscribe();
+      apiSubscription.unsubscribe();
     };
   }, []);
 
