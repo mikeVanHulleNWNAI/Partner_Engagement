@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useRef } from 'react';
 import { Box, IconButton, Drawer, Button, Typography } from '@mui/material';
 import { ChevronRightIcon } from 'lucide-react';
 import SidebarMenu from './Menus/SidebarMenu';
@@ -21,66 +21,31 @@ function Sidebar({
   backgroundColor = '#ffffff',
   positionFromTop = 16
 }: SidebarProps) {
-  const [width, setWidth] = useState(384); // Default width (384px)
-  const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
-
-  const minWidth = 200;
-  const maxWidth = 800;
 
   const {
     activePartnerOffering
   } = useDataStore();
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isResizing) return;
-
-      const windowWidth = window.innerWidth;
-      const newWidth = windowWidth - e.clientX;
-
-      if (newWidth >= minWidth && newWidth <= maxWidth) {
-        setWidth(newWidth);
-      }
-    };
-
-    const handleMouseUp = () => {
-      setIsResizing(false);
-    };
-
-    if (isResizing) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = 'ew-resize';
-      document.body.style.userSelect = 'none';
-    }
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-    };
-  }, [isResizing]);
-
-  const handleMouseDown = () => {
-    setIsResizing(true);
-  };
 
   return (
     <Drawer
       anchor="right"
       open={isOpen}
       onClose={onClose}
+      variant="persistent"
       sx={{
+        width: isOpen ? { xs: '100%', sm: '40%' } : 0,
+        flexShrink: 0,
         '& .MuiDrawer-paper': {
-          width: `${width}px`,
+          width: { xs: '100%', sm: '40%' },
           top: `${positionFromTop * 4}px`,
           height: `calc(100% - ${positionFromTop * 4}px)`,
           backgroundColor: backgroundColor,
           boxShadow: 3,
           overflowY: 'auto',
-        },
+          position: 'absolute',  // Change from default 'fixed'
+          transition: 'width 0.3s ease-in-out',
+        }
       }}
       ModalProps={{
         keepMounted: false,
@@ -89,7 +54,6 @@ function Sidebar({
       <Box ref={sidebarRef} sx={{ position: 'relative', height: '100%' }}>
         {/* Resize Handle */}
         <Box
-          onMouseDown={handleMouseDown}
           sx={{
             position: 'absolute',
             left: 0,
@@ -97,7 +61,7 @@ function Sidebar({
             height: '100%',
             width: '4px',
             cursor: 'ew-resize',
-            backgroundColor: isResizing ? 'primary.main' : 'grey.300',
+            backgroundColor: 'grey.300',
             '&:hover': {
               backgroundColor: 'primary.main',
             },
@@ -175,7 +139,7 @@ function Sidebar({
                 >
                   New Partner Offering
                 </Button>
-                <SidebarMenu 
+                <SidebarMenu
                   onCloseSidebar={onClose}
                 />
                 {/* Partner Offering Details */}

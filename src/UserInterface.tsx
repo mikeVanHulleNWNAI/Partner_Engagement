@@ -107,113 +107,116 @@ function UserInterface() {
       <NavBar
         height={navBarHeight}
       />
-      <Box
-        sx={{
-          pt: `${navBarHeight * 4}px`,
-          background: `linear-gradient(180deg, ${adjustColorHSL(BODY_COLOR, +30)}, ${adjustColorHSL(BODY_COLOR, +50)})`,
-        }}
-      >
-        <Box sx={{ mb: 2 }} />
-
-        {/* Filter Controls */}
+      <Box sx={{ display: 'flex', height: '100vh' }} >
         <Box
           sx={{
-            mb: 2,
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 2,
-            px: 2,
+            flexgrow: 1,
+            pt: `${navBarHeight * 4}px`,
+            background: `linear-gradient(180deg, ${adjustColorHSL(BODY_COLOR, +30)}, ${adjustColorHSL(BODY_COLOR, +50)})`,
           }}
         >
-          <FormControl
-            size="small"
-            sx={{ minWidth: 200 }}
-          >
-            <InputLabel id="manager-select-label">Manager</InputLabel>
-            <Select
-              labelId="manager-select-label"
-              id="manager-select"
-              value={selectedManager}
-              label="Manager"
-              onChange={(e) => setSelectedManager(e.target.value)}
-            >
-              <MenuItem value="">All Managers</MenuItem>
-              {managerOptions.map((manager) => (
-                <MenuItem key={manager.id} value={manager.name}>
-                  {manager.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <Box sx={{ mb: 2 }} />
 
-          <FormControl
-            size="small"
-            sx={{ minWidth: 200 }}
+          {/* Filter Controls */}
+          <Box
+            sx={{
+              mb: 2,
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 2,
+              px: 2,
+            }}
           >
-            <InputLabel id="nwnOffering-select-label">NWN Offering</InputLabel>
-            <Select
-              labelId="nwnOffering-select-label"
-              id="nwnOffering-select"
-              value={selectedNwnOffering}
-              label="NWN Offering"
-              onChange={(e) => setSelectedNwnOffering(e.target.value)}
+            <FormControl
+              size="small"
+              sx={{ minWidth: 200 }}
             >
-              <MenuItem value="">All Offerings</MenuItem>
-              {nwnOfferingOptions.map((offering) => (
-                <MenuItem key={offering.id} value={offering.name}>
-                  {offering.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+              <InputLabel id="manager-select-label">Manager</InputLabel>
+              <Select
+                labelId="manager-select-label"
+                id="manager-select"
+                value={selectedManager}
+                label="Manager"
+                onChange={(e) => setSelectedManager(e.target.value)}
+              >
+                <MenuItem value="">All Managers</MenuItem>
+                {managerOptions.map((manager) => (
+                  <MenuItem key={manager.id} value={manager.name}>
+                    {manager.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
-          <FormControl
-            size="small"
-            sx={{ minWidth: 200 }}
-          >
-            <InputLabel id="apiType-select-label">API Type</InputLabel>
-            <Select
-              labelId="apiType-select-label"
-              id="apiType-select"
-              value={selectedApiType}
-              label="API Type"
-              onChange={(e) => setSelectedApiType(e.target.value)}
+            <FormControl
+              size="small"
+              sx={{ minWidth: 200 }}
             >
-              <MenuItem value="">All Types</MenuItem>
-              {apiTypeOptions.map((type) => (
-                <MenuItem key={type.id} value={type.name}>
-                  {type.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+              <InputLabel id="nwnOffering-select-label">NWN Offering</InputLabel>
+              <Select
+                labelId="nwnOffering-select-label"
+                id="nwnOffering-select"
+                value={selectedNwnOffering}
+                label="NWN Offering"
+                onChange={(e) => setSelectedNwnOffering(e.target.value)}
+              >
+                <MenuItem value="">All Offerings</MenuItem>
+                {nwnOfferingOptions.map((offering) => (
+                  <MenuItem key={offering.id} value={offering.name}>
+                    {offering.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl
+              size="small"
+              sx={{ minWidth: 200 }}
+            >
+              <InputLabel id="apiType-select-label">API Type</InputLabel>
+              <Select
+                labelId="apiType-select-label"
+                id="apiType-select"
+                value={selectedApiType}
+                label="API Type"
+                onChange={(e) => setSelectedApiType(e.target.value)}
+              >
+                <MenuItem value="">All Types</MenuItem>
+                {apiTypeOptions.map((type) => (
+                  <MenuItem key={type.id} value={type.name}>
+                    {type.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+
+          {/* Debug Buttons (hidden) */}
+          <Button
+            sx={{ display: 'none' }}
+            onClick={handleDeleteAndRestore}
+          >
+            Delete and Restore
+          </Button>
+          <Button
+            sx={{ display: 'none' }}
+            onClick={deleteTemps}
+          >
+            Delete temps
+          </Button>
+
+          {/* Item Grid */}
+          <ItemGrid>
+            {filteredPartnerOfferings.map((partnerOffering) => (
+              <PartnerOfferingTileMemo
+                key={partnerOffering.id}
+                partnerOffering={partnerOffering}
+                isHighlighted={activePartnerOffering?.id === partnerOffering.id}
+                onClick={() => activateSidebar(partnerOffering)}
+              />
+            ))}
+          </ItemGrid>
         </Box>
-
-        {/* Debug Buttons (hidden) */}
-        <Button
-          sx={{ display: 'none' }}
-          onClick={handleDeleteAndRestore}
-        >
-          Delete and Restore
-        </Button>
-        <Button
-          sx={{ display: 'none' }}
-          onClick={deleteTemps}
-        >
-          Delete temps
-        </Button>
-
-        {/* Item Grid */}
-        <ItemGrid>
-          {filteredPartnerOfferings.map((partnerOffering) => (
-            <PartnerOfferingTileMemo
-              key={partnerOffering.id}
-              partnerOffering={partnerOffering}
-              isHighlighted={activePartnerOffering?.id === partnerOffering.id}
-              onClick={() => activateSidebar(partnerOffering)}
-            />
-          ))}
-        </ItemGrid>
 
         {/* Sidebar */}
         <Sidebar
