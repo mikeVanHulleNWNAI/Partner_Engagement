@@ -107,12 +107,15 @@ function UserInterface() {
       <NavBar
         height={navBarHeight}
       />
-      <Box sx={{ display: 'flex', height: '100vh' }} >
+      <Box 
+        sx={{ 
+          display: 'flex', 
+          overflow: 'hidden',
+        }} >
         <Box
           sx={{
-            flexgrow: 1,
+            flexGrow: 1,
             pt: `${navBarHeight * 4}px`,
-            background: `linear-gradient(180deg, ${adjustColorHSL(BODY_COLOR, +30)}, ${adjustColorHSL(BODY_COLOR, +50)})`,
           }}
         >
           <Box sx={{ mb: 2 }} />
