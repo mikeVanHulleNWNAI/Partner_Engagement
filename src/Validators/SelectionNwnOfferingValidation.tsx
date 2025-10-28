@@ -19,18 +19,20 @@ const SelectionNwnOfferingValidation: React.FC<SelectionNwnOfferingValidationPro
 }) => {
 
     const [selectedValue, setSelectedValue] = useState<IIdNameAndManager>(value);
+    console.log("Entering SelectionNwnOfferingValidate with " + selectedValue.id + ", " + selectedValue.name);
 
     useEffect(() => {
         setSelectedValue(value);
     }, [value])
 
     const getDisplayValue = (item: IIdNameAndManager) => {
-        return `${item.name} - ${item.manager.name}`;
+        // Add null check for manager
+        return item.manager ? `${item.name} - ${item.manager.name}` : item.name;
     }
 
     const handleChange = (event: SelectChangeEvent<string>) => {
         const selected = options.find(
-            opt => getDisplayValue(opt) === event.target.value
+            opt => opt.id === event.target.value // Use ID instead of display value
         );
         if (selected) {
             setSelectedValue(selected);
@@ -43,12 +45,12 @@ const SelectionNwnOfferingValidation: React.FC<SelectionNwnOfferingValidationPro
         <FormControl variant="standard" fullWidth={fullWidth}>
             <InputLabel>{label}</InputLabel>
             <Select
-                value={getDisplayValue(selectedValue)}
+                value={selectedValue.id || ''} // Use ID as value with fallback
                 onChange={handleChange}
             >
                 {options.map((option) => (
                     <MenuItem
-                        value={getDisplayValue(option)}
+                        value={option.id} // Use ID as value
                         key={option.id}
                     >
                         {getDisplayValue(option)}

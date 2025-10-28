@@ -232,7 +232,6 @@ export const DataStoreProvider = ({ children }: DataStoreProviderProps) => {
         const offerings = data.items
           .filter((item) => item !== null && item !== undefined)
           .sort((a, b) => a.name.localeCompare(b.name));
-        try{
         setNwnOfferingOptions(
           offerings.map((o) => ({
             id: o.id, name: o.name,
@@ -240,7 +239,6 @@ export const DataStoreProvider = ({ children }: DataStoreProviderProps) => {
           }))
         );
         setLoadingStates((prev) => ({ ...prev, nwnOfferings: false }));
-      }catch{}
       },
     });
 

@@ -1,4 +1,4 @@
-import React, { useReducer } from 'react';
+import React, { useReducer, useRef, useMemo, useCallback } from 'react';
 import {
     Button,
     Dialog,
@@ -23,66 +23,59 @@ interface IdNamesFormState<T extends IIdName> {
 }
 
 type IdNamesFormAction<T extends IIdName> =
-    | { type: 'UPDATE', idName: T }
-    | { type: 'REMOVE', idName: T }
-    | { type: 'ADD', idName: T }
-    | { type: 'OPEN_DELETE_CONFIRM', idName: T }
+    | { type: 'UPDATE'; idName: T }
+    | { type: 'REMOVE'; idName: T }
+    | { type: 'ADD'; idName: T }
+    | { type: 'OPEN_DELETE_CONFIRM'; idName: T }
     | { type: 'CLOSE_DELETE_CONFIRM' }
-    | { type: 'CONFIRM_DELETE' }
+    | { type: 'CONFIRM_DELETE' };
 
-function idNameFormReducer<T extends IIdName>(state: IdNamesFormState<T>, action: IdNamesFormAction<T>): IdNamesFormState<T> {
+function idNameFormReducer<T extends IIdName>(
+    state: IdNamesFormState<T>,
+    action: IdNamesFormAction<T>
+): IdNamesFormState<T> {
     switch (action.type) {
         case 'UPDATE':
-            {
-                const updatedFormData = state.formData.map(x =>
-                    x.id === action.idName.id
-                        ? { ...x, ...action.idName }
-                        : x
-                );
-                return { ...state, formData: updatedFormData };
-            }
+            return {
+                ...state,
+                formData: state.formData.map(x =>
+                    x.id === action.idName.id ? { ...x, ...action.idName } : x
+                ),
+            };
         case 'ADD':
-            {
-                const updatedFormData = [action.idName, ...state.formData];
-                return { ...state, formData: updatedFormData };
-            }
+            return { ...state, formData: [action.idName, ...state.formData] };
         case 'REMOVE':
-            {
-                const updatedFormData = state.formData.filter(x => x.id !== action.idName.id);
-                return { ...state, formData: updatedFormData };
-            }
+            return {
+                ...state,
+                formData: state.formData.filter(x => x.id !== action.idName.id),
+            };
         case 'OPEN_DELETE_CONFIRM':
-            {
-                return {
-                    ...state,
-                    deleteConfirmOpen: true,
-                    itemToDelete: action.idName
-                };
-            }
+            return {
+                ...state,
+                deleteConfirmOpen: true,
+                itemToDelete: action.idName,
+            };
         case 'CLOSE_DELETE_CONFIRM':
-            {
-                return {
-                    ...state,
-                    deleteConfirmOpen: false,
-                    itemToDelete: null
-                };
-            }
+            return {
+                ...state,
+                deleteConfirmOpen: false,
+                itemToDelete: null,
+            };
         case 'CONFIRM_DELETE':
-            {
-                if (!state.itemToDelete) return state;
-                const updatedFormData = state.formData.filter(x => x.id !== state.itemToDelete!.id);
-                return {
-                    ...state,
-                    formData: updatedFormData,
-                    deleteConfirmOpen: false,
-                    itemToDelete: null
-                };
-            }
+            if (!state.itemToDelete) return state;
+            return {
+                ...state,
+                formData: state.formData.filter(x => x.id !== state.itemToDelete!.id),
+                deleteConfirmOpen: false,
+                itemToDelete: null,
+            };
+        default:
+            return state;
     }
 }
 
 type EntityType =
-    'Companies'
+    | 'Companies'
     | 'Priorities'
     | 'ConnectionStatuses'
     | 'NWNOfferings'
@@ -105,210 +98,223 @@ function IdNamesForm<T extends IIdName>({
     idNames,
     entityType,
 }: IdNamesFormProps<T>) {
+    const [state, dispatch] = useReducer(idNameFormReducer<T>, {
+        formData: idNames.filter(item => item.name !== ''),
+        deleteConfirmOpen: false,
+        itemToDelete: null,
+    });
 
-    const [state, dispatch] =
-        useReducer(idNameFormReducer<T>, {
-            formData: idNames.filter(item => item.name !== ""),
-            deleteConfirmOpen: false,
-            itemToDelete: null
-        })
+    const { allPartnerOfferings, managerOptions } = useDataStore();
+    const firstFieldRef = useRef<HTMLDivElement>(null);
 
-    const {
-        allPartnerOfferings,
-        managerOptions
-    } = useDataStore();
-
-
-    // Check if an ID is in use by any partner offering
-    const isIdInUse = (id: string): boolean => {
-        return allPartnerOfferings.some(offering => {
+    // Memoize ID usage check
+    const idsInUse = useMemo(() => {
+        const ids = new Set<string>();
+        allPartnerOfferings.forEach(offering => {
             switch (entityType) {
                 case 'Companies':
-                    return offering.company.id === id;
+                    ids.add(offering.company.id);
+                    break;
                 case 'Priorities':
-                    return offering.priority.id === id;
+                    ids.add(offering.priority.id);
+                    break;
                 case 'ConnectionStatuses':
-                    return offering.status.id === id;
+                    ids.add(offering.status.id);
+                    break;
                 case 'NWNOfferings':
-                    return offering.nwnOffering.id === id;
+                    ids.add(offering.nwnOffering.id);
+                    break;
                 case 'Managers':
-                    return offering.nwnOffering.manager.id === id;
+                    ids.add(offering.nwnOffering.manager.id);
+                    break;
                 case 'ApiTypes':
-                    return offering.apis.some(api => api.apiType.id === id);
+                    offering.apis.forEach(api => ids.add(api.apiType.id));
+                    break;
                 case 'AuthenticationTypes':
-                    return offering.apis.some(api => api.authenticationType.id === id);
-                default:
-                    return false;
+                    offering.apis.forEach(api => ids.add(api.authenticationType.id));
+                    break;
             }
         });
-    };
+        return ids;
+    }, [allPartnerOfferings, entityType]);
 
-    const hasDuplicates = state.formData.some((item, index) =>
-        state.formData.findIndex(x => x.name.trim() !== "" && x.name === item.name) !== index
-    );
+    // Memoize duplicate names
+    const duplicateNames = useMemo(() => {
+        const names = state.formData
+            .map(item => item.name.trim())
+            .filter(name => name !== '');
+        return new Set(names.filter((name, index) => names.indexOf(name) !== index));
+    }, [state.formData]);
 
-    const firstFieldRef = React.useRef<HTMLDivElement>(null);
+    // Memoize validation
+    const { isValid } = useMemo(() => {
+        const hasEmpty = state.formData.some(item => item.name.trim() === '');
+        const hasDupes = duplicateNames.size > 0;
+        return {
+            isValid: state.formData.length > 0 && !hasEmpty && !hasDupes,
+        };
+    }, [state.formData, duplicateNames]);
 
-    const hasEmptyFields = state.formData.some(item => item.name.trim() === "");
-
-    const isValid = state.formData.length > 0 && !hasEmptyFields && !hasDuplicates;
-
-    const getDuplicateNames = () => {
-        const names = state.formData.map(item => item.name.trim()).filter(name => name !== "");
-        return names.filter((name, index) => names.indexOf(name) !== index);
-    };
-
-    const duplicateNames = getDuplicateNames();
-
-    const handleAdd = () => {
-        // Create a basic IIdName object and cast to T
-        let newItem;
+    const handleAdd = useCallback(() => {
+        let newItem: T;
         if (entityType !== 'NWNOfferings') {
-            newItem = { id: crypto.randomUUID(), name: "" } as T;
-        }
-        else {
-            // this is an NWNOffering
-            // find the blank manager
-            const manager = managerOptions.find(x => x.name === "")
+            newItem = { id: crypto.randomUUID(), name: '' } as T;
+        } else {
+            const manager = managerOptions.find(x => x.name === '');
             newItem = {
                 id: crypto.randomUUID(),
-                name: "",
-                manager: { id: manager?.id, name: manager?.name }
-            } as unknown as T
+                name: '',
+                manager: { id: manager?.id, name: manager?.name },
+            } as unknown as T;
         }
-        dispatch({
-            type: 'ADD',
-            idName: newItem
-        })
+        dispatch({ type: 'ADD', idName: newItem });
 
-        // Scroll to top after state updates
         setTimeout(() => {
-            firstFieldRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            firstFieldRef.current?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'nearest',
+            });
         }, 0);
-    }
+    }, [entityType, managerOptions]);
 
-    const handleDeleteClick = (item: T) => {
-        dispatch({
-            type: 'OPEN_DELETE_CONFIRM',
-            idName: item
-        });
-    };
+    const handleDeleteClick = useCallback((item: T) => {
+        dispatch({ type: 'OPEN_DELETE_CONFIRM', idName: item });
+    }, []);
 
-    const handleDeleteConfirm = () => {
+    const handleDeleteConfirm = useCallback(() => {
         dispatch({ type: 'CONFIRM_DELETE' });
-    };
+    }, []);
 
-    const handleDeleteCancel = () => {
+    const handleDeleteCancel = useCallback(() => {
         dispatch({ type: 'CLOSE_DELETE_CONFIRM' });
-    };
+    }, []);
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (onSubmit) {
+    const handleSubmit = useCallback(
+        (e: React.FormEvent) => {
+            e.preventDefault();
             onSubmit(state.formData);
-        }
-    };
+        },
+        [onSubmit, state.formData]
+    );
+
+    const handleNameChange = useCallback((item: T, value: string) => {
+        dispatch({
+            type: 'UPDATE',
+            idName: { ...item, name: value },
+        });
+    }, []);
+
+    const handleManagerChange = useCallback(
+        (item: T, managerId: string) => {
+            const selectedManager = managerOptions.find(m => m.id === managerId);
+            if (selectedManager) {
+                dispatch({
+                    type: 'UPDATE',
+                    idName: { ...item, manager: selectedManager } as T,
+                });
+            }
+        },
+        [managerOptions]
+    );
 
     return (
         <>
-            <Dialog closeAfterTransition={false} open={open} onClose={onClose} maxWidth="sm" fullWidth>
+            <Dialog
+                closeAfterTransition={false}
+                open={open}
+                onClose={onClose}
+                maxWidth="sm"
+                fullWidth
+            >
                 <DialogTitle>Enter details for {entityType}</DialogTitle>
                 <IconButton
                     onClick={handleAdd}
                     color="primary"
                     sx={{ alignSelf: 'flex-start', ml: 2, mt: 1 }}
+                    aria-label="Add new item"
                 >
                     <AddIcon />
                 </IconButton>
                 <DialogContent>
-                    <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
-                        {state.formData
-                            .map((item, index) => {
-                                const inUse = isIdInUse(item.id);
-                                return (
-                                    <Box key={item.id} sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+                    <Box
+                        component="form"
+                        sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}
+                    >
+                        {state.formData.map((item, index) => {
+                            const inUse = idsInUse.has(item.id);
+                            const trimmedName = item.name.trim();
+                            const isEmpty = trimmedName === '';
+                            const isDuplicate = duplicateNames.has(trimmedName);
+
+                            return (
+                                <Box
+                                    key={item.id}
+                                    sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}
+                                >
+                                    <TextField
+                                        label={item.name}
+                                        ref={index === 0 ? firstFieldRef : null}
+                                        type="text"
+                                        value={item.name}
+                                        onChange={e => handleNameChange(item, e.target.value)}
+                                        error={isEmpty || isDuplicate}
+                                        helperText={
+                                            isEmpty
+                                                ? 'Cannot be empty'
+                                                : isDuplicate
+                                                ? 'Duplicate name'
+                                                : ''
+                                        }
+                                        fullWidth
+                                    />
+                                    {entityType === 'NWNOfferings' && (
                                         <TextField
-                                            key={item.id}
-                                            label={item.name}
-                                            ref={index === 0 ? firstFieldRef : null}
-                                            type="text"
-                                            value={item.name}
-                                            onChange={(e) => {
-                                                dispatch({
-                                                    type: 'UPDATE',
-                                                    idName: { ...item, name: e.target.value },
-                                                })
+                                            select
+                                            label="Manager"
+                                            value={(item as unknown as IIdNameAndManager).manager.id}
+                                            onChange={e => handleManagerChange(item, e.target.value)}
+                                            sx={{ minWidth: 200 }}
+                                            slotProps={{
+                                                select: {
+                                                    native: true,
+                                                },
                                             }}
-                                            error={
-                                                item.name.trim() === "" ||
-                                                duplicateNames.includes(item.name.trim())
-                                            }
-                                            helperText={
-                                                item.name.trim() === ""
-                                                    ? "Cannot be empty"
-                                                    : duplicateNames.includes(item.name.trim())
-                                                        ? "Duplicate name"
-                                                        : ""
-                                            }
-                                            fullWidth
-                                        />
-                                        {entityType === 'NWNOfferings' && (
-                                            <TextField
-                                                select
-                                                label="Manager"
-                                                value={(item as unknown as IIdNameAndManager).manager.id}
-                                                onChange={(e) => {
-                                                    const selectedManager = managerOptions.find(m => m.id === e.target.value);
-                                                    if (selectedManager) {
-                                                        dispatch({
-                                                            type: 'UPDATE',
-                                                            idName: {
-                                                                ...item,
-                                                                manager: selectedManager
-                                                            } as T,
-                                                        });
-                                                    }
-                                                }}
-                                                sx={{ minWidth: 200 }}
-                                                slotProps={{
-                                                    select: {
-                                                        native: true,
-                                                    },
-                                                }}
-                                            >
-                                                {managerOptions.map((manager) => (
-                                                    <option key={manager.id} value={manager.id}>
-                                                        {manager.name}
-                                                    </option>
-                                                ))}
-                                            </TextField>
-                                        )}
-                                        <Tooltip
-                                            title={inUse ? "Cannot delete - in use by partner offerings" : "Delete"}
-                                            arrow
                                         >
-                                            <span>
-                                                <IconButton
-                                                    color="error"
-                                                    onClick={() => handleDeleteClick(item)}
-                                                    disabled={inUse}
-                                                    sx={{ mt: 1 }}
-                                                >
-                                                    <DeleteIcon />
-                                                </IconButton>
-                                            </span>
-                                        </Tooltip>
-                                    </Box>
-                                );
-                            })}
+                                            {managerOptions.map(manager => (
+                                                <option key={manager.id} value={manager.id}>
+                                                    {manager.name}
+                                                </option>
+                                            ))}
+                                        </TextField>
+                                    )}
+                                    <Tooltip
+                                        title={
+                                            inUse
+                                                ? 'Cannot delete - in use by partner offerings'
+                                                : 'Delete'
+                                        }
+                                        arrow
+                                    >
+                                        <span>
+                                            <IconButton
+                                                color="error"
+                                                onClick={() => handleDeleteClick(item)}
+                                                disabled={inUse}
+                                                sx={{ mt: 1 }}
+                                                aria-label={`Delete ${item.name || 'item'}`}
+                                            >
+                                                <DeleteIcon />
+                                            </IconButton>
+                                        </span>
+                                    </Tooltip>
+                                </Box>
+                            );
+                        })}
                     </Box>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={onClose}>Cancel</Button>
-                    <Button
-                        onClick={handleSubmit} variant="contained"
-                        disabled={!isValid}
-                    >
+                    <Button onClick={handleSubmit} variant="contained" disabled={!isValid}>
                         Submit
                     </Button>
                 </DialogActions>

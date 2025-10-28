@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react';
+import React, { FC, useEffect, useReducer, useCallback } from 'react';
 import {
   Button,
   Dialog,
@@ -8,12 +8,123 @@ import {
   TextField,
   Box,
   Stack,
+  IconButton,
 } from '@mui/material';
 import { partnerOfferingType } from '../Types';
 import UrlTextFieldValidation from '../Validators/UrlTextFieldValidation';
 import SelectionValidation from '../Validators/SelectionValidation';
-import SelectionNwnOfferingValidation from '../Validators/SelectionNwnOfferingValidation';
 import { useDataStore } from '../DataStoreProvider';
+import AddIcon from '@mui/icons-material/Add';
+
+interface EditPartnerOfferingState {
+  formData: partnerOfferingType;
+  valid: boolean;
+}
+
+type ApiType = partnerOfferingType['apis'][number];
+
+type EditPartnerOfferingAction =
+  | { type: 'SET_FORMDATA'; newFormData: partnerOfferingType }
+  | { type: 'SET_VALID'; newValid: boolean }
+  | { type: 'UPDATE_FIELD'; field: keyof partnerOfferingType; value: unknown }
+  | { type: 'UPDATE_NESTED'; parent: keyof partnerOfferingType; field: string; value: unknown }
+  | { type: 'UPDATE_DEEP_NESTED'; parent: keyof partnerOfferingType; middle: string; field: string; value: unknown }
+  | { type: 'UPDATE_API'; apiId: string; updates: Partial<ApiType> }
+  | { type: 'ADD_API'; defaultApiType: { id: string; name: string }; defaultAuthType: { id: string; name: string } }
+  | { type: 'REMOVE_API'; apiId: string };
+
+function editPartnerOfferingReducer(
+  state: EditPartnerOfferingState,
+  action: EditPartnerOfferingAction
+): EditPartnerOfferingState {
+  switch (action.type) {
+    case 'SET_FORMDATA':
+      return { ...state, formData: action.newFormData };
+
+    case 'SET_VALID':
+      return { ...state, valid: action.newValid };
+
+    case 'UPDATE_FIELD':
+      return {
+        ...state,
+        formData: {
+          ...state.formData,
+          [action.field]: action.value,
+        },
+      };
+
+    case 'UPDATE_NESTED':
+      return {
+        ...state,
+        formData: {
+          ...state.formData,
+          [action.parent]: {
+            ...(state.formData[action.parent] as Record<string, unknown>),
+            [action.field]: action.value,
+          },
+        },
+      };
+
+    case 'UPDATE_DEEP_NESTED':
+      return {
+        ...state,
+        formData: {
+          ...state.formData,
+          [action.parent]: {
+            ...(state.formData[action.parent] as Record<string, unknown>),
+            [action.middle]: {
+              ...((state.formData[action.parent] as Record<string, unknown>)?.[action.middle] as Record<string, unknown> || {}),
+              [action.field]: action.value,
+            },
+          },
+        },
+      };
+
+    case 'UPDATE_API':
+      return {
+        ...state,
+        formData: {
+          ...state.formData,
+          apis: state.formData.apis.map((a) =>
+            a.id === action.apiId ? { ...a, ...action.updates } : a
+          ),
+        },
+      };
+
+    case 'ADD_API':
+      return {
+        ...state,
+        formData: {
+          ...state.formData,
+          apis: [
+            {
+              id: crypto.randomUUID(),
+              docLink: '',
+              trainingLink: '',
+              sandboxEnvironment: '',
+              endpoint: '',
+              apiType: action.defaultApiType,
+              authenticationType: action.defaultAuthType,
+              authenticationInfo: '',
+            },
+            ...state.formData.apis,
+          ],
+        },
+      };
+
+    case 'REMOVE_API':
+      return {
+        ...state,
+        formData: {
+          ...state.formData,
+          apis: state.formData.apis.filter((x) => x.id !== action.apiId),
+        },
+      };
+
+    default:
+      return state;
+  }
+}
 
 interface EditPartnerOfferingProps {
   open: boolean;
@@ -28,14 +139,13 @@ const EditPartnerOfferingForm: FC<EditPartnerOfferingProps> = ({
   onSubmit,
   partnerOfferingData,
 }) => {
-
-  const [formData, setFormData] = useState<partnerOfferingType>(partnerOfferingData);
-  const [valid, setValid] = useState(true);
-  const [activeApiNumber, setActiveApiNumber] = useState(formData.apis.length > 0 ? 0 : null);
+  const [state, dispatch] = useReducer(editPartnerOfferingReducer, {
+    formData: partnerOfferingData,
+    valid: true,
+  });
 
   useEffect(() => {
-    setFormData(partnerOfferingData);
-    setActiveApiNumber(partnerOfferingData.apis.length > 0 ? 0 : null);
+    dispatch({ type: 'SET_FORMDATA', newFormData: partnerOfferingData });
   }, [partnerOfferingData]);
 
   const {
@@ -47,125 +157,74 @@ const EditPartnerOfferingForm: FC<EditPartnerOfferingProps> = ({
     authenticationTypeOptions,
   } = useDataStore();
 
-  const handleChange = (
-    field: string,
-    value: unknown
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
+  const handleChange = useCallback((field: keyof partnerOfferingType, value: unknown) => {
+    dispatch({ type: 'UPDATE_FIELD', field, value });
+  }, []);
 
-  const handleNestedChange = (
-    parent: keyof partnerOfferingType,
-    field: string,
-    value: unknown
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [parent]: {
-        ...(prev[parent] as Record<string, unknown>),
-        [field]: value,
-      },
-    }));
-  };
+  const handleNestedChange = useCallback(
+    (parent: keyof partnerOfferingType, field: string, value: unknown) => {
+      dispatch({ type: 'UPDATE_NESTED', parent, field, value });
+    },
+    []
+  );
 
-  const handleDeepNestedChange = (
-    parent: keyof partnerOfferingType,
-    middle: string,
-    field: string,
-    value: unknown
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [parent]: {
-        ...(prev[parent] as Record<string, unknown>),
-        [middle]: {
-          ...((prev[parent] as Record<string, unknown>)?.[middle] as Record<string, unknown> || {}),
-          [field]: value,
-        },
-      },
-    }));
-  };
+  const handleDeepNestedChange = useCallback(
+    (parent: keyof partnerOfferingType, middle: string, field: string, value: unknown) => {
+      dispatch({ type: 'UPDATE_DEEP_NESTED', parent, middle, field, value });
+    },
+    []
+  );
 
-  const handleApiChange = (
-    index: number,
-    field: string,
-    value: unknown
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      apis: prev.apis.map((api, i) =>
-        i === index ? { ...api, [field]: value } : api
-      ),
-    }));
-  };
+  const handleApiChange = useCallback(
+    (apiId: string, updates: Partial<ApiType>) => {
+      dispatch({ type: 'UPDATE_API', apiId, updates });
+    },
+    []
+  );
 
-  const handleApiNestedChange = (
-    index: number,
-    parent: string,
-    field: string,
-    value: unknown
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      apis: prev.apis.map((api, i) =>
-        i === index
-          ? {
-            ...api,
-            [parent]: {
-              ...(api[parent as keyof typeof api] as object),
-              [field]: value,
-            },
-          }
-          : api
-      ),
-    }));
-  };
+  const handleAddApi = useCallback(() => {
+    // Get the first available option or empty object as fallback
+    const defaultApiType = apiTypeOptions.find(opt => opt.name !== '') || { id: '', name: '' };
+    const defaultAuthType = authenticationTypeOptions.find(opt => opt.name !== '') || { id: '', name: '' };
 
-  /* TODO: 9879 need to add the ability to add and remove APIS
-  const addApi = () => {
-    const newId = `api-${Date.now()}`;
-    setFormData((prev) => ({
-      ...prev,
-      apis: [
-        ...prev.apis,
-        {
-          docLink: '',
-          trainingLink: '',
-          sandboxEnvironment: '',
-          endpoint: '',
-          authenticationInfo: '',
-          id: newId,
-          apiType: { id: '', name: '' },
-          authenticationType: { id: '', name: '' },
-        },
-      ],
-    }));
-    setExpandedApis(prev => new Set([...prev, newId]));
-  };
-
-  const removeApi = (index: number) => {
-    const apiId = formData.apis[index].id;
-    setFormData((prev) => ({
-      ...prev,
-      apis: prev.apis.filter((_, i) => i !== index),
-    }));
-    setExpandedApis(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(apiId);
-      return newSet;
+    dispatch({
+      type: 'ADD_API',
+      defaultApiType,
+      defaultAuthType
     });
-  };
-  */
+  }, [apiTypeOptions, authenticationTypeOptions]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (onSubmit) {
-      onSubmit(formData);
-    }
-  };
+  const handleRemoveApi = useCallback((id: string) => {
+    dispatch({ type: 'REMOVE_API', apiId: id });
+  }, []);
+
+  const handleNwnOfferingChange = useCallback(
+    (e: { id: string; name: string }) => {
+      handleNestedChange('nwnOffering', 'id', e.id);
+      handleNestedChange('nwnOffering', 'name', e.name);
+
+      const nwnOffering = nwnOfferingOptions.find((x) => x.id === e.id);
+      if (nwnOffering) {
+        handleDeepNestedChange('nwnOffering', 'manager', 'id', nwnOffering.manager.id);
+        handleDeepNestedChange('nwnOffering', 'manager', 'name', nwnOffering.manager.name);
+      }
+    },
+    [nwnOfferingOptions, handleNestedChange, handleDeepNestedChange]
+  );
+
+  const handleSubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      if (onSubmit) {
+        onSubmit(state.formData);
+      }
+    },
+    [onSubmit, state.formData]
+  );
+
+  const handleValidChange = useCallback((validEntry: boolean) => {
+    dispatch({ type: 'SET_VALID', newValid: validEntry });
+  }, []);
 
   return (
     <Dialog closeAfterTransition={false} open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -175,29 +234,29 @@ const EditPartnerOfferingForm: FC<EditPartnerOfferingProps> = ({
           <TextField
             label="Offering Name"
             type="text"
-            value={formData.offeringName}
+            value={state.formData.offeringName}
             onChange={(e) => handleChange('offeringName', e.target.value)}
             fullWidth
           />
           <TextField
             label="Contact Info"
             type="text"
-            value={formData.contactInfo}
+            value={state.formData.contactInfo}
             onChange={(e) => handleChange('contactInfo', e.target.value)}
             fullWidth
           />
           <UrlTextFieldValidation
             label="Dashboard"
-            urlValue={formData.dashboard}
+            urlValue={state.formData.dashboard}
             canBeEmpty={true}
             onChange={(e) => handleChange('dashboard', e.target.value)}
-            onValid={(validEntry) => setValid(validEntry)}
+            onValid={handleValidChange}
             fullWidth
           />
           <TextField
             label="Notes"
             type="text"
-            value={formData.notes}
+            value={state.formData.notes}
             onChange={(e) => handleChange('notes', e.target.value)}
             multiline
             rows={4}
@@ -205,153 +264,149 @@ const EditPartnerOfferingForm: FC<EditPartnerOfferingProps> = ({
           />
           <SelectionValidation
             label="Connection Status"
-            value={{ id: formData.status.id, name: formData.status.name }}
+            value={{ id: state.formData.status.id, name: state.formData.status.name }}
             options={connectionStatusOptions}
             fullWidth
             onChange={(e) => {
-              handleNestedChange("status", "id", e.id);
-              handleNestedChange("status", "name", e.name);
-            }}
-          />
-          <SelectionNwnOfferingValidation
-            label="NWN Offering"
-            value={{
-              id: formData.nwnOffering.id, 
-              name: formData.nwnOffering.name,
-              manager: { id: formData.nwnOffering.manager.id, name: formData.nwnOffering.manager.name }
-            }}
-            options={nwnOfferingOptions}
-            fullWidth
-            onChange={(e) => {
-              handleNestedChange("nwnOffering", "id", e.id);
-              handleNestedChange("nwnOffering", "name", e.name);
-              handleDeepNestedChange("nwnOffering", "manager", "id", e.manager.id);
-              handleDeepNestedChange("nwnOffering", "manager", "name", e.manager.name);
+              handleNestedChange('status', 'id', e.id);
+              handleNestedChange('status', 'name', e.name);
             }}
           />
           <SelectionValidation
+            label="NWN Offering"
+            fullWidth
+            value={{ id: state.formData.nwnOffering.id, name: state.formData.nwnOffering.name }}
+            options={nwnOfferingOptions}
+            onChange={handleNwnOfferingChange}
+          />
+          <SelectionValidation
+            label="Manager"
+            disabled
+            fullWidth
+            value={state.formData.nwnOffering.manager}
+            options={[state.formData.nwnOffering.manager]}
+            onChange={undefined}
+          />
+          <SelectionValidation
             label="Company"
-            value={{ id: formData.company.id, name: formData.company.name }}
+            value={{ id: state.formData.company.id, name: state.formData.company.name }}
             options={companyOptions}
             fullWidth
             onChange={(e) => {
-              handleNestedChange("company", "id", e.id);
-              handleNestedChange("company", "name", e.name);
+              handleNestedChange('company', 'id', e.id);
+              handleNestedChange('company', 'name', e.name);
             }}
           />
           <SelectionValidation
             label="Priority"
-            value={{ id: formData.priority.id, name: formData.priority.name }}
+            value={{ id: state.formData.priority.id, name: state.formData.priority.name }}
             options={priorityOptions}
             fullWidth
             onChange={(e) => {
-              handleNestedChange("priority", "id", e.id);
-              handleNestedChange("priority", "name", e.name);
+              handleNestedChange('priority', 'id', e.id);
+              handleNestedChange('priority', 'name', e.name);
             }}
           />
-          {activeApiNumber != null ? (
-            <>
-              <SelectionValidation
-                label="APIs"
-                value={{
-                  id: formData.apis[activeApiNumber].id,
-                  name: formData.apis[activeApiNumber].apiType.name
-                }}
-                options={formData.apis.map((a) => ({
-                  id: a.id,
-                  name: a.apiType.name
-                }))}
-                onChange={(e) => {
-                  setActiveApiNumber(formData.apis.findIndex((a) => a.id === e.id));
-                }}
-                fullWidth />
-              <Box
-                sx={{
-                  gap: 10,
-                  p: 2,
-                  border: '2px solid grey',
-                }}
-              >
-                <Stack direction="column" spacing={2}>
-                  <SelectionValidation
-                    label="API Type"
-                    value={{
-                      id: formData.apis[activeApiNumber].apiType.id,
-                      name: formData.apis[activeApiNumber].apiType.name
-                    }}
-                    options={apiTypeOptions}
-                    fullWidth
-                    onChange={(e) => {
-                      handleApiNestedChange(activeApiNumber, "apiType", "id", e.id);
-                      handleApiNestedChange(activeApiNumber, "apiType", "name", e.name);
-                    }}
-                  />
-                  <UrlTextFieldValidation
-                    label="Doc Link"
-                    urlValue={formData.apis[activeApiNumber].docLink}
-                    canBeEmpty={true}
-                    onChange={(e) => handleApiChange(activeApiNumber, 'docLink', e.target.value)}
-                    onValid={(validEntry) => setValid(validEntry)}
-                    fullWidth
-                  />
-                  <UrlTextFieldValidation
-                    label="Training Link"
-                    urlValue={formData.apis[activeApiNumber].trainingLink}
-                    canBeEmpty={true}
-                    onChange={(e) => handleApiChange(activeApiNumber, 'trainingLink', e.target.value)}
-                    onValid={(validEntry) => setValid(validEntry)}
-                    fullWidth
-                  />
-                  <TextField
-                    label="Sandbox Environment"
-                    type="text"
-                    value={formData.apis[activeApiNumber].sandboxEnvironment}
-                    onChange={(e) => handleApiChange(activeApiNumber, 'sandboxEndironment', e.target.value)}
-                    multiline
-                    rows={4}
-                    fullWidth
-                  />
-                  <TextField
-                    label="Endpoint"
-                    type="text"
-                    value={formData.apis[activeApiNumber].endpoint}
-                    onChange={(e) => handleApiChange(activeApiNumber, 'endpoint', e.target.value)}
-                    fullWidth
-                  />
-                  <SelectionValidation
-                    label="Authentication Type"
-                    value={{
-                      id: formData.apis[activeApiNumber].authenticationType?.id,
-                      name: formData.apis[activeApiNumber].authenticationType?.name
-                    }}
-                    options={authenticationTypeOptions}
-                    fullWidth
-                    onChange={(e) => {
-                      handleApiNestedChange(activeApiNumber, "authenticationType", "id", e.id);
-                      handleApiNestedChange(activeApiNumber, "authenticationType", "name", e.name);
-                    }}
-                  />
-                  <TextField
-                    label="Authentication Info"
-                    type="text"
-                    value={formData.apis[activeApiNumber].authenticationInfo}
-                    onChange={(e) => handleApiChange(activeApiNumber, 'authenticationInfo', e.target.value)}
-                    fullWidth
-                  />
-                </Stack>
-              </Box>
-            </>
-          ) : (
-            <div>No APIs</div>
-          )}
+          <IconButton
+            onClick={handleAddApi}
+            color="primary"
+            sx={{ alignSelf: 'flex-start', ml: 2, mt: 1 }}
+            aria-label="Add new API"
+          >
+            <AddIcon />
+          </IconButton>
+          {state.formData.apis.map((api) => (
+            <Box
+              key={api.id}
+              sx={{
+                gap: 10,
+                p: 2,
+                border: '2px solid grey',
+              }}
+            >
+              <Stack direction="column" spacing={2}>
+                <SelectionValidation
+                  label="API Type"
+                  value={{
+                    id: api.apiType.id,
+                    name: api.apiType.name,
+                  }}
+                  options={apiTypeOptions}
+                  fullWidth
+                  onChange={(e) => {
+                    handleApiChange(api.id, {
+                      apiType: { id: e.id, name: e.name }
+                    });
+                  }}
+                />
+                <UrlTextFieldValidation
+                  label="Doc Link"
+                  urlValue={api.docLink}
+                  canBeEmpty={true}
+                  onChange={(e) => handleApiChange(api.id, { docLink: e.target.value })}
+                  onValid={handleValidChange}
+                  fullWidth
+                />
+                <UrlTextFieldValidation
+                  label="Training Link"
+                  urlValue={api.trainingLink}
+                  canBeEmpty={true}
+                  onChange={(e) => handleApiChange(api.id, { trainingLink: e.target.value })}
+                  onValid={handleValidChange}
+                  fullWidth
+                />
+                <TextField
+                  label="Sandbox Environment"
+                  type="text"
+                  value={api.sandboxEnvironment}
+                  onChange={(e) => handleApiChange(api.id, { sandboxEnvironment: e.target.value })}
+                  multiline
+                  rows={4}
+                  fullWidth
+                />
+                <TextField
+                  label="Endpoint"
+                  type="text"
+                  value={api.endpoint}
+                  onChange={(e) => handleApiChange(api.id, { endpoint: e.target.value })}
+                  fullWidth
+                />
+                <SelectionValidation
+                  label="Authentication Type"
+                  value={{
+                    id: api.authenticationType?.id,
+                    name: api.authenticationType?.name,
+                  }}
+                  options={authenticationTypeOptions}
+                  fullWidth
+                  onChange={(e) => {
+                    handleApiChange(api.id, {
+                      authenticationType: { id: e.id, name: e.name }
+                    });
+                  }}
+                />
+                <TextField
+                  label="Authentication Info"
+                  type="text"
+                  value={api.authenticationInfo}
+                  onChange={(e) => handleApiChange(api.id, { authenticationInfo: e.target.value })}
+                  fullWidth
+                />
+                <Button
+                  onClick={() => handleRemoveApi(api.id)}
+                  variant="outlined"
+                  color="error"
+                >
+                  Remove API
+                </Button>
+              </Stack>
+            </Box>
+          ))}
         </Box>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
-        <Button
-          onClick={handleSubmit} variant="contained"
-          disabled={!valid}
-        >
+        <Button onClick={handleSubmit} variant="contained" disabled={!state.valid}>
           Submit
         </Button>
       </DialogActions>

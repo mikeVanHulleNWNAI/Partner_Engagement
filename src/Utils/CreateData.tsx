@@ -105,21 +105,25 @@ const authenticationType = [
 export async function createPartnerOffering(
     newPartnerOffering: partnerOfferingType
 ) {
-
     // Create a uuid for the PartnerOffering because we are going to include
-    // in on the client side.  This way everything for PartnerOffering is updated once.
+    // it on the client side. This way everything for PartnerOffering is updated once.
     const partnerOfferingId = crypto.randomUUID();
 
-    newPartnerOffering.apis.forEach((i) => CLIENT.models.Api.create({
-        docLink: i.docLink,
-        trainingLink: i.trainingLink,
-        sandboxEnvironment: i.sandboxEnvironment,
-        endpoint: i.endpoint,
-        partnerOfferingId: partnerOfferingId,
-        apiTypeId: i.apiType.id,
-        authenticationTypeId: i.authenticationType.id,
-        authenticationInfo: i.authenticationInfo
-    }));
+    // Create all APIs in parallel
+    await Promise.all(
+        newPartnerOffering.apis.map((i) => 
+            CLIENT.models.Api.create({
+                docLink: i.docLink,
+                trainingLink: i.trainingLink,
+                sandboxEnvironment: i.sandboxEnvironment,
+                endpoint: i.endpoint,
+                partnerOfferingId: partnerOfferingId,
+                apiTypeId: i.apiType.id,
+                authenticationTypeId: i.authenticationType.id,
+                authenticationInfo: i.authenticationInfo
+            })
+        )
+    );
 
     await CLIENT.models.PartnerOffering.create({
         id: partnerOfferingId,
@@ -152,9 +156,8 @@ export async function createPartnerOfferingRemove9879(
     authenticationTypeList: string[],
     authenticationInfoList: string[]
 ) {
-
     // Create a uuid for the PartnerOffering because we are going to include
-    // in on the client side.  This way everything for PartnerOffering is updated once.
+    // it on the client side. This way everything for PartnerOffering is updated once.
     const partnerOfferingId = crypto.randomUUID();
 
     const statusResult = await CLIENT.models.ConnectionStatus.list({ filter: { name: { eq: status } } })
@@ -207,45 +210,64 @@ export async function updatePartnerOffering(
     const partnerOfferingId = newPartnerOffering.id;
 
     const oldApis = oldPartnerOffering.apis || [];
+    const newApis = newPartnerOffering.apis || [];
+
+    // Create a Set of old API IDs for faster lookup
+    const oldApiIds = new Set(oldApis.map(api => api.id));
 
     // APIs to delete (exist in old but not in new)
     const deleteApis = oldApis.filter(
-        element => !newPartnerOffering.apis.find(x => x.id === element.id)
+        element => !newApis.find(x => x.id === element.id)
     );
-    deleteApis.forEach((i) => CLIENT.models.Api.delete({ id: i.id }));
 
     // APIs to add (exist in new but not in old)
-    const addApis = newPartnerOffering.apis.filter(
-        element => !oldApis.find(x => x.id === element.id)
+    // These are APIs with IDs that don't exist in the oldApis
+    const addApis = newApis.filter(
+        element => !oldApiIds.has(element.id)
     );
 
-    // APIs to update (exist in both)
-    const updateApis = newPartnerOffering.apis.filter(
-        element => !addApis.find(x => x.id === element.id)
+    // APIs to update (exist in both - same ID in old and new)
+    const updateApis = newApis.filter(
+        element => oldApiIds.has(element.id)
     );
 
-    addApis.forEach((i) => CLIENT.models.Api.create({
-        docLink: i.docLink,
-        trainingLink: i.trainingLink,
-        sandboxEnvironment: i.sandboxEnvironment,
-        endpoint: i.endpoint,
-        partnerOfferingId: partnerOfferingId,
-        apiTypeId: i.apiType.id,
-        authenticationTypeId: i.authenticationType.id,
-        authenticationInfo: i.authenticationInfo
-    }));
+    console.log('Delete APIs:', deleteApis.length, deleteApis.map(a => a.id));
+    console.log('Add APIs:', addApis.length, addApis.map(a => a.id));
+    console.log('Update APIs:', updateApis.length, updateApis.map(a => a.id));
 
-    updateApis.forEach((i) => CLIENT.models.Api.update({
-        id: i.id,
-        docLink: i.docLink,
-        trainingLink: i.trainingLink,
-        sandboxEnvironment: i.sandboxEnvironment,
-        endpoint: i.endpoint,
-        partnerOfferingId: partnerOfferingId,
-        apiTypeId: i.apiType.id,
-        authenticationTypeId: i.authenticationType.id,
-        authenticationInfo: i.authenticationInfo
-    }));
+    // Delete APIs
+    if (deleteApis.length > 0) {
+        await Promise.all(deleteApis.map((i) => CLIENT.models.Api.delete({ id: i.id })));
+    }
+
+    // Add new APIs (don't include the temporary ID from crypto.randomUUID())
+    if (addApis.length > 0) {
+        await Promise.all(addApis.map((i) => CLIENT.models.Api.create({
+            docLink: i.docLink,
+            trainingLink: i.trainingLink,
+            sandboxEnvironment: i.sandboxEnvironment,
+            endpoint: i.endpoint,
+            partnerOfferingId: partnerOfferingId,
+            apiTypeId: i.apiType.id,
+            authenticationTypeId: i.authenticationType.id,
+            authenticationInfo: i.authenticationInfo
+        })));
+    }
+
+    // Update existing APIs
+    if (updateApis.length > 0) {
+        await Promise.all(updateApis.map((i) => CLIENT.models.Api.update({
+            id: i.id,
+            docLink: i.docLink,
+            trainingLink: i.trainingLink,
+            sandboxEnvironment: i.sandboxEnvironment,
+            endpoint: i.endpoint,
+            partnerOfferingId: partnerOfferingId,
+            apiTypeId: i.apiType.id,
+            authenticationTypeId: i.authenticationType.id,
+            authenticationInfo: i.authenticationInfo
+        })));
+    }
 
     // Update the partner offering
     await CLIENT.models.PartnerOffering.update({
@@ -312,21 +334,18 @@ export async function updateAllEntities<T extends BaseEntity>(
     oldEntities: T[],
     newEntities: T[]
 ) {
-    // Get all existing entities
-    let existingEntities: BaseEntity[] = [];
-
-    // don't touch any of the empties
-    existingEntities = oldEntities.filter(x => x.name !== "")
+    // Get all existing entities (don't touch any of the empties)
+    const existingEntities = oldEntities.filter(x => x.name !== "");
 
     // Find entities to delete (exist in DB but not in newEntities)
     const entitiesToDelete = existingEntities.filter(
         existing => !newEntities.find(newEntity => newEntity.id === existing.id)
     );
 
-    // Find entities to add (in newEntities but not in DB)
-    // Dont try to add the empties
+    // Find entities to add (in newEntities but not in existingEntities)
+    // Don't try to add the empties
     const entitiesToAdd = newEntities.filter(
-        newEntity => existingEntities.find(existing => {existing.id === newEntity.id})
+        newEntity => !existingEntities.find(existing => existing.id === newEntity.id) && newEntity.name !== ""
     );
 
     // Find entities to update (exist in both and have changes)
