@@ -111,7 +111,7 @@ export async function createPartnerOffering(
 
     // Create all APIs in parallel
     await Promise.all(
-        newPartnerOffering.apis.map((i) => 
+        newPartnerOffering.apis.map((i) =>
             CLIENT.models.Api.create({
                 docLink: i.docLink,
                 trainingLink: i.trainingLink,
@@ -221,7 +221,6 @@ export async function updatePartnerOffering(
     );
 
     // APIs to add (exist in new but not in old)
-    // These are APIs with IDs that don't exist in the oldApis
     const addApis = newApis.filter(
         element => !oldApiIds.has(element.id)
     );
@@ -240,7 +239,7 @@ export async function updatePartnerOffering(
         await Promise.all(deleteApis.map((i) => CLIENT.models.Api.delete({ id: i.id })));
     }
 
-    // Add new APIs (don't include the temporary ID from crypto.randomUUID())
+    // Add new APIs
     if (addApis.length > 0) {
         await Promise.all(addApis.map((i) => CLIENT.models.Api.create({
             docLink: i.docLink,
@@ -254,33 +253,61 @@ export async function updatePartnerOffering(
         })));
     }
 
-    // Update existing APIs
+    // Update existing APIs - only if they actually changed
     if (updateApis.length > 0) {
-        await Promise.all(updateApis.map((i) => CLIENT.models.Api.update({
-            id: i.id,
-            docLink: i.docLink,
-            trainingLink: i.trainingLink,
-            sandboxEnvironment: i.sandboxEnvironment,
-            endpoint: i.endpoint,
-            partnerOfferingId: partnerOfferingId,
-            apiTypeId: i.apiType.id,
-            authenticationTypeId: i.authenticationType.id,
-            authenticationInfo: i.authenticationInfo
-        })));
+        const apisToUpdate = updateApis.filter(newApi => {
+            const oldApi = oldApis.find(a => a.id === newApi.id);
+            if (!oldApi) return true;
+
+            return oldApi.docLink !== newApi.docLink ||
+                oldApi.trainingLink !== newApi.trainingLink ||
+                oldApi.sandboxEnvironment !== newApi.sandboxEnvironment ||
+                oldApi.endpoint !== newApi.endpoint ||
+                oldApi.apiType.id !== newApi.apiType.id ||
+                oldApi.authenticationType.id !== newApi.authenticationType.id ||
+                oldApi.authenticationInfo !== newApi.authenticationInfo;
+        });
+
+        if (apisToUpdate.length > 0) {
+            await Promise.all(apisToUpdate.map((i) => CLIENT.models.Api.update({
+                id: i.id,
+                docLink: i.docLink,
+                trainingLink: i.trainingLink,
+                sandboxEnvironment: i.sandboxEnvironment,
+                endpoint: i.endpoint,
+                partnerOfferingId: partnerOfferingId,
+                apiTypeId: i.apiType.id,
+                authenticationTypeId: i.authenticationType.id,
+                authenticationInfo: i.authenticationInfo
+            })));
+        }
     }
 
-    // Update the partner offering
-    await CLIENT.models.PartnerOffering.update({
-        id: partnerOfferingId,
-        offeringName: newPartnerOffering.offeringName,
-        contactInfo: newPartnerOffering.contactInfo,
-        dashboard: newPartnerOffering.dashboard,
-        notes: newPartnerOffering.notes,
-        statusId: newPartnerOffering.status.id,
-        nwnOfferingId: newPartnerOffering.nwnOffering.id,
-        companyId: newPartnerOffering.company.id,
-        priorityId: newPartnerOffering.priority.id,
-    });
+    // Check if PartnerOffering fields have changed
+    const partnerOfferingChanged =
+        oldPartnerOffering.offeringName !== newPartnerOffering.offeringName ||
+        oldPartnerOffering.contactInfo !== newPartnerOffering.contactInfo ||
+        oldPartnerOffering.dashboard !== newPartnerOffering.dashboard ||
+        oldPartnerOffering.notes !== newPartnerOffering.notes ||
+        oldPartnerOffering.status.id !== newPartnerOffering.status.id ||
+        oldPartnerOffering.nwnOffering.id !== newPartnerOffering.nwnOffering.id ||
+        oldPartnerOffering.company.id !== newPartnerOffering.company.id ||
+        oldPartnerOffering.priority.id !== newPartnerOffering.priority.id;
+
+    // Only update the partner offering if something changed
+    if (partnerOfferingChanged) {
+        await CLIENT.models.PartnerOffering.update({
+            id: partnerOfferingId,
+            offeringName: newPartnerOffering.offeringName,
+            contactInfo: newPartnerOffering.contactInfo,
+            dashboard: newPartnerOffering.dashboard,
+            notes: newPartnerOffering.notes,
+            statusId: newPartnerOffering.status.id,
+            nwnOfferingId: newPartnerOffering.nwnOffering.id,
+            companyId: newPartnerOffering.company.id,
+            priorityId: newPartnerOffering.priority.id,
+        });
+    }
 }
 
 export async function deletePartnerOffering(id: string) {
@@ -352,20 +379,20 @@ export async function updateAllEntities<T extends BaseEntity>(
     const entitiesToUpdate = newEntities.filter(
         newEntity => {
             const existing = existingEntities.find(e => e.id === newEntity.id);
-            if (!existing) 
+            if (!existing)
                 return false;
-            
+
             // Check if name has changed
-            if (existing.name !== newEntity.name) 
+            if (existing.name !== newEntity.name)
                 return true;
-            
+
             // If NWNOfferings, also check if manager has changed
             if (entityType === 'NwnOffering') {
                 const existingWithManager = existing as unknown as IIdNameAndManager;
                 const newWithManager = newEntity as unknown as IIdNameAndManager;
                 return existingWithManager.manager.id !== newWithManager.manager.id;
             }
-            
+
             return false;
         }
     );
