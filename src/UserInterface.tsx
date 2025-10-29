@@ -1,6 +1,6 @@
 import { memo, useState, useCallback, useMemo } from "react";
-import { Box, Button, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
-import { createInitialDataSettings, createPartnerOfferingRemove9879, deleteAll, deletePartnerOffering } from "./Utils/CreateData"
+import { Box, Button, FormControl, InputLabel, Select, MenuItem, IconButton } from '@mui/material';
+import { createInitialDataSettings, deleteAll } from "./Utils/CreateData"
 import { BODY_COLOR } from "./Utils/Constants";
 import ItemGrid from "./ItemGrid";
 import Sidebar from "./Sidebar";
@@ -9,6 +9,7 @@ import NavBar from "./NavBar";
 import { partnerOfferingType } from './Types';
 import { adjustColorHSL } from "./Utils/adjustColor";
 import { useDataStore } from "./DataStoreProvider";
+import AddIcon from '@mui/icons-material/Add';
 
 // Memoized tile component for better performance
 const PartnerOfferingTileMemo = memo<{
@@ -62,7 +63,7 @@ function UserInterface() {
   }, [allPartnerOfferings, selectedManager, selectedNwnOffering, selectedApiType]);
 
   // Callbacks
-  const activateSidebar = useCallback((partnerOffering: partnerOfferingType) => {
+  const activateSidebar = useCallback((partnerOffering: partnerOfferingType | undefined) => {
     setActivePartnerOffering(partnerOffering);
     setIsSidebarOpen(true);
   }, []);
@@ -71,31 +72,6 @@ function UserInterface() {
     setActivePartnerOffering(undefined);
     setIsSidebarOpen(false);
   }, []);
-
-  // Fixed async function - use Promise.all instead of forEach
-  const deleteTemps = useCallback(async () => {
-    const test = allPartnerOfferings.filter((value) => value.company.name === "ApexaiQ");
-
-    // Properly handle async operations
-    await Promise.all(test.map(value => deletePartnerOffering(value.id)));
-
-    await createPartnerOfferingRemove9879(
-      "",
-      "Pragti Aggarwal <pragti@apexaiq.com>; Engineering support: lokesh@apexaiq.com",
-      "https://nwn.okta.com/app/UserHome",
-      "",
-      "Connected",
-      "",
-      "ApexaiQ",
-      "LOW",
-      ["REST"],
-      ["https://app.apexaiq.com/docs"],
-      ["https://www.apexaiq.com/resources/"],
-      [""],
-      [""],
-      [""]
-    );
-  }, [allPartnerOfferings]);
 
   const handleDeleteAndRestore = useCallback(async () => {
     await deleteAll();
@@ -107,9 +83,9 @@ function UserInterface() {
       <NavBar
         height={navBarHeight}
       />
-      <Box 
-        sx={{ 
-          display: 'flex', 
+      <Box
+        sx={{
+          display: 'flex',
           overflow: 'hidden',
         }} >
         <Box
@@ -194,18 +170,37 @@ function UserInterface() {
             </FormControl>
           </Box>
 
+          <IconButton
+            onClick={() => activateSidebar(undefined)}
+            aria-label="Open sidebar"
+            title="Open sidebar"
+            sx={{
+              position: 'absolute',
+              top: 75,
+              right: 8,
+              zIndex: 50,
+              p: 0.75,
+              backgroundColor: 'background.paper',
+              border: 1,
+              borderColor: 'grey.300',
+              boxShadow: 1,
+              '&:hover': {
+                backgroundColor: 'grey.100',
+              },
+              '&:focus': {
+                outline: 'none',
+                boxShadow: (theme) => `0 0 0 2px ${theme.palette.primary.main}`,
+              },
+            }}>
+            <AddIcon style={{ width: 16, height: 16, color: '#4b5563' }} />
+          </IconButton>
+
           {/* Debug Buttons (hidden) */}
           <Button
             sx={{ display: 'none' }}
             onClick={handleDeleteAndRestore}
           >
             Delete and Restore
-          </Button>
-          <Button
-            sx={{ display: 'none' }}
-            onClick={deleteTemps}
-          >
-            Delete temps
           </Button>
 
           {/* Item Grid */}

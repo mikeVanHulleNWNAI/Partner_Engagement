@@ -139,14 +139,6 @@ const EditPartnerOfferingForm: FC<EditPartnerOfferingProps> = ({
   onSubmit,
   partnerOfferingData,
 }) => {
-  const [state, dispatch] = useReducer(editPartnerOfferingReducer, {
-    formData: partnerOfferingData,
-    valid: true,
-  });
-
-  useEffect(() => {
-    dispatch({ type: 'SET_FORMDATA', newFormData: partnerOfferingData });
-  }, [partnerOfferingData]);
 
   const {
     connectionStatusOptions,
@@ -156,6 +148,15 @@ const EditPartnerOfferingForm: FC<EditPartnerOfferingProps> = ({
     apiTypeOptions,
     authenticationTypeOptions,
   } = useDataStore();
+
+  const [state, dispatch] = useReducer(editPartnerOfferingReducer, {
+    formData: partnerOfferingData,
+    valid: true,
+  });
+
+  useEffect(() => {
+    dispatch({ type: 'SET_FORMDATA', newFormData: partnerOfferingData });
+  }, [partnerOfferingData]);
 
   const handleChange = useCallback((field: keyof partnerOfferingType, value: unknown) => {
     dispatch({ type: 'UPDATE_FIELD', field, value });
