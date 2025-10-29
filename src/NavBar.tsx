@@ -19,7 +19,7 @@ export default function NavBar({
     } = useDataStore();
 
     const {
-        busy
+        busyCount
     } = useSharedItems();
 
     return (
@@ -51,7 +51,7 @@ export default function NavBar({
                 >
                     Partner Offerings
                 </Typography>
-                {(isLoading || busy) && (
+                {(isLoading || busyCount != 0) && (
                     <CircularProgress
                         size={24}
                         sx={{ ml: 2, color: 'black' }}

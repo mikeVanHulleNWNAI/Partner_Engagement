@@ -227,14 +227,15 @@ function IdNamesForm<T extends IIdName>({
                 fullWidth
             >
                 <DialogTitle>Enter details for {entityType}</DialogTitle>
-                <IconButton
-                    onClick={handleAdd}
-                    color="primary"
-                    sx={{ alignSelf: 'flex-start', ml: 2, mt: 1 }}
-                    aria-label="Add new item"
-                >
-                    <AddIcon />
-                </IconButton>
+                <Tooltip title="Add new item">
+                    <IconButton
+                        onClick={handleAdd}
+                        color="primary"
+                        sx={{ alignSelf: 'flex-start', ml: 2, mt: 1 }}
+                    >
+                        <AddIcon />
+                    </IconButton>
+                </Tooltip>
                 <DialogContent>
                     <Box
                         component="form"
@@ -262,8 +263,8 @@ function IdNamesForm<T extends IIdName>({
                                             isEmpty
                                                 ? 'Cannot be empty'
                                                 : isDuplicate
-                                                ? 'Duplicate name'
-                                                : ''
+                                                    ? 'Duplicate name'
+                                                    : ''
                                         }
                                         fullWidth
                                     />
@@ -293,7 +294,6 @@ function IdNamesForm<T extends IIdName>({
                                                 ? 'Cannot delete - in use by partner offerings'
                                                 : 'Delete'
                                         }
-                                        arrow
                                     >
                                         <span>
                                             <IconButton
@@ -301,7 +301,6 @@ function IdNamesForm<T extends IIdName>({
                                                 onClick={() => handleDeleteClick(item)}
                                                 disabled={inUse}
                                                 sx={{ mt: 1 }}
-                                                aria-label={`Delete ${item.name || 'item'}`}
                                             >
                                                 <DeleteIcon />
                                             </IconButton>

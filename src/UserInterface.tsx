@@ -1,5 +1,5 @@
 import { memo, useState, useCallback, useMemo } from "react";
-import { Box, Button, FormControl, InputLabel, Select, MenuItem, IconButton } from '@mui/material';
+import { Box, Button, FormControl, InputLabel, Select, MenuItem, IconButton, Tooltip } from '@mui/material';
 import { createInitialDataSettings, deleteAll } from "./Utils/CreateData"
 import { BODY_COLOR } from "./Utils/Constants";
 import ItemGrid from "./ItemGrid";
@@ -170,30 +170,31 @@ function UserInterface() {
             </FormControl>
           </Box>
 
-          <IconButton
-            onClick={() => activateSidebar(undefined)}
-            aria-label="Open sidebar"
-            title="Open sidebar"
-            sx={{
-              position: 'absolute',
-              top: 75,
-              right: 8,
-              zIndex: 50,
-              p: 0.75,
-              backgroundColor: 'background.paper',
-              border: 1,
-              borderColor: 'grey.300',
-              boxShadow: 1,
-              '&:hover': {
-                backgroundColor: 'grey.100',
-              },
-              '&:focus': {
-                outline: 'none',
-                boxShadow: (theme) => `0 0 0 2px ${theme.palette.primary.main}`,
-              },
-            }}>
-            <AddIcon style={{ width: 16, height: 16, color: '#4b5563' }} />
-          </IconButton>
+          <Tooltip title="Create new">
+            <IconButton
+              onClick={() => activateSidebar(undefined)}
+              title="Open sidebar"
+              sx={{
+                position: 'absolute',
+                top: 75,
+                right: 8,
+                zIndex: 50,
+                p: 0.75,
+                backgroundColor: 'background.paper',
+                border: 1,
+                borderColor: 'grey.300',
+                boxShadow: 1,
+                '&:hover': {
+                  backgroundColor: 'grey.100',
+                },
+                '&:focus': {
+                  outline: 'none',
+                  boxShadow: (theme) => `0 0 0 2px ${theme.palette.primary.main}`,
+                },
+              }}>
+              <AddIcon style={{ width: 16, height: 16, color: '#4b5563' }} />
+            </IconButton>
+          </Tooltip>
 
           {/* Debug Buttons (hidden) */}
           <Button

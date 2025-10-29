@@ -1,15 +1,17 @@
-import { Box, IconButton, Drawer } from '@mui/material';
+import { Box, IconButton, Drawer, Tooltip } from '@mui/material';
 import { useDataStore } from './DataStoreProvider';
 import PartnerOfferingShow from './PartnerOfferingShow';
 import { useCallback, useEffect, useReducer } from 'react';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PublishIcon from '@mui/icons-material/Publish';
-import CancelIcon from '@mui/icons-material/Cancel';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { partnerOfferingType } from './Types';
 import PartnerOfferingEdit from './PartnerOfferingEdit';
+import AreYouSureForm from './Forms/AreYouSureForm';
+import { deletePartnerOffering } from './Utils/CreateData';
+import { useSharedItems } from './SharedItems';
 
 // Define state type
 interface SidebarState {
@@ -17,20 +19,23 @@ interface SidebarState {
   backButtonActive: boolean;
   deleteButtonActive: boolean;
   submitButtonActive: boolean;
-  cancelButtonActive: boolean;
   editPartnerOffering: boolean;
-  areYouSure: boolean;
+  areYouSureEditNoSubmit: boolean;
+  areYouSureDelete: boolean;
   lastActiveId: string | undefined;
   blankPartnerOffering: partnerOfferingType;
 }
 
 // Define action types
 type SidebarAction =
-  | { type: 'OPEN_AREYOUSURE' }
-  | { type: 'CLOSE_ALL' }
+  | { type: 'OPEN_AREYOUSURE_DELETE' }
+  | { type: 'CLOSE_AREYOUSURE_DELETE' }
+  | { type: 'OPEN_AREYOUSURE_EDITNOSUBMIT' }
+  | { type: 'CLOSE_AREYOUSURE_EDITNOSUBMIT' }
   | { type: 'CREATE_PO' }
   | { type: 'EDIT_PO' }
   | { type: 'SHOW_PO' }
+  | { type: 'CLOSE_PO' }
   | { type: 'SET_BLANK', blank: partnerOfferingType }
   | { type: 'SET_LASTACTIVEID', newLastActiveId: string | undefined }
 
@@ -40,9 +45,9 @@ const initialState: SidebarState = {
   backButtonActive: false,
   deleteButtonActive: false,
   submitButtonActive: false,
-  cancelButtonActive: false,
   editPartnerOffering: false,
-  areYouSure: false,
+  areYouSureEditNoSubmit: false,
+  areYouSureDelete: false,
   lastActiveId: undefined,
   blankPartnerOffering: {
     id: "",
@@ -77,14 +82,14 @@ const initialState: SidebarState = {
 // Reducer function
 function sidebarReducer(state: SidebarState, action: SidebarAction): SidebarState {
   switch (action.type) {
-    case 'OPEN_AREYOUSURE':
-      return { ...state, areYouSure: true };
-    case 'CLOSE_ALL':
-      return {
-        ...state,
-        editPartnerOffering: false,
-        areYouSure: false
-      };
+    case 'OPEN_AREYOUSURE_DELETE':
+      return { ...state, areYouSureDelete: true };
+    case 'CLOSE_AREYOUSURE_DELETE':
+      return { ...state, areYouSureDelete: false };
+    case 'OPEN_AREYOUSURE_EDITNOSUBMIT':
+      return { ...state, areYouSureEditNoSubmit: true };
+    case 'CLOSE_AREYOUSURE_EDITNOSUBMIT':
+      return { ...state, areYouSureEditNoSubmit: false };
     case 'CREATE_PO':
       return {
         ...state,
@@ -92,7 +97,6 @@ function sidebarReducer(state: SidebarState, action: SidebarAction): SidebarStat
         backButtonActive: true,
         deleteButtonActive: false,
         submitButtonActive: true,
-        cancelButtonActive: true,
         editPartnerOffering: true,
       }
     case 'EDIT_PO':
@@ -102,7 +106,6 @@ function sidebarReducer(state: SidebarState, action: SidebarAction): SidebarStat
         backButtonActive: true,
         deleteButtonActive: false,
         submitButtonActive: true,
-        cancelButtonActive: true,
         editPartnerOffering: true,
       }
     case 'SHOW_PO':
@@ -112,9 +115,13 @@ function sidebarReducer(state: SidebarState, action: SidebarAction): SidebarStat
         backButtonActive: false,
         deleteButtonActive: true,
         submitButtonActive: false,
-        cancelButtonActive: false,
         editPartnerOffering: false,
       }
+    case 'CLOSE_PO':
+      return {
+        ...state,
+        editPartnerOffering: false,
+      };
     case 'SET_BLANK':
       return {
         ...state,
@@ -124,10 +131,10 @@ function sidebarReducer(state: SidebarState, action: SidebarAction): SidebarStat
       return {
         ...state,
         lastActiveId: action.newLastActiveId
-  }
+      }
     default:
-  return state;
-}
+      return state;
+  }
 }
 
 interface SidebarProps {
@@ -154,6 +161,10 @@ function Sidebar({
     priorityOptions
   } = useDataStore();
 
+  const {
+    setBusyCount
+  } = useSharedItems();
+
   // this useEffect puts us in a mode where we are create a new PO if we do not have an active PO
   useEffect(() => {
     const newActiveId = activePartnerOffering ? activePartnerOffering.id : undefined;
@@ -162,8 +173,8 @@ function Sidebar({
     if (state.lastActiveId === undefined && newActiveId !== undefined) {
       dispatch({ type: 'SHOW_PO' });
     }
-    if (state.lastActiveId !== undefined && newActiveId !== undefined && 
-        state.lastActiveId !== newActiveId) {
+    if (state.lastActiveId !== undefined && newActiveId !== undefined &&
+      state.lastActiveId !== newActiveId) {
       dispatch({ type: 'SHOW_PO' });
     }
 
@@ -225,16 +236,48 @@ function Sidebar({
     dispatch({ type: 'EDIT_PO' });
   }
 
-  const handleDelete = () => {
-    dispatch({ type: 'OPEN_AREYOUSURE' });
+  const handleDeleteOpen = () => {
+    dispatch({ type: 'OPEN_AREYOUSURE_DELETE' })
   }
 
-  const handleEditPartnerOfferingFormClose = () => {
-
+  const handleDeleteClose = () => {
+    dispatch({ type: 'CLOSE_AREYOUSURE_DELETE' })
   }
 
-  const handleEditPartnerOfferingFormSubmit = (partnerOffering: partnerOfferingType) => {
+  const handleDeleteConfirm = async () => {
+    dispatch({ type: 'CLOSE_AREYOUSURE_DELETE' });
+    if (activePartnerOffering) {
+      setBusyCount(prevCount => prevCount + 1);
+      try {
+        await deletePartnerOffering(activePartnerOffering.id);
+      } finally {
+        setBusyCount(prevCount => prevCount - 1);
+      }
+    }
+  }
 
+  const handleSubmit = () => {
+    // TODO: 9879 need to handle this
+  }
+
+  const handleEditNoSubmitOpen = () => {
+    dispatch({ type: 'OPEN_AREYOUSURE_EDITNOSUBMIT' })
+  }
+
+  const handleEditNoSubmitClose = () => {
+    dispatch({ type: 'CLOSE_AREYOUSURE_EDITNOSUBMIT' })
+  }
+
+  const handleEditNoSubmitConfirm = async () => {
+    dispatch({ type: 'CLOSE_AREYOUSURE_EDITNOSUBMIT' });
+    if (activePartnerOffering) {
+      setBusyCount(prevCount => prevCount + 1);
+      try {
+        await deletePartnerOffering(activePartnerOffering.id);
+      } finally {
+        setBusyCount(prevCount => prevCount - 1);
+      }
+    }
   }
 
   return (
@@ -280,9 +323,9 @@ function Sidebar({
         >
           {/* Close Button */}
           <Box sx={{ display: 'flex' }}>
+             <Tooltip title="Close sidebar">
             <IconButton
               onClick={onClose}
-              aria-label="Close sidebar"
               title="Close sidebar"
               sx={{
                 position: 'absolute',
@@ -304,41 +347,43 @@ function Sidebar({
               }}>
               <ChevronRightIcon style={{ width: 16, height: 16, color: '#4b5563' }} />
             </IconButton>
+            </Tooltip>
             <Box sx={{ pl: 4 }}>
               {state.backButtonActive && (
-                <IconButton
-                  onClick={handleGoBack}
-                >
-                  <ArrowBackIcon sx={{ marginRight: 1 }} />
-                </IconButton>
+                <Tooltip title="Go back">
+                  <IconButton
+                    onClick={handleGoBack}
+                  >
+                    <ArrowBackIcon sx={{ marginRight: 1 }} />
+                  </IconButton>
+                </Tooltip>
               )}
               {state.editButtonActive && (
-                <IconButton
-                  onClick={handleEdit}
-                >
-                  <EditIcon sx={{ marginRight: 1 }} />
-                </IconButton>
+                <Tooltip title="Edit">
+                  <IconButton
+                    onClick={handleEdit}
+                  >
+                    <EditIcon sx={{ marginRight: 1 }} />
+                  </IconButton>
+                </Tooltip>
               )}
               {state.deleteButtonActive && (
-                <IconButton
-                  onClick={handleDelete}
-                >
-                  <DeleteIcon sx={{ marginRight: 1 }} />
-                </IconButton>
+                <Tooltip title="Delete">
+                  <IconButton
+                    onClick={handleDeleteOpen}
+                  >
+                    <DeleteIcon sx={{ marginRight: 1 }} />
+                  </IconButton>
+                </Tooltip>
               )}
               {state.submitButtonActive && (
-                <IconButton
-                  onClick={handleDelete}
-                >
-                  <PublishIcon sx={{ marginRight: 1 }} />
-                </IconButton>
-              )}
-              {state.cancelButtonActive && (
-                <IconButton
-                  onClick={handleDelete}
-                >
-                  <CancelIcon sx={{ marginRight: 1 }} />
-                </IconButton>
+                <Tooltip title="Submit">
+                  <IconButton
+                    onClick={handleSubmit}
+                  >
+                    <PublishIcon sx={{ marginRight: 1 }} />
+                  </IconButton>
+                </Tooltip>
               )}
             </Box>
           </Box>
@@ -373,6 +418,12 @@ function Sidebar({
             />
           )}
         </Box>
+        <AreYouSureForm
+          open={state.areYouSureEditNoSubmit}
+          onClose={handleDeleteClose}
+          onYes={handleDeleteConfirm}
+          label={`Are you sure you want to delete "${activePartnerOffering?.offeringName}"?`}
+        />
       </Box>
     </Drawer >
   );

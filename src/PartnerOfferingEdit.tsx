@@ -5,6 +5,7 @@ import {
     Box,
     Stack,
     IconButton,
+    Tooltip,
 } from '@mui/material';
 import { partnerOfferingType } from './Types';
 import UrlTextFieldValidation from './Validators/UrlTextFieldValidation';
@@ -286,14 +287,15 @@ const PartnerOfferingEdit: FC<PartnerOfferingEditProps> = ({
                         handleNestedChange('priority', 'name', e.name);
                     }}
                 />
-                <IconButton
-                    onClick={handleAddApi}
-                    color="primary"
-                    sx={{ alignSelf: 'flex-start', ml: 2, mt: 1 }}
-                    aria-label="Add new API"
-                >
-                    <AddIcon />
-                </IconButton>
+                <Tooltip title="Add new API">
+                    <IconButton
+                        onClick={handleAddApi}
+                        color="primary"
+                        sx={{ alignSelf: 'flex-start', ml: 2, mt: 1 }}
+                    >
+                        <AddIcon />
+                    </IconButton>
+                </Tooltip>
             </Stack>
             {state.data.apis.map((api) => (
                 <Box
