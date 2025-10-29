@@ -3,6 +3,7 @@ import { NAVBAR_COLOR } from "./Utils/Constants";
 import { adjustColorHSL } from "./Utils/adjustColor";
 import NavBarMenu from "./Menus/NavBarMenu";
 import { useDataStore } from "./DataStoreProvider";
+import { useSharedItems } from "./SharedItems";
 
 interface NavBarProps {
     height?: number;
@@ -16,6 +17,10 @@ export default function NavBar({
     const {
         isLoading
     } = useDataStore();
+
+    const {
+        busy
+    } = useSharedItems();
 
     return (
         <AppBar
@@ -46,15 +51,13 @@ export default function NavBar({
                 >
                     Partner Offerings
                 </Typography>
-                {isLoading && (
+                {(isLoading || busy) && (
                     <CircularProgress
                         size={24}
                         sx={{ ml: 2, color: 'black' }}
                     />
                 )}
-                {!isLoading && (
-                    <NavBarMenu />
-                )}
+                <NavBarMenu />
             </Toolbar>
         </AppBar>
     );
