@@ -94,7 +94,7 @@ function sidebarReducer(state: SidebarState, action: SidebarAction): SidebarStat
       return {
         ...state,
         editButtonActive: false,
-        backButtonActive: true,
+        backButtonActive: false,
         deleteButtonActive: false,
         submitButtonActive: true,
         editPartnerOffering: true,
@@ -187,9 +187,13 @@ function Sidebar({
 
   useEffect(() => {
     // show
-    if (isOpen)
-      dispatch({ type: 'SHOW_PO' });
-  }, [isOpen]);
+    if (isOpen) {
+      if (activePartnerOffering)
+        dispatch({ type: 'SHOW_PO' });
+      else
+        dispatch({ type: 'CREATE_PO' })
+    }
+  }, [activePartnerOffering, isOpen]);
 
   useCallback(() => {
     // these are used to determine if we have the options
@@ -229,7 +233,11 @@ function Sidebar({
   }, [companyOptions, connectionStatusOptions, nwnOfferingOptions, priorityOptions])
 
   const handleGoBack = () => {
-    dispatch({ type: 'SHOW_PO' });
+    // if the submit button is active, then ask the user if they intend to not submit.
+    if (state.submitButtonActive)
+      dispatch({ type: 'OPEN_AREYOUSURE_EDITNOSUBMIT' });
+    else
+      dispatch({ type: 'SHOW_PO' });
   }
 
   const handleEdit = () => {
@@ -260,24 +268,13 @@ function Sidebar({
     // TODO: 9879 need to handle this
   }
 
-  const handleEditNoSubmitOpen = () => {
-    dispatch({ type: 'OPEN_AREYOUSURE_EDITNOSUBMIT' })
-  }
-
   const handleEditNoSubmitClose = () => {
     dispatch({ type: 'CLOSE_AREYOUSURE_EDITNOSUBMIT' })
   }
 
   const handleEditNoSubmitConfirm = async () => {
     dispatch({ type: 'CLOSE_AREYOUSURE_EDITNOSUBMIT' });
-    if (activePartnerOffering) {
-      setBusyCount(prevCount => prevCount + 1);
-      try {
-        await deletePartnerOffering(activePartnerOffering.id);
-      } finally {
-        setBusyCount(prevCount => prevCount - 1);
-      }
-    }
+    dispatch({ type: 'SHOW_PO' });
   }
 
   return (
@@ -326,7 +323,6 @@ function Sidebar({
              <Tooltip title="Close sidebar">
             <IconButton
               onClick={onClose}
-              title="Close sidebar"
               sx={{
                 position: 'absolute',
                 top: 8,
@@ -419,10 +415,16 @@ function Sidebar({
           )}
         </Box>
         <AreYouSureForm
-          open={state.areYouSureEditNoSubmit}
+          open={state.areYouSureDelete}
           onClose={handleDeleteClose}
           onYes={handleDeleteConfirm}
-          label={`Are you sure you want to delete "${activePartnerOffering?.offeringName}"?`}
+          label={`Do you want to delete "${activePartnerOffering?.offeringName}"?`}
+        />
+        <AreYouSureForm
+          open={state.areYouSureEditNoSubmit}
+          onClose={handleEditNoSubmitClose}
+          onYes={handleEditNoSubmitConfirm}
+          label={`You have not submitted these changes?`}
         />
       </Box>
     </Drawer >

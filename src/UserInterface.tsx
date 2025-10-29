@@ -173,7 +173,6 @@ function UserInterface() {
           <Tooltip title="Create new">
             <IconButton
               onClick={() => activateSidebar(undefined)}
-              title="Open sidebar"
               sx={{
                 position: 'absolute',
                 top: 75,
