@@ -1,17 +1,20 @@
-import { useEffect, useReducer, useCallback, forwardRef, useImperativeHandle } from 'react';
+import { useEffect, useReducer, useCallback, forwardRef, useImperativeHandle, useState } from 'react';
 import {
-    Button,
     TextField,
     Box,
     Stack,
     IconButton,
     Tooltip,
+    Tabs,
+    Tab,
+    Divider,
 } from '@mui/material';
 import { partnerOfferingType } from './Types';
 import UrlTextFieldValidation from './Validators/UrlTextFieldValidation';
 import SelectionValidation from './Validators/SelectionValidation';
 import { useDataStore } from './DataStoreProvider';
 import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete'
 import { PartnerOfferingEditRef } from './IPartnerOfferingEdit';
 
 interface PartnerOfferingEdit {
@@ -142,6 +145,9 @@ interface PartnerOfferingEditProps {
 
 const PartnerOfferingEdit = forwardRef<PartnerOfferingEditRef, PartnerOfferingEditProps>(
     ({ partnerOfferingData, onValid, onUserChangedData }, ref) => {
+        // State for managing active tab
+        const [activeTab, setActiveTab] = useState(0);
+
         // expose methods to parent via ref
         useImperativeHandle(ref, () => ({
             getCurrentPOData: () => state.currentPOData,
@@ -173,6 +179,15 @@ const PartnerOfferingEdit = forwardRef<PartnerOfferingEditRef, PartnerOfferingEd
         useEffect(() => {
             dispatch({ type: 'SET_DATA', newData: partnerOfferingData });
         }, [partnerOfferingData]);
+
+        // Reset tab if it's out of bounds after removing an API
+        useEffect(() => {
+            if (activeTab >= state.currentPOData.apis.length && state.currentPOData.apis.length > 0) {
+                setActiveTab(state.currentPOData.apis.length - 1);
+            } else if (state.currentPOData.apis.length === 0) {
+                setActiveTab(0);
+            }
+        }, [state.currentPOData.apis.length, activeTab]);
 
         const handleChange = useCallback((field: keyof partnerOfferingType, value: unknown) => {
             dispatch({ type: 'UPDATE_FIELD', field, value });
@@ -209,6 +224,9 @@ const PartnerOfferingEdit = forwardRef<PartnerOfferingEditRef, PartnerOfferingEd
                 defaultApiType,
                 defaultAuthType
             });
+
+            // Switch to the newly added tab (which will be at index 0)
+            setActiveTab(0);
         }, [apiTypeOptions, authenticationTypeOptions]);
 
         const handleRemoveApi = useCallback((id: string) => {
@@ -232,6 +250,10 @@ const PartnerOfferingEdit = forwardRef<PartnerOfferingEditRef, PartnerOfferingEd
         const handleValidChange = useCallback((validEntry: boolean) => {
             dispatch({ type: 'SET_VALID_FIELDS', newValidFields: validEntry });
         }, []);
+
+        const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+            setActiveTab(newValue);
+        };
 
         return (
             <>
@@ -314,103 +336,139 @@ const PartnerOfferingEdit = forwardRef<PartnerOfferingEditRef, PartnerOfferingEd
                             handleNestedChange('priority', 'name', e.name);
                         }}
                     />
+                    <Divider sx={{ bgcolor: 'primary.main', borderBottomWidth: 5 }} />
                     <Tooltip title="Add new API">
                         <IconButton
                             onClick={handleAddApi}
                             color="primary"
-                            sx={{ alignSelf: 'flex-start', ml: 2, mt: 1 }}
+                            sx={{ alignSelf: 'flex-start', ml: 2 }}
                         >
                             <AddIcon />
                         </IconButton>
                     </Tooltip>
+                    {state.currentPOData.apis.length > 0 && (
+                        <>
+                            <Box sx={{ mt: 3 }}>
+                                <Tabs
+                                    value={activeTab}
+                                    onChange={handleTabChange}
+                                    variant="scrollable"
+                                    scrollButtons="auto"
+                                >
+                                    {state.currentPOData.apis.map((api, index) => (
+                                        <Tab
+                                            key={api.id}
+                                            label={api.apiType.name || `API ${index + 1}`}
+                                            value={index}
+                                        />
+                                    ))}
+                                </Tabs>
+
+                                {state.currentPOData.apis.map((api, index) => (
+                                    <>
+                                        <Box
+                                            key={api.id}
+                                            role="tabpanel"
+                                            hidden={activeTab !== index}
+                                            sx={{ pt: 2 }}
+                                        >
+                                            {activeTab === index && (
+                                                <>
+                                                    <Box
+                                                        sx={{
+                                                            p: 2,
+                                                            border: '2px solid grey',
+                                                            borderRadius: 1,
+                                                        }}
+                                                    >
+                                                        <Stack direction="column" spacing={2}>
+                                                            <Tooltip title="Remove this API">
+                                                                <IconButton
+                                                                    onClick={() => handleRemoveApi(api.id)}
+                                                                    color="primary"
+                                                                    sx={{ alignSelf: 'flex-start', ml: 2 }}
+                                                                >
+                                                                    <DeleteIcon />
+                                                                </IconButton>
+                                                            </Tooltip>
+                                                            <SelectionValidation
+                                                                label="API Type"
+                                                                value={{
+                                                                    id: api.apiType.id,
+                                                                    name: api.apiType.name,
+                                                                }}
+                                                                options={apiTypeOptions}
+                                                                fullWidth
+                                                                onChange={(e) => {
+                                                                    handleApiChange(api.id, {
+                                                                        apiType: { id: e.id, name: e.name }
+                                                                    });
+                                                                }}
+                                                            />
+                                                            <UrlTextFieldValidation
+                                                                label="Doc Link"
+                                                                urlValue={api.docLink}
+                                                                canBeEmpty={true}
+                                                                onChange={(e) => handleApiChange(api.id, { docLink: e.target.value })}
+                                                                onValid={handleValidChange}
+                                                                fullWidth
+                                                            />
+                                                            <UrlTextFieldValidation
+                                                                label="Training Link"
+                                                                urlValue={api.trainingLink}
+                                                                canBeEmpty={true}
+                                                                onChange={(e) => handleApiChange(api.id, { trainingLink: e.target.value })}
+                                                                onValid={handleValidChange}
+                                                                fullWidth
+                                                            />
+                                                            <TextField
+                                                                label="Sandbox Environment"
+                                                                type="text"
+                                                                value={api.sandboxEnvironment}
+                                                                onChange={(e) => handleApiChange(api.id, { sandboxEnvironment: e.target.value })}
+                                                                multiline
+                                                                rows={4}
+                                                                fullWidth
+                                                            />
+                                                            <TextField
+                                                                label="Endpoint"
+                                                                type="text"
+                                                                value={api.endpoint}
+                                                                onChange={(e) => handleApiChange(api.id, { endpoint: e.target.value })}
+                                                                fullWidth
+                                                            />
+                                                            <SelectionValidation
+                                                                label="Authentication Type"
+                                                                value={{
+                                                                    id: api.authenticationType?.id,
+                                                                    name: api.authenticationType?.name,
+                                                                }}
+                                                                options={authenticationTypeOptions}
+                                                                fullWidth
+                                                                onChange={(e) => {
+                                                                    handleApiChange(api.id, {
+                                                                        authenticationType: { id: e.id, name: e.name }
+                                                                    });
+                                                                }}
+                                                            />
+                                                            <TextField
+                                                                label="Authentication Info"
+                                                                type="text"
+                                                                value={api.authenticationInfo}
+                                                                onChange={(e) => handleApiChange(api.id, { authenticationInfo: e.target.value })}
+                                                                fullWidth
+                                                            />
+                                                        </Stack>
+                                                    </Box>
+                                                </>
+                                            )}
+                                        </Box>
+                                    </>
+                                ))}
+                            </Box>
+                        </>
+                    )}
                 </Stack>
-                {state.currentPOData.apis.map((api) => (
-                    <Box
-                        key={api.id}
-                        sx={{
-                            gap: 10,
-                            p: 2,
-                            border: '2px solid grey',
-                        }}
-                    >
-                        <Stack direction="column" spacing={2}>
-                            <SelectionValidation
-                                label="API Type"
-                                value={{
-                                    id: api.apiType.id,
-                                    name: api.apiType.name,
-                                }}
-                                options={apiTypeOptions}
-                                fullWidth
-                                onChange={(e) => {
-                                    handleApiChange(api.id, {
-                                        apiType: { id: e.id, name: e.name }
-                                    });
-                                }}
-                            />
-                            <UrlTextFieldValidation
-                                label="Doc Link"
-                                urlValue={api.docLink}
-                                canBeEmpty={true}
-                                onChange={(e) => handleApiChange(api.id, { docLink: e.target.value })}
-                                onValid={handleValidChange}
-                                fullWidth
-                            />
-                            <UrlTextFieldValidation
-                                label="Training Link"
-                                urlValue={api.trainingLink}
-                                canBeEmpty={true}
-                                onChange={(e) => handleApiChange(api.id, { trainingLink: e.target.value })}
-                                onValid={handleValidChange}
-                                fullWidth
-                            />
-                            <TextField
-                                label="Sandbox Environment"
-                                type="text"
-                                value={api.sandboxEnvironment}
-                                onChange={(e) => handleApiChange(api.id, { sandboxEnvironment: e.target.value })}
-                                multiline
-                                rows={4}
-                                fullWidth
-                            />
-                            <TextField
-                                label="Endpoint"
-                                type="text"
-                                value={api.endpoint}
-                                onChange={(e) => handleApiChange(api.id, { endpoint: e.target.value })}
-                                fullWidth
-                            />
-                            <SelectionValidation
-                                label="Authentication Type"
-                                value={{
-                                    id: api.authenticationType?.id,
-                                    name: api.authenticationType?.name,
-                                }}
-                                options={authenticationTypeOptions}
-                                fullWidth
-                                onChange={(e) => {
-                                    handleApiChange(api.id, {
-                                        authenticationType: { id: e.id, name: e.name }
-                                    });
-                                }}
-                            />
-                            <TextField
-                                label="Authentication Info"
-                                type="text"
-                                value={api.authenticationInfo}
-                                onChange={(e) => handleApiChange(api.id, { authenticationInfo: e.target.value })}
-                                fullWidth
-                            />
-                            <Button
-                                onClick={() => handleRemoveApi(api.id)}
-                                variant="outlined"
-                                color="error"
-                            >
-                                Remove API
-                            </Button>
-                        </Stack>
-                    </Box>
-                ))}
             </>
         );
     });

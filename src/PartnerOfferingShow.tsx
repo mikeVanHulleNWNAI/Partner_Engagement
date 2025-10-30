@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Divider, Typography } from '@mui/material';
 import PartnerOfferingTile from './PartnerOfferingTile';
 import { RenderLinkOrText } from './RenderLinkOrText';
 import ApiList from './ApiList';
@@ -85,7 +85,7 @@ const PartnerOfferingShow: React.FC<PartnerOfferingShowProps> = ({
                             {activePartnerOffering.priority?.name}
                         </Typography>
                     </Box>
-
+                    <Divider sx={{ bgcolor: 'primary.main', borderBottomWidth: 5 }} />
                     <ApiList partnerOffering={activePartnerOffering} />
                 </Box>
             </Box>
