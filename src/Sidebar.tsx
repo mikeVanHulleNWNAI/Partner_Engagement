@@ -1,7 +1,7 @@
 import { Box, IconButton, Drawer, Tooltip } from '@mui/material';
 import { useDataStore } from './DataStoreProvider';
 import PartnerOfferingShow from './PartnerOfferingShow';
-import { useEffect, useMemo, useReducer, useCallback, useRef, act } from 'react';
+import { useEffect, useMemo, useReducer, useCallback, useRef} from 'react';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PublishIcon from '@mui/icons-material/Publish';

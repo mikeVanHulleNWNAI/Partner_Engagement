@@ -1,4 +1,4 @@
-import React, { useReducer, useRef, useMemo, useCallback } from 'react';
+import React, { useReducer, useRef, useMemo, useCallback, useEffect } from 'react';
 import {
     Button,
     Dialog,
@@ -23,6 +23,7 @@ interface IdNamesFormState<T extends IIdName> {
 }
 
 type IdNamesFormAction<T extends IIdName> =
+    | { type: 'SET'; idNames: T[] }
     | { type: 'UPDATE'; idName: T }
     | { type: 'REMOVE'; idName: T }
     | { type: 'ADD'; idName: T }
@@ -35,6 +36,10 @@ function idNameFormReducer<T extends IIdName>(
     action: IdNamesFormAction<T>
 ): IdNamesFormState<T> {
     switch (action.type) {
+        case 'SET':
+            return {
+                ...state, formData: action.idNames
+            }
         case 'UPDATE':
             return {
                 ...state,
@@ -104,39 +109,52 @@ function IdNamesForm<T extends IIdName>({
         itemToDelete: null,
     });
 
-    const { allPartnerOfferings, managerOptions } = useDataStore();
+    const {
+        managerOptions,
+        companyOptions,
+        priorityOptions,
+        connectionStatusOptions,
+        nwnOfferingOptions,
+        apiTypeOptions,
+        authenticationTypeOptions,
+        isLoading,
+    } = useDataStore();
     const firstFieldRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        dispatch({ type: 'SET', idNames: idNames.filter(x => x.name !== '') as T[] })
+    }, [idNames])
 
     // Memoize ID usage check
     const idsInUse = useMemo(() => {
         const ids = new Set<string>();
-        allPartnerOfferings.forEach(offering => {
+        if (isLoading === false) {
             switch (entityType) {
                 case 'Companies':
-                    ids.add(offering.company.id);
+                    companyOptions.forEach(x => ids.add(x.id));
                     break;
                 case 'Priorities':
-                    ids.add(offering.priority.id);
+                    priorityOptions.forEach(x => ids.add(x.id));
                     break;
                 case 'ConnectionStatuses':
-                    ids.add(offering.status.id);
+                    connectionStatusOptions.forEach(x => ids.add(x.id));
                     break;
                 case 'NWNOfferings':
-                    ids.add(offering.nwnOffering.id);
+                    nwnOfferingOptions.forEach(x => ids.add(x.id));
                     break;
                 case 'Managers':
-                    ids.add(offering.nwnOffering.manager.id);
+                    managerOptions.forEach(x => ids.add(x.id));
                     break;
                 case 'ApiTypes':
-                    offering.apis.forEach(api => ids.add(api.apiType.id));
+                    apiTypeOptions.forEach(x => ids.add(x.id));
                     break;
                 case 'AuthenticationTypes':
-                    offering.apis.forEach(api => ids.add(api.authenticationType.id));
+                    authenticationTypeOptions.forEach(x => ids.add(x.id));
                     break;
             }
-        });
+        }
         return ids;
-    }, [allPartnerOfferings, entityType]);
+    }, [apiTypeOptions, authenticationTypeOptions, companyOptions, connectionStatusOptions, entityType, isLoading, managerOptions, nwnOfferingOptions, priorityOptions]);
 
     // Memoize duplicate names
     const duplicateNames = useMemo(() => {

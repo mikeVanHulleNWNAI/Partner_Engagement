@@ -1,5 +1,10 @@
 import { Card, CardContent, Box, Typography } from '@mui/material';
 import { partnerOfferingType } from "./Types";
+import { grey } from '@mui/material/colors';
+import { lightGreen } from '@mui/material/colors';
+import { amber } from '@mui/material/colors';
+import { deepOrange } from '@mui/material/colors';
+import { yellow } from '@mui/material/colors';
 
 function PartnerOfferingTile({ partnerOffering, onClick, isHighlighted = false }:
     {
@@ -9,16 +14,34 @@ function PartnerOfferingTile({ partnerOffering, onClick, isHighlighted = false }
     }) {
 
     let tileColor = '#e5e7eb'; // gray-200
-    if (partnerOffering.priority) {
-        switch (partnerOffering.priority.name) {
-            case "LOW": 
-                tileColor = '#e5e7eb'; // gray-200
+    if (partnerOffering.status) {
+        switch (partnerOffering.status.name) {
+            case "NOT_STARTED": 
+                tileColor = `${grey['100']}`;
                 break;
-            case "MEDIUM": 
-                tileColor = '#fef08a'; // yellow-200
+            case "DISCOVERY": 
+                tileColor = `${lightGreen['A100']}`;
                 break;
-            case "HIGH": 
-                tileColor = '#fecaca'; // red-200
+            case "EXPERIMENTING": 
+                tileColor = `${lightGreen['A200']}`;
+                break;
+            case "INTEGRATING": 
+                tileColor = `${lightGreen['A400']}`;
+                break;
+            case "BLOCKED_ACCESS": 
+                tileColor = `${amber['500']}`;
+                break;
+            case "BLOCKED_ISSUE": 
+                tileColor = `${deepOrange['500']}`;
+                break;
+            case "COMPLETE": 
+                tileColor = `${lightGreen['A700']}`;
+                break;
+            case "GENERAL": 
+                tileColor = `${grey[900]}`;
+                break;
+            case "DELAYED": 
+                tileColor = `${yellow[500]}`;
                 break;
         }
     }

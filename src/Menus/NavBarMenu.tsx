@@ -124,7 +124,7 @@ const NavBarMenu = () => {
             'Company',
             companyOptions,
             companies)
-    }, []);
+    }, [companyOptions]);
 
     const handlePriorityOpen = () => {
         dispatch({ type: 'OPEN_PRIORITY' });
@@ -142,7 +142,7 @@ const NavBarMenu = () => {
             'Priority',
             priorityOptions,
             priorities)
-    }, []);
+    }, [priorityOptions]);
 
     const handleStatusOpen = () => {
         dispatch({ type: 'OPEN_STATUS' });
@@ -160,7 +160,7 @@ const NavBarMenu = () => {
             'ConnectionStatus',
             connectionStatusOptions,
             connectionStatuses)
-    }, []);
+    }, [connectionStatusOptions]);
 
     const handleNwnOfferingOpen = () => {
         dispatch({ type: 'OPEN_NWNOFFERING' });
@@ -179,7 +179,7 @@ const NavBarMenu = () => {
             'NwnOffering',
             nwnOfferingOptions,
             nwnOfferings)
-    }, []);
+    }, [nwnOfferingOptions]);
 
     const handleManagerOpen = () => {
         dispatch({ type: 'OPEN_MANAGER' });
@@ -197,7 +197,7 @@ const NavBarMenu = () => {
             'Manager',
             managerOptions,
             managers)
-    }, []);
+    }, [managerOptions]);
 
     const handleApiTypeOpen = () => {
         dispatch({ type: 'OPEN_APITYPE' });
@@ -215,7 +215,7 @@ const NavBarMenu = () => {
             'ApiType',
             apiTypeOptions,
             apiTypes)
-    }, []);
+    }, [apiTypeOptions]);
 
     const handleAuthenticationTypeOpen = () => {
         dispatch({ type: 'OPEN_AUTHENTICATIONTYPE' });
@@ -233,7 +233,7 @@ const NavBarMenu = () => {
             'AuthenticationType',
             authenticationTypeOptions,
             authenticationTypes)
-    }, []);
+    }, [authenticationTypeOptions]);
 
     return (
         <>
