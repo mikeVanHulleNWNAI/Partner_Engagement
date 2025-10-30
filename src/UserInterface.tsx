@@ -15,13 +15,15 @@ import AddIcon from '@mui/icons-material/Add';
 const PartnerOfferingTileMemo = memo<{
   partnerOffering: partnerOfferingType
   isHighlighted?: boolean
+  disabled?: boolean
   onClick: () => void
 }>(
-  ({ partnerOffering, isHighlighted, onClick }) => (
+  ({ partnerOffering, isHighlighted, disabled, onClick }) => (
     <PartnerOfferingTile
       key={partnerOffering.id}
       partnerOffering={partnerOffering}
       isHighlighted={isHighlighted}
+      disabled={disabled}
       onClick={onClick}
     />
   )
@@ -47,6 +49,7 @@ function UserInterface() {
   const [selectedManager, setSelectedManager] = useState<string>("");
   const [selectedNwnOffering, setSelectedNwnOffering] = useState<string>("");
   const [selectedApiType, setSelectedApiType] = useState<string>("");
+  const [disabled, setDisabled] = useState(false);
 
   // Apply filters client-side using useMemo for performance
   const filteredPartnerOfferings = useMemo(() => {
@@ -72,6 +75,10 @@ function UserInterface() {
     setActivePartnerOffering(undefined);
     setIsSidebarOpen(false);
   }, []);
+
+  const handleEditSidebar = useCallback((edit: boolean) => {
+    setDisabled(edit);
+  }, [])
 
   const handleDeleteAndRestore = useCallback(async () => {
     await deleteAll();
@@ -117,6 +124,7 @@ function UserInterface() {
                 value={selectedManager}
                 label="Manager"
                 onChange={(e) => setSelectedManager(e.target.value)}
+                disabled={disabled}
               >
                 <MenuItem value="">All Managers</MenuItem>
                 {managerOptions.map((manager) => (
@@ -138,6 +146,7 @@ function UserInterface() {
                 value={selectedNwnOffering}
                 label="NWN Offering"
                 onChange={(e) => setSelectedNwnOffering(e.target.value)}
+                disabled={disabled}
               >
                 <MenuItem value="">All Offerings</MenuItem>
                 {nwnOfferingOptions.map((offering) => (
@@ -159,6 +168,7 @@ function UserInterface() {
                 value={selectedApiType}
                 label="API Type"
                 onChange={(e) => setSelectedApiType(e.target.value)}
+                disabled={disabled}
               >
                 <MenuItem value="">All Types</MenuItem>
                 {apiTypeOptions.map((type) => (
@@ -173,6 +183,7 @@ function UserInterface() {
           <Tooltip title="Create new">
             <IconButton
               onClick={() => activateSidebar(undefined)}
+              disabled={disabled}
               sx={{
                 position: 'absolute',
                 top: 75,
@@ -210,6 +221,7 @@ function UserInterface() {
                 key={partnerOffering.id}
                 partnerOffering={partnerOffering}
                 isHighlighted={activePartnerOffering?.id === partnerOffering.id}
+                disabled={disabled}
                 onClick={() => activateSidebar(partnerOffering)}
               />
             ))}
@@ -220,6 +232,7 @@ function UserInterface() {
         <Sidebar
           isOpen={isSidebarOpen}
           onClose={handleCloseSidebar}
+          onEdit={handleEditSidebar}
           backgroundColor={`${adjustColorHSL(BODY_COLOR, +50)}`}
           positionFromTop={navBarHeight}
         >

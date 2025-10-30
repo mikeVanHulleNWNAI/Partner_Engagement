@@ -153,6 +153,7 @@ function sidebarReducer(state: SidebarState, action: SidebarAction): SidebarStat
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  onEdit?: (edit: boolean) => void;
   backgroundColor?: string;
   positionFromTop: number;
 }
@@ -160,6 +161,7 @@ interface SidebarProps {
 function Sidebar({
   isOpen,
   onClose,
+  onEdit,
   backgroundColor = '#ffffff',
   positionFromTop = 16
 }: SidebarProps) {
@@ -206,7 +208,13 @@ function Sidebar({
       priority: firstPriority,
       apis: []
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyOptions, connectionStatusOptions, nwnOfferingOptions, priorityOptions, state.resetCounter]);
+
+  useEffect(() => {
+    // indicate to the parent that we are in edit mode
+    onEdit && onEdit(state.editPartnerOffering);
+  }, [state.editPartnerOffering]);
 
   useEffect(() => {
     console.log("submit button " + state.submitButtonActive);
