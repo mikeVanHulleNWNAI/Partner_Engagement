@@ -1,7 +1,7 @@
 import { Box, IconButton, Drawer, Tooltip } from '@mui/material';
 import { useDataStore } from './DataStoreProvider';
 import PartnerOfferingShow from './PartnerOfferingShow';
-import { useEffect, useMemo, useReducer, useCallback, useRef} from 'react';
+import { useEffect, useMemo, useReducer, useCallback, useRef } from 'react';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PublishIcon from '@mui/icons-material/Publish';
@@ -144,7 +144,7 @@ function sidebarReducer(state: SidebarState, action: SidebarAction): SidebarStat
         userChangedPartnerOfferingData: action.newUserChangedPartnerOfferingData
       }
     case 'RESET_COUNTER':
-      return {...state, resetCounter: state.resetCounter + 1}
+      return { ...state, resetCounter: state.resetCounter + 1 }
     default:
       return state;
   }
@@ -208,17 +208,19 @@ function Sidebar({
       priority: firstPriority,
       apis: []
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyOptions, connectionStatusOptions, nwnOfferingOptions, priorityOptions, state.resetCounter]);
+
+  const showSubmitButton = useMemo(() => {
+    return state.submitButtonActive &&
+      state.dataInPartnerOfferingValid &&
+      state.userChangedPartnerOfferingData;
+  }, [state.dataInPartnerOfferingValid, state.submitButtonActive, state.userChangedPartnerOfferingData]);
 
   useEffect(() => {
     // indicate to the parent that we are in edit mode
-    onEdit && onEdit(state.editPartnerOffering);
-  }, [state.editPartnerOffering]);
-
-  useEffect(() => {
-    console.log("submit button " + state.submitButtonActive);
-  }, [state.submitButtonActive])
+    onEdit && onEdit(showSubmitButton);
+  }, [onEdit, showSubmitButton]);
 
   // Handle active partner offering changes
   useEffect(() => {
@@ -281,6 +283,7 @@ function Sidebar({
     } finally {
       setBusyCount(prevCount => prevCount - 1);
     }
+    dispatch({ type: 'CLOSE_PO' });
   }, [activePartnerOffering, setBusyCount]);
 
   const handleSubmit = useCallback(async () => {
@@ -333,10 +336,6 @@ function Sidebar({
   const handleUserChangedData = useCallback((valid: boolean) => {
     dispatch({ type: 'SET_USERCHANGEDPARTNEROFFERINGDATA', newUserChangedPartnerOfferingData: valid });
   }, []);
-
-  const showSubmitButton = state.submitButtonActive &&
-    state.dataInPartnerOfferingValid &&
-    state.userChangedPartnerOfferingData;
 
   const handleClose = useCallback(() => {
     if (showSubmitButton)
@@ -450,7 +449,7 @@ function Sidebar({
         {/* Content */}
         <Box sx={{ pt: 4, p: 2 }}>
           {currentPartnerOffering && (
-            <PartnerOfferingEdit 
+            <PartnerOfferingEdit
               ref={partnerOfferingEditRef}
               partnerOfferingData={currentPartnerOffering}
               onValid={handleOnValid}
