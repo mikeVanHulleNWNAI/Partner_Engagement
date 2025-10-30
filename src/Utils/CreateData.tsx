@@ -14,10 +14,15 @@ const managers = [
 ];
 
 const connectionStatus = [
-    "Connected",
-    "In Process",
-    "Meeting Scheduled",
-    "Upcoming",
+    "NOT_STARTED",
+    "DISCOVERY",
+    "EXPERIMENTING",
+    "INTEGRATING",
+    "BLOCKED_ACCESS",
+    "BLOCKED_ISSUE",
+    "COMPLETE",
+    "GENERAL",
+    "DELAYED",
     ""
 ];
 

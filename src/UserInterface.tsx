@@ -10,6 +10,7 @@ import { partnerOfferingType } from './Types';
 import { adjustColorHSL } from "./Utils/adjustColor";
 import { useDataStore } from "./DataStoreProvider";
 import AddIcon from '@mui/icons-material/Add';
+import configData from './config.json';
 
 // Memoized tile component for better performance
 const PartnerOfferingTileMemo = memo<{
@@ -207,12 +208,13 @@ function UserInterface() {
           </Tooltip>
 
           {/* Debug Buttons (hidden) */}
-          <Button
-            sx={{ display: 'none' }}
-            onClick={handleDeleteAndRestore}
-          >
-            Delete and Restore
-          </Button>
+          {configData.deleteAndRestore && (
+            <Button
+              onClick={handleDeleteAndRestore}
+            >
+              Delete and Restore
+            </Button>
+          )}
 
           {/* Item Grid */}
           <ItemGrid>

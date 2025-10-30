@@ -1,3 +1,4 @@
 {
-  "useFullEdit": false
+  "useFullEdit": true,
+  "deleteAndRestore": true
 }
