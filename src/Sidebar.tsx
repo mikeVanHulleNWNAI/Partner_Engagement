@@ -1,7 +1,7 @@
 import { Box, IconButton, Drawer, Tooltip } from '@mui/material';
 import { useDataStore } from './DataStoreProvider';
 import PartnerOfferingShow from './PartnerOfferingShow';
-import { useEffect, useMemo, useReducer, useCallback } from 'react';
+import { useEffect, useMemo, useReducer, useCallback, useRef, act } from 'react';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PublishIcon from '@mui/icons-material/Publish';
@@ -11,6 +11,7 @@ import PartnerOfferingEdit from './PartnerOfferingEdit';
 import AreYouSureForm from './Forms/AreYouSureForm';
 import { createPartnerOffering, deletePartnerOffering, updatePartnerOffering } from './Utils/CreateData';
 import { useSharedItems } from './SharedItems';
+import { PartnerOfferingEditRef } from './IPartnerOfferingEdit';
 
 // Define state type
 interface SidebarState {
@@ -25,6 +26,7 @@ interface SidebarState {
   lastActiveId: string | undefined;
   dataInPartnerOfferingValid: boolean;
   userChangedPartnerOfferingData: boolean;
+  resetCounter: number;
 }
 
 // Define action types
@@ -42,6 +44,7 @@ type SidebarAction =
   | { type: 'SET_LASTACTIVEID', newLastActiveId: string | undefined }
   | { type: 'SET_DATAINPARTNEROFFERINGVALID', newDataInPartnerOfferingValid: boolean }
   | { type: 'SET_USERCHANGEDPARTNEROFFERINGDATA', newUserChangedPartnerOfferingData: boolean }
+  | { type: 'RESET_COUNTER' }
 
 // Initial state
 const initialState: SidebarState = {
@@ -56,6 +59,7 @@ const initialState: SidebarState = {
   lastActiveId: undefined,
   dataInPartnerOfferingValid: true,
   userChangedPartnerOfferingData: false,
+  resetCounter: 0,
 };
 
 // Reducer function
@@ -139,6 +143,8 @@ function sidebarReducer(state: SidebarState, action: SidebarAction): SidebarStat
         ...state,
         userChangedPartnerOfferingData: action.newUserChangedPartnerOfferingData
       }
+    case 'RESET_COUNTER':
+      return {...state, resetCounter: state.resetCounter + 1}
     default:
       return state;
   }
@@ -200,7 +206,7 @@ function Sidebar({
       priority: firstPriority,
       apis: []
     };
-  }, [companyOptions, connectionStatusOptions, nwnOfferingOptions, priorityOptions]);
+  }, [companyOptions, connectionStatusOptions, nwnOfferingOptions, priorityOptions, state.resetCounter]);
 
   useEffect(() => {
     console.log("submit button " + state.submitButtonActive);
@@ -224,6 +230,8 @@ function Sidebar({
       dispatch({ type: activePartnerOffering ? 'SHOW_PO' : 'CREATE_PO' });
     }
   }, [activePartnerOffering, isOpen]);
+
+  const partnerOfferingEditRef = useRef<PartnerOfferingEditRef>(null);
 
   const currentPartnerOffering = useMemo(() => {
     if (state.editPartnerOffering || !activePartnerOffering) {
@@ -268,22 +276,28 @@ function Sidebar({
   }, [activePartnerOffering, setBusyCount]);
 
   const handleSubmit = useCallback(async () => {
-    if (!currentPartnerOffering) return;
+    const partnerOfferingEditData = partnerOfferingEditRef.current?.getCurrentPOData();
+
+    if (!partnerOfferingEditData) return;
 
     setBusyCount(prevCount => prevCount + 1);
     try {
       if (activePartnerOffering) {
-        await updatePartnerOffering(activePartnerOffering, currentPartnerOffering);
+        await updatePartnerOffering(activePartnerOffering, partnerOfferingEditData);
+        dispatch({ type: 'SHOW_PO' });
       } else {
-        await createPartnerOffering(currentPartnerOffering);
+        await createPartnerOffering(partnerOfferingEditData);
+        // The reset counter increment by one causeing the blankPartnerOffering to
+        // reprocess and cause the currentPartnerOffering to refresh with new data.
+        dispatch({ type: 'RESET_COUNTER' });
+        dispatch({ type: 'CREATE_PO' });
       }
-      dispatch({ type: 'SHOW_PO' });
     } catch (error) {
       console.error('Failed to submit partner offering:', error);
     } finally {
       setBusyCount(prevCount => prevCount - 1);
     }
-  }, [currentPartnerOffering, activePartnerOffering, setBusyCount]);
+  }, [activePartnerOffering, setBusyCount]);
 
   const handleEditNoSubmitGoBackClose = useCallback(() => {
     dispatch({ type: 'CLOSE_AREYOUSURE_EDITNOSUBMIT_GOBACK' });
@@ -428,7 +442,8 @@ function Sidebar({
         {/* Content */}
         <Box sx={{ pt: 4, p: 2 }}>
           {currentPartnerOffering && (
-            <PartnerOfferingEdit
+            <PartnerOfferingEdit 
+              ref={partnerOfferingEditRef}
               partnerOfferingData={currentPartnerOffering}
               onValid={handleOnValid}
               onUserChangedData={handleUserChangedData}
