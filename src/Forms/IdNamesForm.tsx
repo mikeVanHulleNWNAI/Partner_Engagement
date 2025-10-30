@@ -110,13 +110,8 @@ function IdNamesForm<T extends IIdName>({
     });
 
     const {
+        allPartnerOfferings,
         managerOptions,
-        companyOptions,
-        priorityOptions,
-        connectionStatusOptions,
-        nwnOfferingOptions,
-        apiTypeOptions,
-        authenticationTypeOptions,
         isLoading,
     } = useDataStore();
     const firstFieldRef = useRef<HTMLDivElement>(null);
@@ -129,32 +124,34 @@ function IdNamesForm<T extends IIdName>({
     const idsInUse = useMemo(() => {
         const ids = new Set<string>();
         if (isLoading === false) {
-            switch (entityType) {
-                case 'Companies':
-                    companyOptions.forEach(x => ids.add(x.id));
-                    break;
-                case 'Priorities':
-                    priorityOptions.forEach(x => ids.add(x.id));
-                    break;
-                case 'ConnectionStatuses':
-                    connectionStatusOptions.forEach(x => ids.add(x.id));
-                    break;
-                case 'NWNOfferings':
-                    nwnOfferingOptions.forEach(x => ids.add(x.id));
-                    break;
-                case 'Managers':
-                    managerOptions.forEach(x => ids.add(x.id));
-                    break;
-                case 'ApiTypes':
-                    apiTypeOptions.forEach(x => ids.add(x.id));
-                    break;
-                case 'AuthenticationTypes':
-                    authenticationTypeOptions.forEach(x => ids.add(x.id));
-                    break;
-            }
+            allPartnerOfferings.forEach(offering => {
+                switch (entityType) {
+                    case 'Companies':
+                        ids.add(offering.company.id);
+                        break;
+                    case 'Priorities':
+                        ids.add(offering.priority.id);
+                        break;
+                    case 'ConnectionStatuses':
+                        ids.add(offering.status.id);
+                        break;
+                    case 'NWNOfferings':
+                        ids.add(offering.nwnOffering.id);
+                        break;
+                    case 'Managers':
+                        ids.add(offering.nwnOffering.manager.id);
+                        break;
+                    case 'ApiTypes':
+                        offering.apis.forEach(api => ids.add(api.apiType.id));
+                        break;
+                    case 'AuthenticationTypes':
+                        offering.apis.forEach(api => ids.add(api.authenticationType.id));
+                        break;
+                }
+            });
         }
         return ids;
-    }, [apiTypeOptions, authenticationTypeOptions, companyOptions, connectionStatusOptions, entityType, isLoading, managerOptions, nwnOfferingOptions, priorityOptions]);
+    }, [allPartnerOfferings, entityType, isLoading]);
 
     // Memoize duplicate names
     const duplicateNames = useMemo(() => {
