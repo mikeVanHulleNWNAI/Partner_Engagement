@@ -1,4 +1,4 @@
-import { FormControl, InputLabel, MenuItem, Select, SelectChangeEvent } from '@mui/material';
+import { FormControl, FormHelperText, InputLabel, MenuItem, Select, SelectChangeEvent } from '@mui/material';
 import { IIdName } from '../Types';
 import { useEffect, useState } from 'react';
 
@@ -8,7 +8,10 @@ interface SelectionValidationProps {
     options: IIdName[]
     fullWidth?: boolean;
     disabled?: boolean;
+    checkEmpty?: boolean;
     onChange?: (idNameType: IIdName) => void;
+    onValid?: (valid: boolean) => void;
+
 }
 
 const SelectionValidation: React.FC<SelectionValidationProps> = ({
@@ -17,43 +20,54 @@ const SelectionValidation: React.FC<SelectionValidationProps> = ({
     options,
     fullWidth,
     disabled,
-    onChange
+    checkEmpty,
+    onChange,
+    onValid,
 }) => {
+    const [error, setError] = useState('');
 
-    const [selectedValue, setSelectedValue] = useState<IIdName>(value);
-
+    // Validate whenever value or checkEmpty changes
     useEffect(() => {
-       setSelectedValue(value);
-    }, [value])
+        const errorMessage = (checkEmpty && value.name === "") ? "Must select a value" : "";
+        setError(errorMessage);
+        if (onValid) {
+            onValid(errorMessage === "");
+        }
+    }, [value.name, checkEmpty, onValid]); // Only depend on primitives and stable callbacks
 
     const handleChange = (event: SelectChangeEvent<string>) => {
         const selected = options.find(opt => opt.name === event.target.value);
         if (selected) {
-            setSelectedValue(selected);
-            if (onChange)
+            // Validate immediately
+            const errorMessage = (checkEmpty && selected.name === "") ? "Must select a value" : "";
+            setError(errorMessage);
+
+            if (onChange) {
                 onChange(selected);
+            }
+            if (onValid) {
+                onValid(errorMessage === "");
+            }
         }
-    }
+    };
 
     return (
-        <FormControl variant="standard" fullWidth={fullWidth}>
+        <FormControl variant="standard" fullWidth={fullWidth} error={!!error}>
             <InputLabel>{label}</InputLabel>
             <Select
-                value={selectedValue.name}
+                value={value.name}
                 onChange={handleChange}
                 disabled={disabled}
             >
                 {options.map((option) => (
-                    <MenuItem
-                        value={option.name}
-                        key={option.id}
-                    >
+                    <MenuItem value={option.name} key={option.id}>
                         {option.name}
                     </MenuItem>
                 ))}
             </Select>
+            {error && <FormHelperText>{error}</FormHelperText>}
         </FormControl>
     );
-}
+};
 
 export default SelectionValidation;

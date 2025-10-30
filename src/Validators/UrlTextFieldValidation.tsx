@@ -31,7 +31,7 @@ const UrlTextFieldValidation: React.FC<UrlTextFieldValidationProps> = ({
 
     useEffect(() => {
         checkUrl(urlValue);
-    }, [label]);
+    }, [urlValue]);
 
     const validateUrl = (value: string) => {
         if (canBeEmpty) {

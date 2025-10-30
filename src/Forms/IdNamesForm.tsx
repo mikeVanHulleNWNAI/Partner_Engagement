@@ -321,7 +321,7 @@ function IdNamesForm<T extends IIdName>({
 
             <AreYouSureForm
                 open={state.deleteConfirmOpen}
-                onClose={handleDeleteCancel}
+                onNo={handleDeleteCancel}
                 onYes={handleDeleteConfirm}
                 label={`Are you sure you want to delete "${state.itemToDelete?.name}"?`}
             />

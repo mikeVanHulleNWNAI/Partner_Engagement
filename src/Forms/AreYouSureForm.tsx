@@ -9,14 +9,14 @@ import {
 
 interface AreYouSureFormProps {
     open: boolean;
-    onClose: () => void;
+    onNo: () => void;
     onYes: () => void;
     label: string;
 }
 
 const AreYouSureForm: FC<AreYouSureFormProps> = ({
     open,
-    onClose,
+    onNo,
     onYes,
     label
 }) => {
@@ -36,7 +36,7 @@ const AreYouSureForm: FC<AreYouSureFormProps> = ({
     };
 
     return (
-        <Dialog closeAfterTransition={false} open={open} onClose={onClose} maxWidth="sm" fullWidth>
+        <Dialog closeAfterTransition={false} open={open} onClose={onNo} maxWidth="sm" fullWidth>
             <DialogTitle>Are you sure?</DialogTitle>
             <DialogContent>
                 {label}
@@ -48,7 +48,7 @@ const AreYouSureForm: FC<AreYouSureFormProps> = ({
                 >
                     Yes
                 </Button>
-                <Button onClick={onClose}>No</Button>
+                <Button onClick={onNo}>No</Button>
             </DialogActions>
         </Dialog>
     );

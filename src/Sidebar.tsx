@@ -1,16 +1,15 @@
 import { Box, IconButton, Drawer, Tooltip } from '@mui/material';
 import { useDataStore } from './DataStoreProvider';
 import PartnerOfferingShow from './PartnerOfferingShow';
-import { useCallback, useEffect, useReducer } from 'react';
+import { useEffect, useMemo, useReducer, useCallback } from 'react';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PublishIcon from '@mui/icons-material/Publish';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { partnerOfferingType } from './Types';
 import PartnerOfferingEdit from './PartnerOfferingEdit';
 import AreYouSureForm from './Forms/AreYouSureForm';
-import { deletePartnerOffering } from './Utils/CreateData';
+import { createPartnerOffering, deletePartnerOffering, updatePartnerOffering } from './Utils/CreateData';
 import { useSharedItems } from './SharedItems';
 
 // Define state type
@@ -20,24 +19,29 @@ interface SidebarState {
   deleteButtonActive: boolean;
   submitButtonActive: boolean;
   editPartnerOffering: boolean;
-  areYouSureEditNoSubmit: boolean;
+  areYouSureEditNoSubmit_GoBack: boolean;
+  areYouSureEditNoSubmit_Close: boolean;
   areYouSureDelete: boolean;
   lastActiveId: string | undefined;
-  blankPartnerOffering: partnerOfferingType;
+  dataInPartnerOfferingValid: boolean;
+  userChangedPartnerOfferingData: boolean;
 }
 
 // Define action types
 type SidebarAction =
   | { type: 'OPEN_AREYOUSURE_DELETE' }
   | { type: 'CLOSE_AREYOUSURE_DELETE' }
-  | { type: 'OPEN_AREYOUSURE_EDITNOSUBMIT' }
-  | { type: 'CLOSE_AREYOUSURE_EDITNOSUBMIT' }
+  | { type: 'OPEN_AREYOUSURE_EDITNOSUBMIT_GOBACK' }
+  | { type: 'CLOSE_AREYOUSURE_EDITNOSUBMIT_GOBACK' }
+  | { type: 'OPEN_AREYOUSURE_EDITNOSUBMIT_CLOSE' }
+  | { type: 'CLOSE_AREYOUSURE_EDITNOSUBMIT_CLOSE' }
   | { type: 'CREATE_PO' }
   | { type: 'EDIT_PO' }
   | { type: 'SHOW_PO' }
   | { type: 'CLOSE_PO' }
-  | { type: 'SET_BLANK', blank: partnerOfferingType }
   | { type: 'SET_LASTACTIVEID', newLastActiveId: string | undefined }
+  | { type: 'SET_DATAINPARTNEROFFERINGVALID', newDataInPartnerOfferingValid: boolean }
+  | { type: 'SET_USERCHANGEDPARTNEROFFERINGDATA', newUserChangedPartnerOfferingData: boolean }
 
 // Initial state
 const initialState: SidebarState = {
@@ -46,50 +50,36 @@ const initialState: SidebarState = {
   deleteButtonActive: false,
   submitButtonActive: false,
   editPartnerOffering: false,
-  areYouSureEditNoSubmit: false,
+  areYouSureEditNoSubmit_GoBack: false,
+  areYouSureEditNoSubmit_Close: false,
   areYouSureDelete: false,
   lastActiveId: undefined,
-  blankPartnerOffering: {
-    id: "",
-    offeringName: "",
-    contactInfo: "",
-    dashboard: "",
-    notes: "",
-    status: {
-      id: "",
-      name: ""
-    },
-    nwnOffering: {
-      id: "",
-      name: "",
-      manager: {
-        id: "",
-        name: ""
-      }
-    },
-    company: {
-      id: "",
-      name: ""
-    },
-    priority: {
-      id: "",
-      name: ""
-    },
-    apis: []
-  },
+  dataInPartnerOfferingValid: true,
+  userChangedPartnerOfferingData: false,
 };
 
 // Reducer function
 function sidebarReducer(state: SidebarState, action: SidebarAction): SidebarState {
   switch (action.type) {
+    // opens the are you sure to delete form
     case 'OPEN_AREYOUSURE_DELETE':
       return { ...state, areYouSureDelete: true };
+    // closes the are you sure to delete form
     case 'CLOSE_AREYOUSURE_DELETE':
       return { ...state, areYouSureDelete: false };
-    case 'OPEN_AREYOUSURE_EDITNOSUBMIT':
-      return { ...state, areYouSureEditNoSubmit: true };
-    case 'CLOSE_AREYOUSURE_EDITNOSUBMIT':
-      return { ...state, areYouSureEditNoSubmit: false };
+    // opens the are you sure to exit editing without a submit when the go back button was pressed
+    case 'OPEN_AREYOUSURE_EDITNOSUBMIT_GOBACK':
+      return { ...state, areYouSureEditNoSubmit_GoBack: true };
+    // closes the are you sure to exit editing without a submit when the go back button was pressed
+    case 'CLOSE_AREYOUSURE_EDITNOSUBMIT_GOBACK':
+      return { ...state, areYouSureEditNoSubmit_GoBack: false };
+    // opens the are you sure to exit editing without a submit when the close button was pressed
+    case 'OPEN_AREYOUSURE_EDITNOSUBMIT_CLOSE':
+      return { ...state, areYouSureEditNoSubmit_Close: true };
+    // closes the are you sure to exit editing without a submit when the close button was pressed
+    case 'CLOSE_AREYOUSURE_EDITNOSUBMIT_CLOSE':
+      return { ...state, areYouSureEditNoSubmit_Close: false };
+    // goes to the create partner offering state and shows the user the create form
     case 'CREATE_PO':
       return {
         ...state,
@@ -99,6 +89,7 @@ function sidebarReducer(state: SidebarState, action: SidebarAction): SidebarStat
         submitButtonActive: true,
         editPartnerOffering: true,
       }
+    // goes to the edit partner offering state and shows the user the edit form
     case 'EDIT_PO':
       return {
         ...state,
@@ -108,6 +99,7 @@ function sidebarReducer(state: SidebarState, action: SidebarAction): SidebarStat
         submitButtonActive: true,
         editPartnerOffering: true,
       }
+    // goes to the show the partner offering state and shows the partner offering
     case 'SHOW_PO':
       return {
         ...state,
@@ -117,20 +109,35 @@ function sidebarReducer(state: SidebarState, action: SidebarAction): SidebarStat
         submitButtonActive: false,
         editPartnerOffering: false,
       }
+    // closes everything
     case 'CLOSE_PO':
       return {
         ...state,
+        editButtonActive: false,
+        backButtonActive: false,
+        deleteButtonActive: false,
+        submitButtonActive: false,
         editPartnerOffering: false,
       };
-    case 'SET_BLANK':
-      return {
-        ...state,
-        blankPartnerOffering: action.blank
-      }
+    // sets the last active partner offerint ID
     case 'SET_LASTACTIVEID':
       return {
         ...state,
         lastActiveId: action.newLastActiveId
+      }
+    // Sets the data in the partner offering as valid.
+    // The valid states come from the edit form.  If all fields are valid, then this is true.
+    case 'SET_DATAINPARTNEROFFERINGVALID':
+      return {
+        ...state,
+        dataInPartnerOfferingValid: action.newDataInPartnerOfferingValid
+      }
+    // Sets the user changed partner offering data.
+    // If the user changed any values in the edit form, then this will be true.
+    case 'SET_USERCHANGEDPARTNEROFFERINGDATA':
+      return {
+        ...state,
+        userChangedPartnerOfferingData: action.newUserChangedPartnerOfferingData
       }
     default:
       return state;
@@ -161,56 +168,20 @@ function Sidebar({
     priorityOptions
   } = useDataStore();
 
-  const {
-    setBusyCount
-  } = useSharedItems();
+  const { setBusyCount } = useSharedItems();
 
-  // this useEffect puts us in a mode where we are create a new PO if we do not have an active PO
-  useEffect(() => {
-    const newActiveId = activePartnerOffering ? activePartnerOffering.id : undefined;
-
-    // If we're transitioning from undefined to a value (new PO selected), show it
-    if (state.lastActiveId === undefined && newActiveId !== undefined) {
-      dispatch({ type: 'SHOW_PO' });
-    }
-    if (state.lastActiveId !== undefined && newActiveId !== undefined &&
-      state.lastActiveId !== newActiveId) {
-      dispatch({ type: 'SHOW_PO' });
-    }
-
-    // Update the lastActiveId
-    dispatch({
-      type: 'SET_LASTACTIVEID',
-      newLastActiveId: newActiveId
-    });
-  }, [activePartnerOffering, state.lastActiveId]);
-
-  useEffect(() => {
-    // show
-    if (isOpen) {
-      if (activePartnerOffering)
-        dispatch({ type: 'SHOW_PO' });
-      else
-        dispatch({ type: 'CREATE_PO' })
-    }
-  }, [activePartnerOffering, isOpen]);
-
-  useCallback(() => {
-    // these are used to determine if we have the options
+  // Create blank partner offering template
+  const blankPartnerOffering = useMemo(() => {
     const firstConnectionsStatus =
-      connectionStatusOptions.find((x) => x.name == "") ||
-      { id: "", name: "" };
+      connectionStatusOptions.find((x) => x.name === "") || { id: "", name: "" };
     const firstNwnOffering =
-      nwnOfferingOptions.find((x) => x.name == "") ||
-      { id: "", name: "", manager: { id: "", name: "" } };
+      nwnOfferingOptions.find((x) => x.name === "") || { id: "", name: "", manager: { id: "", name: "" } };
     const firstCompany =
-      companyOptions.find((x) => x.name == "") ||
-      { id: "", name: "" };
+      companyOptions.find((x) => x.name === "") || { id: "", name: "" };
     const firstPriority =
-      priorityOptions.find((x) => x.name == "") ||
-      { id: "", name: "" };
+      priorityOptions.find((x) => x.name === "") || { id: "", name: "" };
 
-    const blankPartnerOffering = {
+    return {
       id: "",
       offeringName: "",
       contactInfo: "",
@@ -228,60 +199,137 @@ function Sidebar({
       company: firstCompany,
       priority: firstPriority,
       apis: []
-    }
-    dispatch({ type: 'SET_BLANK', blank: blankPartnerOffering })
-  }, [companyOptions, connectionStatusOptions, nwnOfferingOptions, priorityOptions])
+    };
+  }, [companyOptions, connectionStatusOptions, nwnOfferingOptions, priorityOptions]);
 
-  const handleGoBack = () => {
-    // if the submit button is active, then ask the user if they intend to not submit.
-    if (state.submitButtonActive)
-      dispatch({ type: 'OPEN_AREYOUSURE_EDITNOSUBMIT' });
-    else
+  useEffect(() => {
+    console.log("submit button " + state.submitButtonActive);
+  }, [state.submitButtonActive])
+
+  // Handle active partner offering changes
+  useEffect(() => {
+    const newActiveId = activePartnerOffering?.id;
+
+    if ((state.lastActiveId === undefined && newActiveId !== undefined) ||
+      (state.lastActiveId !== undefined && newActiveId !== undefined && state.lastActiveId !== newActiveId)) {
       dispatch({ type: 'SHOW_PO' });
-  }
-
-  const handleEdit = () => {
-    dispatch({ type: 'EDIT_PO' });
-  }
-
-  const handleDeleteOpen = () => {
-    dispatch({ type: 'OPEN_AREYOUSURE_DELETE' })
-  }
-
-  const handleDeleteClose = () => {
-    dispatch({ type: 'CLOSE_AREYOUSURE_DELETE' })
-  }
-
-  const handleDeleteConfirm = async () => {
-    dispatch({ type: 'CLOSE_AREYOUSURE_DELETE' });
-    if (activePartnerOffering) {
-      setBusyCount(prevCount => prevCount + 1);
-      try {
-        await deletePartnerOffering(activePartnerOffering.id);
-      } finally {
-        setBusyCount(prevCount => prevCount - 1);
-      }
     }
-  }
 
-  const handleSubmit = () => {
-    // TODO: 9879 need to handle this
-  }
+    dispatch({ type: 'SET_LASTACTIVEID', newLastActiveId: newActiveId });
+  }, [activePartnerOffering?.id, state.lastActiveId]);
 
-  const handleEditNoSubmitClose = () => {
-    dispatch({ type: 'CLOSE_AREYOUSURE_EDITNOSUBMIT' })
-  }
+  // Handle drawer open/close
+  useEffect(() => {
+    if (isOpen) {
+      dispatch({ type: activePartnerOffering ? 'SHOW_PO' : 'CREATE_PO' });
+    }
+  }, [activePartnerOffering, isOpen]);
 
-  const handleEditNoSubmitConfirm = async () => {
-    dispatch({ type: 'CLOSE_AREYOUSURE_EDITNOSUBMIT' });
+  const currentPartnerOffering = useMemo(() => {
+    if (state.editPartnerOffering || !activePartnerOffering) {
+      return activePartnerOffering
+        ? structuredClone(activePartnerOffering)
+        : structuredClone(blankPartnerOffering);
+    }
+    return undefined;
+  }, [state.editPartnerOffering, activePartnerOffering, blankPartnerOffering]);
+
+  // Memoized handlers
+  const handleGoBack = useCallback(() => {
+    if (state.submitButtonActive && state.userChangedPartnerOfferingData) {
+      dispatch({ type: 'OPEN_AREYOUSURE_EDITNOSUBMIT_GOBACK' });
+    } else {
+      dispatch({ type: 'SHOW_PO' });
+    }
+  }, [state.submitButtonActive, state.userChangedPartnerOfferingData]);
+
+  const handleEdit = useCallback(() => {
+    dispatch({ type: 'EDIT_PO' });
+  }, []);
+
+  const handleDeleteOpen = useCallback(() => {
+    dispatch({ type: 'OPEN_AREYOUSURE_DELETE' });
+  }, []);
+
+  const handleDeleteClose = useCallback(() => {
+    dispatch({ type: 'CLOSE_AREYOUSURE_DELETE' });
+  }, []);
+
+  const handleDeleteConfirm = useCallback(async () => {
+    dispatch({ type: 'CLOSE_AREYOUSURE_DELETE' });
+    if (!activePartnerOffering) return;
+
+    setBusyCount(prevCount => prevCount + 1);
+    try {
+      await deletePartnerOffering(activePartnerOffering.id);
+    } finally {
+      setBusyCount(prevCount => prevCount - 1);
+    }
+  }, [activePartnerOffering, setBusyCount]);
+
+  const handleSubmit = useCallback(async () => {
+    if (!currentPartnerOffering) return;
+
+    setBusyCount(prevCount => prevCount + 1);
+    try {
+      if (activePartnerOffering) {
+        await updatePartnerOffering(activePartnerOffering, currentPartnerOffering);
+      } else {
+        await createPartnerOffering(currentPartnerOffering);
+      }
+      dispatch({ type: 'SHOW_PO' });
+    } catch (error) {
+      console.error('Failed to submit partner offering:', error);
+    } finally {
+      setBusyCount(prevCount => prevCount - 1);
+    }
+  }, [currentPartnerOffering, activePartnerOffering, setBusyCount]);
+
+  const handleEditNoSubmitGoBackClose = useCallback(() => {
+    dispatch({ type: 'CLOSE_AREYOUSURE_EDITNOSUBMIT_GOBACK' });
+  }, []);
+
+  const handleEditNoSubmitGoBackConfirm = useCallback(() => {
+    dispatch({ type: 'CLOSE_AREYOUSURE_EDITNOSUBMIT_GOBACK' });
     dispatch({ type: 'SHOW_PO' });
-  }
+  }, []);
+
+  const handleEditNoSubmitCloseClose = useCallback(() => {
+    dispatch({ type: 'CLOSE_AREYOUSURE_EDITNOSUBMIT_CLOSE' });
+  }, []);
+
+  const handleEditNoSubmitCloseConfirm = useCallback(() => {
+    dispatch({ type: 'CLOSE_AREYOUSURE_EDITNOSUBMIT_CLOSE' });
+    dispatch({ type: 'CLOSE_PO' });
+    onClose();
+  }, [onClose])
+
+  const handleOnValid = useCallback((valid: boolean) => {
+    dispatch({ type: 'SET_DATAINPARTNEROFFERINGVALID', newDataInPartnerOfferingValid: valid });
+  }, []);
+
+  const handleUserChangedData = useCallback((valid: boolean) => {
+    dispatch({ type: 'SET_USERCHANGEDPARTNEROFFERINGDATA', newUserChangedPartnerOfferingData: valid });
+  }, []);
+
+  const showSubmitButton = state.submitButtonActive &&
+    state.dataInPartnerOfferingValid &&
+    state.userChangedPartnerOfferingData;
+
+  const handleClose = useCallback(() => {
+    if (showSubmitButton)
+      dispatch({ type: 'OPEN_AREYOUSURE_EDITNOSUBMIT_CLOSE' });
+    else {
+      dispatch({ type: 'CLOSE_PO' });
+      onClose();
+    }
+  }, [showSubmitButton, onClose]);
 
   return (
     <Drawer
       anchor="right"
       open={isOpen}
-      onClose={onClose}
+      onClose={handleClose}
       variant="persistent"
       sx={{
         width: isOpen ? { xs: '100%', sm: '40%' } : 0,
@@ -293,7 +341,7 @@ function Sidebar({
           backgroundColor: backgroundColor,
           boxShadow: 3,
           overflowY: 'auto',
-          position: 'fixed',  // Change from default 'fixed'
+          position: 'fixed',
           transition: 'width 0.3s ease-in-out',
         }
       }}
@@ -301,16 +349,14 @@ function Sidebar({
         keepMounted: false,
       }}
     >
-      <Box sx={{
-        position: 'relative',
-        overflow: 'auto',
-        height: '100%'
-      }}>
+      <Box sx={{ position: 'relative', overflow: 'auto', height: '100%' }}>
+        {/* Sticky Header */}
         <Box
           sx={{
             position: 'sticky',
             top: 0,
             left: 0,
+            height: 32,
             right: 0,
             zIndex: 1,
             backgroundColor: 'white',
@@ -318,65 +364,59 @@ function Sidebar({
             padding: 2
           }}
         >
-          {/* Close Button */}
           <Box sx={{ display: 'flex' }}>
-             <Tooltip title="Close sidebar">
-            <IconButton
-              onClick={onClose}
-              sx={{
-                position: 'absolute',
-                top: 8,
-                left: 8,
-                zIndex: 50,
-                p: 0.75,
-                backgroundColor: 'background.paper',
-                border: 1,
-                borderColor: 'grey.300',
-                boxShadow: 1,
-                '&:hover': {
-                  backgroundColor: 'grey.100',
-                },
-                '&:focus': {
-                  outline: 'none',
-                  boxShadow: (theme) => `0 0 0 2px ${theme.palette.primary.main}`,
-                },
-              }}>
-              <ChevronRightIcon style={{ width: 16, height: 16, color: '#4b5563' }} />
-            </IconButton>
+            {/* Close Button */}
+            <Tooltip title="Close sidebar">
+              <IconButton
+                onClick={handleClose}
+                sx={{
+                  position: 'absolute',
+                  top: 8,
+                  left: 8,
+                  zIndex: 50,
+                  p: 0.75,
+                  backgroundColor: 'background.paper',
+                  border: 1,
+                  borderColor: 'grey.300',
+                  boxShadow: 1,
+                  '&:hover': {
+                    backgroundColor: 'grey.100',
+                  },
+                  '&:focus': {
+                    outline: 'none',
+                    boxShadow: (theme) => `0 0 0 2px ${theme.palette.primary.main}`,
+                  },
+                }}>
+                <ChevronRightIcon style={{ width: 16, height: 16, color: '#4b5563' }} />
+              </IconButton>
             </Tooltip>
+
+            {/* Action Buttons */}
             <Box sx={{ pl: 4 }}>
               {state.backButtonActive && (
                 <Tooltip title="Go back">
-                  <IconButton
-                    onClick={handleGoBack}
-                  >
+                  <IconButton onClick={handleGoBack}>
                     <ArrowBackIcon sx={{ marginRight: 1 }} />
                   </IconButton>
                 </Tooltip>
               )}
               {state.editButtonActive && (
                 <Tooltip title="Edit">
-                  <IconButton
-                    onClick={handleEdit}
-                  >
+                  <IconButton onClick={handleEdit}>
                     <EditIcon sx={{ marginRight: 1 }} />
                   </IconButton>
                 </Tooltip>
               )}
               {state.deleteButtonActive && (
                 <Tooltip title="Delete">
-                  <IconButton
-                    onClick={handleDeleteOpen}
-                  >
+                  <IconButton onClick={handleDeleteOpen}>
                     <DeleteIcon sx={{ marginRight: 1 }} />
                   </IconButton>
                 </Tooltip>
               )}
-              {state.submitButtonActive && (
+              {showSubmitButton && (
                 <Tooltip title="Submit">
-                  <IconButton
-                    onClick={handleSubmit}
-                  >
+                  <IconButton onClick={handleSubmit}>
                     <PublishIcon sx={{ marginRight: 1 }} />
                   </IconButton>
                 </Tooltip>
@@ -387,47 +427,40 @@ function Sidebar({
 
         {/* Content */}
         <Box sx={{ pt: 4, p: 2 }}>
-          {/* Show if editPartnerOffering is true */}
-          {state.editPartnerOffering && (
+          {currentPartnerOffering && (
             <PartnerOfferingEdit
-              partnerOfferingData={
-                activePartnerOffering ?
-                  structuredClone(activePartnerOffering) :
-                  state.blankPartnerOffering
-              }
+              partnerOfferingData={currentPartnerOffering}
+              onValid={handleOnValid}
+              onUserChangedData={handleUserChangedData}
             />
           )}
 
-          {/* If we are not editing and we have an active, then we are showing. */}
           {!state.editPartnerOffering && activePartnerOffering && (
-            <PartnerOfferingShow
-              activePartnerOffering={activePartnerOffering}
-            />
-          )}
-
-          {/* If we are not editing and we have do not have an active, then we are trying to create a new one. */}
-          {!state.editPartnerOffering && !activePartnerOffering && (
-            <PartnerOfferingEdit
-              partnerOfferingData={
-                state.blankPartnerOffering
-              }
-            />
+            <PartnerOfferingShow activePartnerOffering={activePartnerOffering} />
           )}
         </Box>
+
+        {/* Confirmation Dialogs */}
         <AreYouSureForm
           open={state.areYouSureDelete}
-          onClose={handleDeleteClose}
+          onNo={handleDeleteClose}
           onYes={handleDeleteConfirm}
           label={`Do you want to delete "${activePartnerOffering?.offeringName}"?`}
         />
         <AreYouSureForm
-          open={state.areYouSureEditNoSubmit}
-          onClose={handleEditNoSubmitClose}
-          onYes={handleEditNoSubmitConfirm}
-          label={`You have not submitted these changes?`}
+          open={state.areYouSureEditNoSubmit_GoBack}
+          onNo={handleEditNoSubmitGoBackClose}
+          onYes={handleEditNoSubmitGoBackConfirm}
+          label="You have not submitted these changes?"
+        />
+        <AreYouSureForm
+          open={state.areYouSureEditNoSubmit_Close}
+          onNo={handleEditNoSubmitCloseClose}
+          onYes={handleEditNoSubmitCloseConfirm}
+          label="You have not submitted these changes?"
         />
       </Box>
-    </Drawer >
+    </Drawer>
   );
 }
 

@@ -143,7 +143,7 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
             {/* DeletePartnerOfferingForm */}
             <AreYouSureForm
                 open={state.deletePartnerOffering}
-                onClose={handleCloseAll}
+                onNo={handleCloseAll}
                 onYes={handleDeletePartnerOfferingYes}
                 label="Are you sure you want to delete this Partner Offering?"
             >
