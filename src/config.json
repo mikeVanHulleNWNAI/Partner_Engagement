@@ -1,4 +1,5 @@
 {
-  "useFullEdit": true,
-  "deleteAndRestore": true
+  "useCSVManage": true,
+  "useFullEdit": false,
+  "useDeleteAndRestore": false
 }

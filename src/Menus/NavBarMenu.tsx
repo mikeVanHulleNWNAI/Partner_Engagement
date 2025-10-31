@@ -18,9 +18,11 @@ import IdNamesForm from '../Forms/IdNamesForm';
 import { updateAllEntities } from '../Utils/CreateData';
 import { useDataStore } from '../DataStoreProvider';
 import configData from '../config.json';
+import CSVManager from '../Forms/CSVManagerForm';
 
 // Define state type
 interface NavBarMenuState {
+    cSVManagerOpen: boolean;
     editCompany: boolean;
     editPriority: boolean;
     editStatus: boolean;
@@ -32,6 +34,7 @@ interface NavBarMenuState {
 
 // Define action types
 type NavBarMenuAction =
+    | { type: 'OPEN_CSV_MANAGER' }
     | { type: 'OPEN_COMPANY' }
     | { type: 'OPEN_PRIORITY' }
     | { type: 'OPEN_STATUS' }
@@ -43,6 +46,7 @@ type NavBarMenuAction =
 
 // Initial state
 const initialState: NavBarMenuState = {
+    cSVManagerOpen: false,
     editCompany: false,
     editPriority: false,
     editStatus: false,
@@ -55,6 +59,8 @@ const initialState: NavBarMenuState = {
 // Reducer function
 function navBarMenuReducer(state: NavBarMenuState, action: NavBarMenuAction): NavBarMenuState {
     switch (action.type) {
+        case 'OPEN_CSV_MANAGER':
+            return { ...state, cSVManagerOpen: true };
         case 'OPEN_COMPANY':
             return { ...state, editCompany: true };
         case 'OPEN_PRIORITY':
@@ -72,6 +78,7 @@ function navBarMenuReducer(state: NavBarMenuState, action: NavBarMenuAction): Na
         case 'CLOSE_ALL':
             return {
                 ...state,
+                cSVManagerOpen: false,
                 editCompany: false,
                 editPriority: false,
                 editStatus: false,
@@ -106,6 +113,20 @@ const NavBarMenu = () => {
 
     const handleMenuClose = () => {
         setAnchorEl(null);
+    };
+
+    const handleCSVManagerOpen = () => {
+        dispatch({ type: 'OPEN_CSV_MANAGER' });
+        handleMenuClose();
+    };
+
+    const handleCSVManagerClose = () => {
+        dispatch({ type: 'CLOSE_ALL' });
+        handleMenuClose();
+    };
+
+    const handleCSVManagerSubmit = () => {
+        // TODO: 9879 handle loading these new offerings
     };
 
     const handleCompanyOpen = () => {
@@ -237,7 +258,7 @@ const NavBarMenu = () => {
 
     return (
         <>
-            {configData.useFullEdit && (
+            {(configData.useCSVManage || configData.useFullEdit) && (
                 <>
                     <Button
                         sx={{
@@ -252,35 +273,54 @@ const NavBarMenu = () => {
                         open={menuOpen}
                         onClose={handleMenuClose}
                     >
-                        <MenuItem onClick={handleCompanyOpen}>
-                            <BusinessIcon sx={{ marginRight: 1 }} />
-                            Companies
-                        </MenuItem>
-                        <MenuItem onClick={handlePriorityOpen}>
-                            <FlagIcon sx={{ marginRight: 1 }} />
-                            Priorities
-                        </MenuItem>
-                        <MenuItem onClick={handleStatusOpen}>
-                            <CheckCircleIcon sx={{ marginRight: 1 }} />
-                            Statuses
-                        </MenuItem>
-                        <MenuItem onClick={handleNwnOfferingOpen}>
-                            <InventoryIcon sx={{ marginRight: 1 }} />
-                            NWN Offerings
-                        </MenuItem>
-                        <MenuItem onClick={handleManagerOpen}>
-                            <PersonIcon sx={{ marginRight: 1 }} />
-                            Managers
-                        </MenuItem>
-                        <MenuItem onClick={handleApiTypeOpen}>
-                            <ApiIcon sx={{ marginRight: 1 }} />
-                            API Types
-                        </MenuItem>
-                        <MenuItem onClick={handleAuthenticationTypeOpen}>
-                            <LockIcon sx={{ marginRight: 1 }} />
-                            Authentication Types
-                        </MenuItem>
+                        {configData.useCSVManage && (
+                            <>
+                                <MenuItem onClick={handleCSVManagerOpen}>
+                                    <BusinessIcon sx={{ marginRight: 1 }} />
+                                    CSV Download or Upload
+                                </MenuItem>
+                            </>
+                        )}
+                        {configData.useFullEdit && (
+                            <>
+                                <MenuItem onClick={handleCompanyOpen}>
+                                    <BusinessIcon sx={{ marginRight: 1 }} />
+                                    Companies
+                                </MenuItem>
+                                <MenuItem onClick={handlePriorityOpen}>
+                                    <FlagIcon sx={{ marginRight: 1 }} />
+                                    Priorities
+                                </MenuItem>
+                                <MenuItem onClick={handleStatusOpen}>
+                                    <CheckCircleIcon sx={{ marginRight: 1 }} />
+                                    Statuses
+                                </MenuItem>
+                                <MenuItem onClick={handleNwnOfferingOpen}>
+                                    <InventoryIcon sx={{ marginRight: 1 }} />
+                                    NWN Offerings
+                                </MenuItem>
+                                <MenuItem onClick={handleManagerOpen}>
+                                    <PersonIcon sx={{ marginRight: 1 }} />
+                                    Managers
+                                </MenuItem>
+                                <MenuItem onClick={handleApiTypeOpen}>
+                                    <ApiIcon sx={{ marginRight: 1 }} />
+                                    API Types
+                                </MenuItem>
+                                <MenuItem onClick={handleAuthenticationTypeOpen}>
+                                    <LockIcon sx={{ marginRight: 1 }} />
+                                    Authentication Types
+                                </MenuItem>
+                            </>
+                        )}
                     </Menu>
+
+                    {/* CSVManager */}
+                    <CSVManager
+                        open={state.cSVManagerOpen}
+                        onClose={handleCSVManagerClose}
+                        onSubmit={handleCSVManagerSubmit}
+                    />
 
                     {/* Company */}
                     <IdNamesForm
