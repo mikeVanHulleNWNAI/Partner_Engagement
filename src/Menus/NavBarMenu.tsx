@@ -13,9 +13,9 @@ import PersonIcon from '@mui/icons-material/Person';
 import ApiIcon from '@mui/icons-material/Api';
 import LockIcon from '@mui/icons-material/Lock';
 
-import { IIdName, IIdNameAndManager } from '../Types';
+import { IIdName, IIdNameAndManager, partnerOfferingType } from '../Types';
 import IdNamesForm from '../Forms/IdNamesForm';
-import { updateAllEntities } from '../Utils/CreateData';
+import { createPartnerOffering, deletePartnerOffering, updateAllEntities, updatePartnerOffering } from '../Utils/CreateData';
 import { useDataStore } from '../DataStoreProvider';
 import configData from '../config.json';
 import CSVManager from '../Forms/CSVManagerForm';
@@ -98,6 +98,7 @@ const NavBarMenu = () => {
     const menuOpen = Boolean(anchorEl);
 
     const {
+        allPartnerOfferings,
         connectionStatusOptions,
         managerOptions,
         nwnOfferingOptions,
@@ -106,6 +107,46 @@ const NavBarMenu = () => {
         apiTypeOptions,
         authenticationTypeOptions
     } = useDataStore();
+
+    // This is used when new data is uploaded and it has the ids of certain fields missing
+    const lookupIdsPartnerOfferings = useCallback((
+        partnerOfferings: partnerOfferingType[]
+    ): partnerOfferingType[] => {
+        partnerOfferings.forEach(partnerOffering => {
+            partnerOffering.status.id =
+                connectionStatusOptions.find(x => x.name === partnerOffering.status.name)?.id ||
+                connectionStatusOptions.find(x => x.name === '')?.id ||
+                "";
+            partnerOffering.nwnOffering.id =
+                nwnOfferingOptions.find(x => x.name === partnerOffering.nwnOffering.name)?.id ||
+                nwnOfferingOptions.find(x => x.name === '')?.id ||
+                "";
+            if (partnerOffering.nwnOffering.id !== "")
+                partnerOffering.nwnOffering.manager.id =
+                    managerOptions.find(x => x.name === partnerOffering.nwnOffering.manager.name)?.id ||
+                    managerOptions.find(x => x.name === '')?.id ||
+                    "";
+            partnerOffering.company.id =
+                companyOptions.find(x => x.name === partnerOffering.company.name)?.id ||
+                companyOptions.find(x => x.name === '')?.id ||
+                '';
+            partnerOffering.priority.id =
+                priorityOptions.find(x => x.name === partnerOffering.priority.name)?.id ||
+                priorityOptions.find(x => x.name === '')?.id ||
+                '';
+            partnerOffering.apis.forEach(x => {
+                x.apiType.id =
+                    apiTypeOptions.find(y => y.name === x.apiType.name)?.id ||
+                    apiTypeOptions.find(y => y.name === '')?.id ||
+                    '';
+                x.authenticationType.id =
+                    authenticationTypeOptions.find(y => y.name === x.authenticationType.name)?.id ||
+                    authenticationTypeOptions.find(y => y.name === '')?.id ||
+                    '';
+            })
+        })
+        return partnerOfferings;
+    }, [apiTypeOptions, authenticationTypeOptions, companyOptions, connectionStatusOptions, managerOptions, nwnOfferingOptions, priorityOptions]);
 
     const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget);
@@ -125,9 +166,26 @@ const NavBarMenu = () => {
         handleMenuClose();
     };
 
-    const handleCSVManagerSubmit = () => {
+    const handleCSVManagerSubmit = useCallback(async (uploadedOfferings: partnerOfferingType[]) => {
         // TODO: 9879 handle loading these new offerings
-    };
+        const processedOfferings = lookupIdsPartnerOfferings(uploadedOfferings);
+        processedOfferings.map(x => {
+            const found = allPartnerOfferings.find(y => y.id === x.id);
+            if (found) {
+                return updatePartnerOffering(found, x);
+            } else {
+                return createPartnerOffering(x);
+            }
+        });
+        allPartnerOfferings.map(x => {
+            const found = processedOfferings.find(y => y.id === x.id);
+            if (!found) {
+                return deletePartnerOffering(x.id);
+            }
+        })
+        dispatch({ type: 'CLOSE_ALL' });
+        handleMenuClose();
+    }, [allPartnerOfferings, lookupIdsPartnerOfferings]);
 
     const handleCompanyOpen = () => {
         dispatch({ type: 'OPEN_COMPANY' });
@@ -381,7 +439,7 @@ const NavBarMenu = () => {
                         open={state.editAuthenticationType}
                         onClose={handleAuthenticationTypeClose}
                         onSubmit={handleAuthenticationTypeSubmit}
-                        idNames={structuredClone(authenticationTypeOptions)} // TODO: 9879 You'll need to add authenticationTypeOptions to useDataStore
+                        idNames={structuredClone(authenticationTypeOptions)}
                         entityType='AuthenticationTypes'
                     />
                 </>

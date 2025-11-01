@@ -463,7 +463,6 @@ export async function updateAllEntities<T extends BaseEntity>(
     }
 
     // Update
-    // TODO: 9879 we are updating entries that are not changed.  May need to filter those out.
     for (const entity of entitiesToUpdate) {
         switch (entityType) {
             case 'Company':

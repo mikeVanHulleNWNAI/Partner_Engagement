@@ -326,7 +326,7 @@ export const DataStoreProvider = ({ children }: DataStoreProviderProps) => {
     // Subscribe to API changes to trigger PartnerOffering refresh
     // Track previous API snapshot to detect actual changes
     let previousApiSnapshot = new Map<string, string>();
-    
+
     const apiSubscription = CLIENT.models.Api.observeQuery({
       selectionSet: ['id', 'partnerOfferingId', 'docLink', 'trainingLink', 'sandboxEnvironment', 'endpoint', 'apiTypeId', 'authenticationTypeId', 'authenticationInfo'],
     }).subscribe({
@@ -334,7 +334,7 @@ export const DataStoreProvider = ({ children }: DataStoreProviderProps) => {
         // Create current snapshot of all APIs
         const currentApiSnapshot = new Map<string, string>();
         const partnerOfferingIdsToRefresh = new Set<string>();
-        
+
         // Build current snapshot and detect changes
         for (const api of data.items) {
           if (api?.id && api?.partnerOfferingId) {
@@ -349,9 +349,9 @@ export const DataStoreProvider = ({ children }: DataStoreProviderProps) => {
               authenticationTypeId: api.authenticationTypeId,
               authenticationInfo: api.authenticationInfo,
             });
-            
+
             currentApiSnapshot.set(api.id, apiFingerprint);
-            
+
             // Check if this API changed or is new
             const previousFingerprint = previousApiSnapshot.get(api.id);
             if (!previousFingerprint || previousFingerprint !== apiFingerprint) {
@@ -359,7 +359,7 @@ export const DataStoreProvider = ({ children }: DataStoreProviderProps) => {
             }
           }
         }
-        
+
         // Check for deleted APIs
         for (const [apiId, fingerprint] of previousApiSnapshot.entries()) {
           if (!currentApiSnapshot.has(apiId)) {
@@ -370,14 +370,14 @@ export const DataStoreProvider = ({ children }: DataStoreProviderProps) => {
             }
           }
         }
-        
+
         // Update snapshot for next comparison
         previousApiSnapshot = currentApiSnapshot;
-        
+
         // Only refetch PartnerOfferings that actually changed
         if (partnerOfferingIdsToRefresh.size > 0) {
           console.log('Refreshing PartnerOfferings:', Array.from(partnerOfferingIdsToRefresh));
-          
+
           for (const offeringId of partnerOfferingIdsToRefresh) {
             const refetchedOffering = await CLIENT.models.PartnerOffering.get(
               { id: offeringId },

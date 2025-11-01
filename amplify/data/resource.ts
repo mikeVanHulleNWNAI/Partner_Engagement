@@ -23,10 +23,8 @@ const schema = a.schema({
     })
     .authorization((allow) => [allow.publicApiKey()]),
 
-  // TODO: 9879 This may need to be changed to PartnerProduct
     PartnerOffering: a
     .model({
-      // TODO: 9879 This may need to be changed to productName
       offeringName: a.string().required(),
       contactInfo: a.string().required(),
       dashboard: a.string().required(),

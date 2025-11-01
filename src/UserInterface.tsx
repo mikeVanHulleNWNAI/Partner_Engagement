@@ -208,7 +208,7 @@ function UserInterface() {
           </Tooltip>
 
           {/* Debug Buttons (hidden) */}
-          {configData.deleteAndRestore && (
+          {configData.useDeleteAndRestore && (
             <Button
               onClick={handleDeleteAndRestore}
             >
